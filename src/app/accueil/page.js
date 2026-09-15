@@ -5,7 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Share01Icon } from "@hugeicons/core-free-icons";
 import { HeroAccueil } from "@/domaines/accueil/composants/HeroAccueil";
 import { heroSlides, morceauxClassement, artistesDuMois, topAlbums, topArtists, topPlaylists } from "@/domaines/accueil/donnees/accueilMock";
-import { useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
+import { demoQueue, useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
 import TopAlbumsSection from "@/domaines/accueil/composants/TopAlbumsSection";
 import TopArtistsSection from "@/domaines/accueil/composants/TopArtistsSection";
 import Top30Section from "@/domaines/accueil/composants/Top30Section";
@@ -32,18 +32,13 @@ export default function AccueilPage() {
       notify(`${slide.title} a été ajouté à votre bibliothèque`);
       return;
     }
-    setCurrentTrack({
-      id: slide.id,
-      title: slide.title,
-      artist: slide.artist,
-      cover: slide.image,
-      gradient: "from-[#3559d7] to-[#091632]",
-    });
+    const track = demoQueue.find((item) => item.id === slide.trackId) || demoQueue[0];
+    setCurrentTrack(track);
     if (!isPlaying) togglePlay();
     notify(
       slide.action === "discover"
-        ? `Découverte de ${slide.title} lancée`
-        : `${slide.title} est en lecture`
+        ? "Découverte Audiva lancée"
+        : "Votre expérience Audiva est lancée"
     );
   };
 

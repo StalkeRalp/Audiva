@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   FavouriteIcon,
-  Plus01Icon,
+  Add01Icon,
   PlayNextIcon,
   QueueIcon,
   UserAddIcon,
@@ -64,7 +64,7 @@ export const contextMenuItems = {
     },
     {
       label: "Ajouter à la playlist",
-      icon: <HugeiconsIcon icon={Plus01Icon} size={16} />,
+      icon: <HugeiconsIcon icon={Add01Icon} size={16} />,
       onClick: onAddToPlaylist,
     },
     {

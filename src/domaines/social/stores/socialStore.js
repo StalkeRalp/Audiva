@@ -15,7 +15,19 @@ const conversations = [
 const notifications = [{ id: "friend-request-ines", type: "social", title: "Nouvelle demande d’amitié", text: "Inès M. souhaite rejoindre votre cercle Audiva.", time: "Il y a 5 min", read: false }, { id: "shared-sophie", type: "partage", title: "Sophie a partagé une playlist", text: "Afro Future · 22 morceaux", time: "Il y a 8 min", read: false }];
 
 export const useSocialStore = create(persist((set, get) => ({
-  friends, requests, conversations, notifications, sentRequests: [],
+  friends, requests, conversations, notifications, sentRequests: [], invites: [],
+  createInvite: () => {
+    const now = Date.now();
+    const token = `audiva-${now}-${Math.random().toString(36).slice(2, 8)}`;
+    const invitation = { token, createdAt: now, expiresAt: now + 5 * 60 * 1000 };
+    set((state) => ({ invites: [invitation, ...state.invites.filter((item) => item.expiresAt > now)] }));
+    return invitation;
+  },
+  getInviteStatus: (token) => {
+    const invitation = get().invites.find((item) => item.token === token);
+    if (!invitation) return "inconnue";
+    return invitation.expiresAt > Date.now() ? "active" : "expirée";
+  },
   sendFriendRequest: (person) => set((state) => state.sentRequests.some((item) => item.id === person.id) || state.friends.some((item) => item.id === person.id) ? state : ({ sentRequests: [...state.sentRequests, person], notifications: [{ id: `sent-${person.id}`, type: "social", title: "Demande d’amitié envoyée", text: `${person.name} recevra votre invitation Audiva.`, time: "À l’instant", read: false }, ...state.notifications] })),
   acceptRequest: (id) => set((state) => { const request = state.requests.find((item) => item.id === id); if (!request) return state; const friend = { ...request, online: false, common: "Goûts à découvrir", playlist: "Première sélection" }; return { requests: state.requests.filter((item) => item.id !== id), friends: [...state.friends, friend], notifications: [{ id: `accepted-${id}`, type: "social", title: "Ami ajouté", text: `${request.name} fait maintenant partie de vos amis.`, time: "À l’instant", read: false }, ...state.notifications] }; }),
   declineRequest: (id) => set((state) => ({ requests: state.requests.filter((item) => item.id !== id) })),

@@ -2,27 +2,21 @@
 
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Plus01Icon, PlayIcon } from "@hugeicons/core-free-icons";
-
-const DEMO_PLAYLISTS = [
-  { id: "late-night", name: "Late Night Drive", trackCount: 24 },
-  { id: "afro-vibes", name: "Afro Vibes", trackCount: 38 },
-  { id: "indie-radar", name: "Indie Radar", trackCount: 18 },
-  { id: "blue-room", name: "Blue Room", trackCount: 22 },
-];
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { usePlaylistsStore } from "@/domaines/playlists/stores/playlistsStore";
 
 export default function AddToPlaylistModal({ isOpen, onClose, onAddToPlaylist }) {
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [showCreateNew, setShowCreateNew] = useState(false);
+  const playlists = usePlaylistsStore((state) => state.playlists);
+  const createPlaylist = usePlaylistsStore((state) => state.createPlaylist);
 
   if (!isOpen) return null;
 
   const handleCreateNew = () => {
     if (newPlaylistName.trim()) {
-      onAddToPlaylist({
-        id: `playlist-${Date.now()}`,
-        name: newPlaylistName,
-      });
+      const playlist = createPlaylist({ title: newPlaylistName });
+      onAddToPlaylist(playlist);
       setNewPlaylistName("");
       setShowCreateNew(false);
       onClose();
@@ -41,13 +35,13 @@ export default function AddToPlaylistModal({ isOpen, onClose, onAddToPlaylist })
               onClick={() => setShowCreateNew(true)}
               className="w-full mb-4 flex items-center gap-3 px-4 py-3 rounded-lg bg-[#72eee7]/10 hover:bg-[#72eee7]/20 transition border border-[#72eee7]/30 text-white font-semibold"
             >
-              <HugeiconsIcon icon={Plus01Icon} size={20} className="text-[#72eee7]" />
+              <HugeiconsIcon icon={Add01Icon} size={20} className="text-[#72eee7]" />
               Nouvelle playlist
             </button>
 
             {/* Playlists existantes */}
             <div className="space-y-2">
-              {DEMO_PLAYLISTS.map((playlist) => (
+              {playlists.map((playlist) => (
                 <button
                   key={playlist.id}
                   onClick={() => {
@@ -58,13 +52,13 @@ export default function AddToPlaylistModal({ isOpen, onClose, onAddToPlaylist })
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-white">{playlist.name}</p>
+                      <p className="font-semibold text-white">{playlist.title}</p>
                       <p className="text-xs text-white/60">
-                        {playlist.trackCount} morceaux
+                        {playlist.tracks.length} morceaux
                       </p>
                     </div>
                     <div className="opacity-0 group-hover:opacity-100 transition">
-                      <HugeiconsIcon icon={Plus01Icon} size={20} className="text-[#72eee7]" />
+                      <HugeiconsIcon icon={Add01Icon} size={20} className="text-[#72eee7]" />
                     </div>
                   </div>
                 </button>

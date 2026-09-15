@@ -8,6 +8,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Album01Icon, ArrowRight01Icon, Cancel01Icon, CompassIcon, FavouriteIcon, LibraryIcon, MusicNote01Icon, PlayIcon, Queue01Icon, Search01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { topAlbums, topArtists, topPlaylists } from "@/domaines/accueil/donnees/accueilMock";
 import { demoQueue, useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
+import { useBibliothequeStore } from "@/domaines/bibliotheque/stores/bibliothequeStore";
 
 const categories = [
   { name: "Afro fusion", query: "Afro", image: "/hero-tendances.jpg", color: "from-[#d86a38]/80 to-[#17213e]" },
@@ -34,13 +35,15 @@ function RechercheContent({ initialQuery }) {
   const [recent, setRecent] = useState(["Maya K.", "Afro Future", "Lila Sun"]);
   const [notice, setNotice] = useState("");
   const { currentTrack, isPlaying, setCurrentTrack, play, pause, toggleLike, likedTrackIds, addToQueue } = useLecteurStore();
+  const localTracks = useBibliothequeStore((state) => state.tracks);
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const catalog = useMemo(() => [
     ...demoQueue.map((item) => ({ ...item, type: "Titres", image: item.cover })),
+    ...localTracks.map((item) => ({ ...item, type: "Titres", image: item.cover, query: `${item.title} ${item.artist} ${item.album || ""} fichier local importé` })),
     ...topArtists.map((item) => ({ id: `artist-${item.id}`, type: "Artistes", title: item.name, artist: `${item.listeners} auditeurs mensuels`, image: item.image, query: item.name })),
     ...topAlbums.map((item) => ({ id: `album-${item.id}`, type: "Albums", title: item.title, artist: item.artist, image: item.cover, query: `${item.title} ${item.artist}` })),
     ...topPlaylists.map((item) => ({ id: `playlist-${item.id}`, type: "Playlists", title: item.title, artist: `${item.tracks} morceaux · ${item.updatedAt}`, image: item.cover, query: `${item.title} ${item.description}` })),
-  ], []);
+  ], [localTracks]);
   const results = useMemo(() => catalog.filter((item) => {
     const haystack = `${item.title} ${item.artist} ${item.album || ""} ${item.query || ""}`.toLowerCase();
     return (!normalizedQuery || haystack.includes(normalizedQuery)) && (filter === "Tout" || item.type === filter);

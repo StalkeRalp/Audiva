@@ -7,7 +7,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, Cancel01Icon, MusicNote01Icon, PlayIcon, ShuffleIcon } from "@hugeicons/core-free-icons";
 import { demoQueue, useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
 
-const albums = { "blue-hour": { title: "Blue Hour", artist: "Maya K.", year: "2026", cover: "/hero-recommandation.jpg", tracks: demoQueue }, "nuit-electrique": { title: "Nuit électrique", artist: "Audiva Sessions", year: "2026", cover: "/hero-playlist.jpg", tracks: demoQueue }, "afro-future": { title: "Afro Future", artist: "Collectif Audiva", year: "2025", cover: "/hero-tendances.jpg", tracks: demoQueue } };
+const albums = { "blue-hour": { title: "Blue Hour", artist: "Maya K.", year: "2026", cover: "/hero-recommandation.jpg", tracks: demoQueue }, "nuit-electrique": { title: "Pour votre soirée", artist: "Audiva Sessions", year: "2026", cover: "/hero-playlist.jpg", tracks: demoQueue }, "jamendo-discovery": { title: "Jamendo Discovery", artist: "Lila Sun", year: "2024", cover: "/hero-decouverte.jpg", tracks: demoQueue }, tendances: { title: "Tendances", artist: "Collectif Audiva", year: "2025", cover: "/hero-tendances.jpg", tracks: demoQueue }, "afro-future": { title: "Afro Future", artist: "Collectif Audiva", year: "2025", cover: "/hero-tendances.jpg", tracks: demoQueue } };
 const duration = (value) => `${Math.floor(value / 60)}:${String(value % 60).padStart(2, "0")}`;
 
 export default function AlbumPage() {
