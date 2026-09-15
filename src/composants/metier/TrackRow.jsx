@@ -9,17 +9,17 @@ import { useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
 export default function TrackRow({ track, index, ranking, position = "stable", onClick }) {
   const [isHovered, setIsHovered] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const { currentTrack, isPlaying, setCurrentTrack, togglePlay, likedTrackIds, toggleLike } = useLecteurStore();
+  const { currentTrack, isPlaying, setCurrentTrack, play, pause, likedTrackIds, toggleLike } = useLecteurStore();
   const isCurrentTrack = currentTrack?.id === track.id;
   const isFavorited = likedTrackIds.includes(track.id);
 
   const handlePlayClick = (e) => {
     e.stopPropagation();
     if (isCurrentTrack && isPlaying) {
-      togglePlay();
+      pause();
     } else {
       setCurrentTrack(track);
-      togglePlay();
+      play();
     }
   };
 

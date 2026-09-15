@@ -35,7 +35,7 @@ export default function RecentlyPlayedSection() {
       <SectionHeader
         title="Écouté récemment"
         subtitle="Continuez votre écoute"
-        href="/historique"
+        href="/bibliotheque?vue=historique"
       />
 
       <Carousel itemsPerView={4} gap="gap-4">

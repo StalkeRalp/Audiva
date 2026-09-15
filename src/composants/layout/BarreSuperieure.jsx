@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, Home01Icon, Notification03Icon, Search01Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, ArrowRight01Icon, Home01Icon, Search01Icon, Settings01Icon, UserIcon } from "@hugeicons/core-free-icons";
 
 export function BarreSuperieure() {
   const router = useRouter();
   const pathname = usePathname();
+  const [profileOpen, setProfileOpen] = useState(false);
 
   if (pathname === "/" || pathname.startsWith("/authentification")) return null;
 
@@ -23,10 +25,13 @@ export function BarreSuperieure() {
         <form onSubmit={(event) => { event.preventDefault(); const query = new FormData(event.currentTarget).get("query"); router.push(`/recherche${query ? `?q=${encodeURIComponent(query)}` : ""}`); }} className="w-[min(500px,calc(100vw-520px))]"><label className="flex items-center gap-3 rounded-full border border-white/[.06] bg-[#171a22] px-5 py-3 text-[#a5b0ca] transition focus-within:border-[#6479f6]/75 focus-within:bg-[#1a1f2d] focus-within:shadow-[0_0_0_3px_rgba(93,114,254,.13)]"><HugeiconsIcon icon={Search01Icon} size={21} /><input name="query" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-[#adb6c8]" placeholder="Que souhaitez-vous écouter ou regarder ?" /></label></form>
       </div>
 
-      <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
-        <Link href="/notifications" aria-label="Notifications" className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#b9c3dc] transition hover:bg-white/7 hover:text-white"><span className="absolute right-0.5 top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-[#03050a] bg-[#ef4c86] px-1 text-[9px] font-bold text-white">3</span><HugeiconsIcon icon={Notification03Icon} size={20} /></Link>
-        <Link href="/amis" aria-label="Amis" className="hidden h-10 w-10 items-center justify-center rounded-full text-[#b9c3dc] transition hover:bg-white/7 hover:text-white lg:flex"><HugeiconsIcon icon={UserGroupIcon} size={20} /></Link>
-        <Link href="/parametres" className="flex items-center gap-2 rounded-full py-1 pl-1 pr-1 transition hover:bg-white/[.06]"><span className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#40d5a3] bg-gradient-to-br from-[#7588ff] to-[#5452c9] text-[11px] font-bold text-white ring-2 ring-[#17223f]">E</span><HugeiconsIcon icon={ArrowDown01Icon} size={14} className="hidden text-[#9eabcf] sm:block" /></Link>
+      <div className="ml-auto flex shrink-0 items-center gap-3 sm:gap-4">
+        <Link href="/notifications" aria-label="Notifications" title="Notifications" className="group relative grid h-9 w-7 place-items-center text-[#c4cde0] transition hover:text-white active:scale-90"><span className="absolute right-0 top-0 z-10 flex h-3.5 min-w-3.5 items-center justify-center border-2 border-[#03050a] bg-[#f34d87] px-0.5 text-[8px] font-extrabold text-white">3</span><i aria-hidden="true" className="fi fi-rr-bell text-[19px] leading-none transition-transform group-hover:-rotate-6" /></Link>
+        <Link href="/amis" aria-label="Amis en ligne" title="Amis en ligne" className="group relative grid h-9 w-7 place-items-center text-[#c4cde0] transition hover:text-white active:scale-90"><i aria-hidden="true" className="fi fi-rr-users-alt text-[19px] leading-none transition-transform group-hover:scale-110" /></Link>
+        <div className="relative ml-1">
+          <button type="button" onClick={() => setProfileOpen((open) => !open)} aria-label="Ouvrir le menu profil" aria-expanded={profileOpen} aria-haspopup="menu" className="group grid h-11 w-11 place-items-center rounded-full transition hover:scale-105 active:scale-95"><span className={`relative grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[#d1987f] via-[#644b4a] to-[#17213a] text-[11px] font-extrabold text-white shadow-[0_0_0_2px_#080b12,0_0_0_4px_#39d697,0_0_0_5px_rgba(57,214,151,.22),0_0_18px_rgba(57,214,151,.22)] transition ${profileOpen ? "scale-105" : ""}`}>E<span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#080b12] bg-[#39d697]" /></span></button>
+          {profileOpen ? <div role="menu" className="absolute right-0 top-[calc(100%+8px)] z-[60] w-52 border border-white/10 bg-[#101727]/[.98] p-1.5 shadow-2xl backdrop-blur-xl"><div className="border-b border-white/[.07] px-3 py-2.5"><p className="text-sm font-extrabold text-white">Enoch</p><p className="mt-0.5 text-xs text-[#8f9bb6]">Compte Audiva</p></div><Link href="/parametres" onClick={() => setProfileOpen(false)} role="menuitem" className="mt-1 flex items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-[#c4cee1] transition hover:bg-white/[.06] hover:text-[#72eee7]"><HugeiconsIcon icon={UserIcon} size={18} strokeWidth={2.1} />Mon profil</Link><Link href="/parametres" onClick={() => setProfileOpen(false)} role="menuitem" className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-[#c4cee1] transition hover:bg-white/[.06] hover:text-[#72eee7]"><HugeiconsIcon icon={Settings01Icon} size={18} strokeWidth={2.1} />Paramètres</Link></div> : null}
+        </div>
       </div>
     </header>
   );

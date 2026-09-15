@@ -18,7 +18,7 @@ export default function Top30Section({ tracks }) {
       <SectionHeader
         title="Top 30 Classement"
         subtitle="Les chansons les plus écoutées du moment"
-        href="/statistiques"
+        href="/bibliotheque?vue=statistiques"
       />
       
       <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/8 via-white/3 to-transparent overflow-hidden backdrop-blur-sm">

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Share01Icon } from "@hugeicons/core-free-icons";
-import { NavigationPrincipale } from "@/composants/layout/NavigationPrincipale";
 import { HeroAccueil } from "@/domaines/accueil/composants/HeroAccueil";
 import { heroSlides, morceauxClassement, artistesDuMois, topAlbums, topArtists, topPlaylists } from "@/domaines/accueil/donnees/accueilMock";
 import { useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
@@ -50,7 +49,6 @@ export default function AccueilPage() {
 
   return (
     <main className="min-h-screen bg-[#060b18] pb-32 text-[#eff4ff] lg:flex">
-      <NavigationPrincipale />
       <div className="min-w-0 flex-1">
         <HeroAccueil slides={heroSlides} onAction={handleHeroAction} />
         
@@ -94,7 +92,7 @@ export default function AccueilPage() {
       {feedback && (
         <div
           role="status"
-          className="fixed bottom-24 right-5 z-50 rounded-xl border border-[#72eee7]/25 bg-[#101d36] px-4 py-3 text-sm shadow-2xl"
+          className="fixed bottom-24 right-5 z-50 rounded-xl border border-[/25 bg-[#101d36] px-4 py-3 text-sm shadow-2xl"
         >
           {feedback}
         </div>

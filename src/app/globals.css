@@ -175,3 +175,7 @@ body {
 
 .audiva-carousel::-webkit-scrollbar,
 .audiva-rail::-webkit-scrollbar { display: none; }
+
+/* Les anciennes pages conservent leur contenu, mais la navigation est désormais
+   fournie une seule fois par ApplicationShell. */
+main.bg-black > aside[class*="sticky"] { display: none; }

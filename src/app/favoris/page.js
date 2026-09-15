@@ -1,59 +1,87 @@
+"use client";
+
 import Image from "next/image";
-import Link from "next/link";
+import { useMemo, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Add01Icon, FavouriteIcon, MoreHorizontalIcon, PlayIcon, Queue01Icon, Search01Icon, Share01Icon } from "@hugeicons/core-free-icons";
+import CreatePlaylistButton from "@/domaines/playlists/composants/CreatePlaylistButton";
+import { demoQueue, useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
+import { useBibliothequeStore } from "@/domaines/bibliotheque/stores/bibliothequeStore";
 
-const navigation = ["Accueil", "Recherche", "Bibliothèque", "Découvrir", "Favoris", "Amis", "Statistiques"];
-const routes = { Accueil: "/", Recherche: "/recherche", Bibliothèque: "/bibliotheque", Découvrir: "/decouverte", Favoris: "/favoris", Amis: "/amis", Statistiques: "/statistiques" };
-const tracks = [
-  ["The Night We Met", "Lord Huron", "Play It Safe", "2:12", "from-[#e8887b] to-[#6d3d5b]"],
-  ["Akpooza", "Dynamites", "In the Shape of a Dream", "2:12", "from-[#b43a39] to-[#e0b24b]"],
-  ["Be Alright", "Dean Lewis", "Free Spirit", "3:02", "from-[#d09c4d] to-[#472e25]"],
-  ["Falling", "Trevor Daniel", "Vacation", "4:25", "from-[#b48360] to-[#28232d]"],
-  ["If the world was ending", "JP Saxe, Julia Michaels", "Same Old", "2:56", "from-[#d3b6a6] to-[#7a6163]"],
-  ["Let Her Go", "Passenger", "A Moment Apart", "3:54", "from-[#4c839a] to-[#1c364b]"],
-  ["Another Love", "Tom Odell", "1993", "3:13", "from-[#e9917c] to-[#563c64]"],
-  ["Sleepless Nights", "ayokay, Nightly", "In the Shape of a Dream", "2:12", "from-[#8ca8d5] to-[#ead3c7]"],
-  ["Atlantis", "Seafret", "Girl, I Know", "3:14", "from-[#9e6158] to-[#342e3e]"],
-  ["Slow Grenade", "Ellie Goulding, Lauv", "Brightest Blue", "3:37", "from-[#5489aa] to-[#c9d7dd]"],
-  ["Play It Safe", "Julia Wolf", "Play It Safe", "2:12", "from-[#d1c8b8] to-[#6b7286]"],
-  ["Ocean Front Apt.", "ayokay", "In the Shape of a Dream", "2:12", "from-[#8ca8d5] to-[#ead3c7]"],
-];
-
-function Icon({ name }) {
-  const common = { className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: "1.8" };
-  const icons = {
-    Accueil: <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z" />,
-    Recherche: <><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></>,
-    Bibliothèque: <><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 3v5l2-1.5L12 8V3" /></>,
-    Découvrir: <><circle cx="12" cy="12" r="9" /><path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2Z" /></>,
-    Favoris: <path d="M20.8 8.8c0 5.1-8.8 10.2-8.8 10.2S3.2 13.9 3.2 8.8A4.8 4.8 0 0 1 12 6a4.8 4.8 0 0 1 8.8 2.8Z" />,
-    Amis: <><circle cx="9" cy="8" r="3" /><path d="M3.5 20c.4-3.4 2.3-5 5.5-5s5.1 1.6 5.5 5M17 9a2.5 2.5 0 1 0 0-5M17 15c2.1 0 3.3 1.1 3.7 3.2" /></>,
-    Statistiques: <path d="M4 20V11M10 20V4M16 20v-7M22 20V8" />,
-  };
-  return <svg {...common}>{icons[name]}</svg>;
-}
-
-function Cover({ gradient, className = "" }) {
-  return <div className={`shrink-0 rounded-md bg-gradient-to-br ${gradient} ${className}`} />;
-}
+const sortOptions = {
+  recent: "Ajoutés récemment",
+  title: "Titre : A à Z",
+  artist: "Artiste : A à Z",
+};
 
 export default function FavorisPage() {
-  return (
-    <main className="min-h-screen bg-black text-[#edf0ff] lg:flex">
-      <aside className="sticky top-[70px] hidden h-[calc(100dvh-70px)] w-64 shrink-0 self-start overflow-y-auto border-r border-[#5d72fe]/20 bg-[#03050b] px-7 py-6 lg:flex lg:flex-col">
-        <Link href="/" className="mb-9 flex items-center gap-3"><Image src="/logoAudiva2.png" alt="Audiva" width={1254} height={1254} className="h-12 w-12 rounded-xl object-cover" /><span className="text-2xl font-semibold tracking-tight">Audi<span className="text-[#5d72fe]">va</span></span></Link>
-        <nav className="space-y-1">{navigation.map((item) => <Link key={item} href={routes[item]} className={`flex items-center gap-4 rounded-xl px-3 py-3 text-sm transition ${item === "Favoris" ? "bg-[#5d72fe] font-semibold text-white" : "text-[#b9c2ed] hover:bg-[#5d72fe]/10 hover:text-white"}`}><Icon name={item} />{item}</Link>)}</nav>
-        <div className="mt-7 border-t border-[#5d72fe]/20 pt-5"><div className="mb-3 flex items-center justify-between text-sm font-medium"><span>Mes playlists</span><span className="text-xl text-[#93a0ff]">+</span></div><div className="space-y-3">{[["Hits du moment", "32 morceaux"], ["Afro Vibes", "56 morceaux"], ["Chill & Relax", "42 morceaux"]].map(([name, count], index) => <div key={name} className="flex items-center gap-3"><Cover gradient={["from-[#d44d83] to-[#fa9353]", "from-[#d17a32] to-[#302236]", "from-[#6eaec7] to-[#f6e5c5]"][index]} className="h-10 w-10" /><div><p className="text-sm text-white">{name}</p><p className="text-xs text-[#8490bf]">{count}</p></div></div>)}</div></div>
-      </aside>
+  const router = useRouter();
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState("recent");
+  const [menuId, setMenuId] = useState(null);
+  const [notice, setNotice] = useState("");
+  const { likedTrackIds, currentTrack, isPlaying, setCurrentTrack, setQueue, play, pause, toggleLike, addToQueue } = useLecteurStore(); const { tracks: localTracks } = useBibliothequeStore();
 
-      <div className="min-w-0 flex-1 pb-24">
-        <section className="relative overflow-hidden border-b border-[#5d72fe]/20 bg-[linear-gradient(180deg,#25265d_0%,#10142e_58%,#000_100%)] px-6 pb-8 pt-10 sm:px-10 lg:px-14">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_0%,rgba(93,114,254,0.45),transparent_36%)]" />
-          <div className="relative flex items-end gap-5"><div className="flex h-32 w-32 shrink-0 items-center justify-center bg-gradient-to-br from-[#4422d1] via-[#6c61df] to-[#a5c8bd] text-6xl shadow-xl sm:h-40 sm:w-40">♥</div><div><p className="text-[10px] font-semibold uppercase tracking-wide text-[#c5cbef]">Playlist publique</p><h1 className="mt-1 text-4xl font-bold tracking-tight sm:text-6xl">Titres likés</h1><p className="mt-3 text-xs text-[#c5cbef]">Enoch Emmanuel · <span className="font-semibold text-white">255 titres</span></p></div></div>
-        </section>
+  const favorites = useMemo(() => {
+    const collection = [...demoQueue, ...localTracks].filter((track) => likedTrackIds.includes(track.id));
+    const normalizedQuery = query.trim().toLowerCase();
+    const filtered = normalizedQuery ? collection.filter((track) => `${track.title} ${track.artist} ${track.album}`.toLowerCase().includes(normalizedQuery)) : collection;
+    return [...filtered].sort((a, b) => sort === "title" ? a.title.localeCompare(b.title) : sort === "artist" ? a.artist.localeCompare(b.artist) : 0);
+  }, [likedTrackIds, localTracks, query, sort]);
+  const displayFavorites = mounted ? favorites : [];
+  const totalDuration = displayFavorites.reduce((total, track) => total + (track.duration || 0), 0);
+  const formatTime = (seconds) => `${Math.floor(seconds / 60)} min`;
+  const notify = (message) => { setNotice(message); window.setTimeout(() => setNotice(""), 2400); };
+  const launch = (track) => {
+    if (currentTrack?.id === track.id && isPlaying) pause();
+    else { setCurrentTrack(track); play(); }
+  };
+  const playAll = () => {
+    if (!displayFavorites.length) return;
+    setQueue(displayFavorites);
+    setCurrentTrack(displayFavorites[0]);
+    play();
+    notify("Vos favoris sont chargés dans la file");
+  };
+  const shareFavorites = async () => {
+    const shareData = { title: "Mes favoris Audiva", text: "Découvrez ma sélection de favoris sur Audiva.", url: window.location.href };
+    try {
+      if (navigator.share) await navigator.share(shareData);
+      else await navigator.clipboard?.writeText(`${shareData.text} ${shareData.url}`);
+      notify("Lien de vos favoris copié");
+    } catch (error) {
+      if (error?.name !== "AbortError") notify("Partage indisponible pour le moment");
+    }
+  };
 
-        <div className="px-6 py-7 sm:px-10 lg:px-14"><div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-5"><button aria-label="Lire les favoris" className="flex h-12 w-12 items-center justify-center rounded-full bg-[#5d72fe] transition hover:bg-[#7184ff]"><span className="ml-1 h-0 w-0 border-y-[8px] border-l-[12px] border-y-transparent border-l-white" /></button><button className="text-xl text-[#c9d1ff]">↝</button><button className="text-xl text-[#c9d1ff]">⇩</button><button className="text-xl text-[#c9d1ff]">•••</button></div><button className="text-xs text-[#c9d1ff]">⌕ &nbsp; Trier par&nbsp; ▾</button></div>
-          <div className="min-w-[680px]"><div className="grid grid-cols-[30px_minmax(220px,1.5fr)_minmax(170px,1fr)_80px_28px] border-b border-white/15 px-2 pb-2 text-[10px] uppercase tracking-wide text-[#8490bf]"><span>#</span><span>Titre</span><span>Album</span><span>Durée</span><span>♡</span></div>{tracks.map(([title, artist, album, duration, gradient], index) => <div key={title} className="grid grid-cols-[30px_minmax(220px,1.5fr)_minmax(170px,1fr)_80px_28px] items-center rounded-md px-2 py-2 text-xs hover:bg-[#5d72fe]/10"><span className="text-[#8490bf]">{index + 1}</span><div className="flex min-w-0 items-center gap-3"><Cover gradient={gradient} className="h-9 w-9" /><div className="min-w-0"><p className={`truncate ${index === 0 ? "text-[#7688ff]" : "text-white"}`}>{title}</p><p className="truncate text-[10px] text-[#8490bf]">{artist}</p></div></div><span className="truncate text-[#aeb8df]">{album}</span><span>{duration}</span><span className="text-[#5d72fe]">♥</span></div>)}</div></div>
-      </div>
-    </main>
-  );
+  return <main className="min-h-screen bg-[#060b18] pb-32 text-[#eff4ff] lg:flex">
+    <div className="min-w-0 flex-1">
+      <section className="relative isolate min-h-[390px] overflow-hidden border-b border-white/[.07] bg-[#080e1b] px-5 pb-12 pt-12 sm:px-10 lg:px-14">
+        <div className="absolute inset-0 opacity-72"><Image src="/favoris2.jpg" alt="" fill priority className="scale-[1.06] object-cover object-[center_63%]" /></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,rgba(81,124,255,.28),transparent_38%),linear-gradient(90deg,rgba(6,11,24,.93)_4%,rgba(6,11,24,.68)_48%,rgba(6,11,24,.24))]" />
+        <div className="absolute inset-x-0 bottom-0 h-[84%] bg-gradient-to-b from-transparent via-[#060b18]/38 to-[#060b18]" />
+        <div className="relative mx-auto flex max-w-[1500px] flex-col justify-end gap-7 sm:min-h-[338px] sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex items-end gap-5"><div className="grid h-28 w-28 shrink-0 place-items-center bg-[linear-gradient(145deg,#2e3a8e,#17254a_50%,#0d172c)] shadow-[0_18px_42px_rgba(0,0,0,.35)] sm:h-40 sm:w-40"><HugeiconsIcon icon={FavouriteIcon} size={55} strokeWidth={1.65} className="text-[#72eee7]" fill="rgba(114,238,231,.22)" /></div><div className="pb-1"><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#83eee8]">Votre collection</p><h1 className="mt-2 text-4xl font-black tracking-[-.055em] text-white sm:text-6xl">Mes favoris</h1><p className="mt-3 text-sm font-medium text-[#bdc9e6]">Enoch · <b className="text-white">{displayFavorites.length} titre{displayFavorites.length !== 1 ? "s" : ""}</b>{displayFavorites.length ? ` · ${formatTime(totalDuration)}` : ""}</p></div></div>
+          <div className="flex flex-wrap gap-2"><CreatePlaylistButton className="rounded-full" /><button type="button" onClick={shareFavorites} className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[.08] px-4 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:border-[#72eee7]/45 hover:bg-white/[.14]"><HugeiconsIcon icon={Share01Icon} size={18} strokeWidth={2.3} />Partager</button></div>
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-[1500px] px-4 py-8 sm:px-7 xl:px-9">
+        <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between"><div className="flex flex-wrap items-center gap-3"><button type="button" disabled={!displayFavorites.length} onClick={playAll} className="inline-flex h-12 items-center gap-2 bg-[#72eee7] px-5 text-sm font-extrabold text-[#051326] shadow-[0_8px_26px_rgba(114,238,231,.17)] transition hover:scale-[1.02] hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"><HugeiconsIcon icon={PlayIcon} size={20} fill="currentColor" />Tout écouter</button><button type="button" disabled={!displayFavorites.length} onClick={() => { displayFavorites.forEach(addToQueue); notify("Favoris ajoutés à la file d’attente"); }} className="inline-flex h-12 items-center gap-2 border border-white/12 bg-white/[.035] px-4 text-sm font-bold text-[#d7e1f5] transition hover:border-[#72eee7]/35 hover:bg-white/[.08] disabled:cursor-not-allowed disabled:opacity-40"><HugeiconsIcon icon={Queue01Icon} size={19} strokeWidth={2.2} />Ajouter à la file</button></div><div className="flex w-full items-center gap-2 lg:w-auto"><label className="flex h-11 min-w-0 flex-1 items-center gap-2 border border-white/10 bg-[#0c1425] px-3 text-[#91a0bf] transition focus-within:border-[#72eee7]/50 lg:w-64"><HugeiconsIcon icon={Search01Icon} size={18} strokeWidth={2.2} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher dans vos favoris" className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#71809d]" /></label><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Trier les favoris" className="h-11 border border-white/10 bg-[#0c1425] px-3 text-xs font-bold text-[#c7d2e7] outline-none transition hover:border-[#72eee7]/40">{Object.entries(sortOptions).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div></div>
+        {displayFavorites.length ? <div className="overflow-hidden border border-white/[.08] bg-[#0a1221]"><div className="grid grid-cols-[32px_minmax(200px,1.5fr)_minmax(120px,1fr)_68px_34px] border-b border-white/[.08] px-4 py-3 text-[10px] font-bold uppercase tracking-[.15em] text-[#72809d]"><span>#</span><span>Titre</span><span className="hidden sm:block">Album</span><span>Durée</span><span /></div>{displayFavorites.map((track, index) => <FavoriteRow key={track.id} track={track} index={index} active={currentTrack?.id === track.id && isPlaying} menuOpen={menuId === track.id} onPlay={() => launch(track)} onToggleLike={() => { toggleLike(track); notify("Titre retiré de vos favoris"); }} onQueue={() => { addToQueue(track); notify("Titre ajouté à la file"); }} onMenu={() => setMenuId(menuId === track.id ? null : track.id)} onArtist={() => router.push(`/recherche?q=${encodeURIComponent(track.artist)}`)} />)}</div> : <EmptyFavorites onDiscover={() => router.push("/decouverte")} />}
+      </section>
+    </div>
+    {notice ? <p role="status" className="fixed bottom-24 right-5 z-[70] border border-[#72eee7]/30 bg-[#112139] px-4 py-3 text-sm font-bold text-[#c8fffb] shadow-2xl">{notice}</p> : null}
+  </main>;
+}
+
+function FavoriteRow({ track, index, active, menuOpen, onPlay, onToggleLike, onQueue, onMenu, onArtist }) {
+  const duration = `${Math.floor(track.duration / 60)}:${String(track.duration % 60).padStart(2, "0")}`;
+  return <div className={`group grid grid-cols-[32px_minmax(200px,1.5fr)_minmax(120px,1fr)_68px_34px] items-center px-4 py-2.5 transition hover:bg-white/[.055] ${active ? "bg-[#11284a]/65" : ""}`}><span className={`text-sm font-bold ${active ? "text-[#72eee7]" : "text-[#7886a3]"}`}>{active ? <HugeiconsIcon icon={PlayIcon} size={15} fill="currentColor" /> : index + 1}</span><button type="button" onClick={onPlay} className="flex min-w-0 items-center gap-3 text-left"><span className="relative h-11 w-11 shrink-0 overflow-hidden"><Image src={track.cover} alt={`Pochette de ${track.title}`} fill sizes="44px" className="object-cover" /><span className="absolute inset-0 grid place-items-center bg-black/45 opacity-0 transition group-hover:opacity-100"><HugeiconsIcon icon={PlayIcon} size={18} fill="currentColor" /></span></span><span className="min-w-0"><span className={`block truncate text-sm font-bold ${active ? "text-[#72eee7]" : "text-white"}`}>{track.title}</span><span className="mt-0.5 block truncate text-xs text-[#91a0bd]">{track.artist}</span></span></button><button type="button" onClick={onArtist} className="hidden truncate text-left text-xs font-medium text-[#9caac4] transition hover:text-[#72eee7] sm:block">{track.album}</button><span className="text-xs font-medium text-[#8492ad]">{duration}</span><div className="relative flex justify-end"><button type="button" onClick={onMenu} aria-label={`Actions pour ${track.title}`} className="grid h-8 w-8 place-items-center text-[#94a2bd] opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100 focus:opacity-100"><HugeiconsIcon icon={MoreHorizontalIcon} size={19} strokeWidth={2.3} /></button>{menuOpen ? <div className="absolute right-0 top-9 z-20 w-48 border border-white/12 bg-[#151d2d] py-1.5 shadow-2xl"><button type="button" onClick={onQueue} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-bold text-[#d8e0f0] hover:bg-white/[.07]"><HugeiconsIcon icon={Queue01Icon} size={17} />Ajouter à la file</button><button type="button" onClick={onToggleLike} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-bold text-rose-200 hover:bg-rose-400/10"><HugeiconsIcon icon={FavouriteIcon} size={17} fill="currentColor" />Retirer des favoris</button></div> : null}</div></div>;
+}
+
+function EmptyFavorites({ onDiscover }) {
+  return <div className="border border-dashed border-white/15 bg-[#0a1221] px-6 py-20 text-center"><div className="mx-auto grid h-16 w-16 place-items-center bg-[#72eee7]/10 text-[#72eee7]"><HugeiconsIcon icon={FavouriteIcon} size={32} strokeWidth={1.8} /></div><h2 className="mt-5 text-xl font-extrabold text-white">Vos favoris vous attendent</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#91a0bd]">Ajoutez un morceau depuis une découverte, un album ou le lecteur pour construire votre collection personnelle.</p><button type="button" onClick={onDiscover} className="mt-6 inline-flex items-center gap-2 bg-[#72eee7] px-5 py-3 text-sm font-extrabold text-[#051326] transition hover:scale-[1.03] hover:bg-white"><HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2.5} />Découvrir des morceaux</button></div>;
 }
