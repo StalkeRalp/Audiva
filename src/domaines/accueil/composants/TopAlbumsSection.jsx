@@ -70,7 +70,7 @@ export default function TopAlbumsSection({ albums }) {
             <AlbumCard
               album={album}
               onClick={() => {
-                router.push(`/bibliotheque/albums?album=${album.id}`);
+                router.push(`/albums/${album.id}`);
               }}
             />
           </div>

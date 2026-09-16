@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon, ArrowRight01Icon, PlayIcon, PlusSignIcon, Share01Icon } from "@hugeicons/core-free-icons";
+import { Album01Icon, ArrowLeft01Icon, ArrowRight01Icon, PlayIcon, PlusSignIcon, Search01Icon, Share01Icon } from "@hugeicons/core-free-icons";
 import CreatePlaylistButton from "@/domaines/playlists/composants/CreatePlaylistButton";
 import ShareContentModal from "@/composants/ui/ShareContentModal";
 
@@ -50,6 +51,7 @@ export function HeroAccueil({ slides, onAction }) {
         <p className="mt-3 text-base font-bold tracking-[-.015em] text-[#d9e4ff] sm:text-lg">{activeSlide.artist}</p>
         <p className="mt-3 max-w-lg text-sm leading-6 text-[#bdc9e6] sm:text-base">{activeSlide.description}</p>
         {activeSlide.action === "community" ? <div className="mt-7 flex flex-wrap gap-3"><CreatePlaylistButton className="rounded-full px-6 py-3.5" /><button type="button" onClick={() => setShareOpen(true)} className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#07192f]/65 px-6 py-3.5 text-sm font-extrabold text-white backdrop-blur transition hover:scale-[1.03] hover:border-[#76eee9]/70 hover:bg-white/15"><HugeiconsIcon icon={Share01Icon} size={18} strokeWidth={2.4} />Partager ma playlist</button></div> : <div className="mt-7 flex flex-wrap gap-3"><button type="button" onClick={() => onAction(activeSlide)} className="inline-flex items-center gap-2 rounded-full bg-[#76eee9] px-6 py-3.5 text-sm font-extrabold text-[#051326] shadow-[0_8px_30px_rgba(76,237,231,.2)] transition hover:scale-[1.03] hover:bg-white"><HugeiconsIcon icon={PlayIcon} size={18} fill="currentColor" />{activeSlide.actionLabel}</button><button type="button" onClick={() => onAction({ ...activeSlide, action: "library" })} className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/20"><HugeiconsIcon icon={PlusSignIcon} size={18} />Ma bibliothèque</button></div>}
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-bold"><Link href="/albums" className="inline-flex items-center gap-2 text-[#bffffa] transition hover:text-white"><HugeiconsIcon icon={Album01Icon} size={17} />Explorer les albums</Link><Link href="/recherche?type=Artistes" className="inline-flex items-center gap-2 text-[#d8e4ff] transition hover:text-[#72eee7]"><HugeiconsIcon icon={Search01Icon} size={17} />Rechercher un artiste</Link></div>
       </div>
     </div>
     {shareMessage ? <p role="status" className="absolute bottom-24 left-5 z-30 border border-[#76eee9]/30 bg-[#091b32]/90 px-4 py-3 text-sm font-bold text-[#c8fffb] shadow-2xl backdrop-blur sm:left-10 lg:left-14">{shareMessage}</p> : null}

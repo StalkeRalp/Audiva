@@ -19,7 +19,7 @@ export function NavigationPrincipale() {
   return (
     <aside className="sticky top-[72px] hidden h-[calc(100dvh-72px)] w-64 shrink-0 overflow-y-auto border-r border-[#27365f]/45 bg-[#080d1c] px-3 py-5 lg:block">
       <Link href="/accueil" className="mb-7 flex items-center gap-3 rounded-xl px-2 py-1 transition hover:bg-white/5">
-        <Image src="/logoAudiva1.png" alt="Audiva" width={500} height={500} priority className="h-20 w-20 object-contain" />
+        <Image src="/logoAudiva3.png" alt="Audiva" width={500} height={500} priority className="h-20 w-20 object-contain" />
         <div><p className="text-2xl font-bold tracking-tight text-white">Audi<span className="text-[#6578ff]">va</span></p><p className="mt-0.5 text-[10px] font-medium uppercase tracking-[.18em] text-[#7180aa]">Ta musique</p></div>
       </Link>
       <nav className="space-y-5">

@@ -6,11 +6,14 @@ import { NavigationPrincipale } from "@/composants/layout/NavigationPrincipale";
 import { useBibliothequeStore } from "@/domaines/bibliotheque/stores/bibliothequeStore";
 import { useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
 import { loadLocalTracks } from "@/utilitaires/bibliothequeLocaleStorage";
+import { loadPlaylistsSnapshot } from "@/utilitaires/playlistsStorage";
+import { usePlaylistsStore } from "@/domaines/playlists/stores/playlistsStore";
 
 export function ApplicationShell({ children }) {
   const pathname = usePathname();
   const setTracks = useBibliothequeStore((state) => state.setTracks);
   const restoreLocalTracks = useLecteurStore((state) => state.restoreLocalTracks);
+  const restorePlaylists = usePlaylistsStore((state) => state.restorePlaylists);
   const isPublicRoute = pathname === "/" || pathname.startsWith("/authentification");
 
   useEffect(() => {
@@ -26,6 +29,10 @@ export function ApplicationShell({ children }) {
     }, 0);
     return () => { active = false; window.clearTimeout(timer); };
   }, [restoreLocalTracks, setTracks]);
+
+  useEffect(() => {
+    loadPlaylistsSnapshot().then((saved) => { if (saved) restorePlaylists(saved); }).catch(() => {});
+  }, [restorePlaylists]);
 
   if (isPublicRoute) return children;
 

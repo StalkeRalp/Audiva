@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { savePlaylistsSnapshot } from "@/utilitaires/playlistsStorage";
 
 const makeId = () => `playlist-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const fallbackCover = "/hero-playlist.jpg";
@@ -9,6 +10,8 @@ const compactPlaylists = (playlists) => playlists.map((playlist) => ({
   cover: safeCover(playlist.cover),
   tracks: (playlist.tracks || []).map((track) => ({ ...track, cover: safeCover(track.cover) })),
 }));
+const snapshot = (state) => ({ playlists: compactPlaylists(state.playlists), favoritePlaylists: compactPlaylists(state.favoritePlaylists) });
+const saveBackup = (state) => { savePlaylistsSnapshot(snapshot(state)).catch(() => {}); };
 
 // Les couvertures chargées depuis un fichier peuvent dépasser le quota de localStorage.
 // Cette couche persiste une version compacte et ne laisse jamais une création échouer.
@@ -34,7 +37,7 @@ const playlistStorage = {
 
 export const usePlaylistsStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       playlists: [],
       favoritePlaylists: [],
       createPlaylist: ({ title, cover = "", description = "", visibility = "publique", owner = "Vous" }) => {
@@ -50,25 +53,46 @@ export const usePlaylistsStore = create(
           updatedAt: new Date().toISOString(),
         };
         set((state) => ({ playlists: [playlist, ...state.playlists] }));
+        saveBackup(get());
         return playlist;
       },
-      addTrack: (playlistId, track) => set((state) => ({
-        playlists: state.playlists.map((playlist) => playlist.id === playlistId
+      addTrack: (playlistId, track) => {
+        set((state) => {
+        const playlists = state.playlists.map((playlist) => playlist.id === playlistId
           ? { ...playlist, tracks: playlist.tracks.some((entry) => entry.id === track.id) ? playlist.tracks : [...playlist.tracks, track], updatedAt: new Date().toISOString() }
-          : playlist),
-      })),
-      updatePlaylist: (playlistId, updates) => set((state) => ({
-        playlists: state.playlists.map((playlist) => playlist.id === playlistId
+          : playlist);
+        const updated = playlists.find((playlist) => playlist.id === playlistId);
+        return { playlists, favoritePlaylists: state.favoritePlaylists.map((playlist) => playlist.id === playlistId ? { ...playlist, ...updated } : playlist) };
+        });
+        saveBackup(get());
+      },
+      updatePlaylist: (playlistId, updates) => {
+        set((state) => {
+        const playlists = state.playlists.map((playlist) => playlist.id === playlistId
           ? { ...playlist, ...updates, updatedAt: new Date().toISOString() }
-          : playlist),
-      })),
-      togglePlaylistFavorite: (playlist) => set((state) => ({
-        favoritePlaylists: state.favoritePlaylists.some((item) => item.id === playlist.id)
+          : playlist);
+        const updated = playlists.find((playlist) => playlist.id === playlistId);
+        return { playlists, favoritePlaylists: state.favoritePlaylists.map((playlist) => playlist.id === playlistId ? { ...playlist, ...updated } : playlist) };
+        });
+        saveBackup(get());
+      },
+      togglePlaylistFavorite: (playlist) => {
+        set((state) => ({
+          favoritePlaylists: state.favoritePlaylists.some((item) => item.id === playlist.id)
           ? state.favoritePlaylists.filter((item) => item.id !== playlist.id)
           : [{ ...playlist, tracks: playlist.tracks || [] }, ...state.favoritePlaylists],
+        }));
+        saveBackup(get());
+      },
+      setPlaylists: (playlists) => { set({ playlists }); saveBackup(get()); },
+      restorePlaylists: (saved) => set((state) => ({
+        playlists: Array.isArray(saved.playlists) ? saved.playlists : state.playlists,
+        favoritePlaylists: Array.isArray(saved.favoritePlaylists) ? saved.favoritePlaylists : state.favoritePlaylists,
       })),
-      setPlaylists: (playlists) => set({ playlists }),
-      removePlaylist: (playlistId) => set((state) => ({ playlists: state.playlists.filter((playlist) => playlist.id !== playlistId) })),
+      removePlaylist: (playlistId) => {
+        set((state) => ({ playlists: state.playlists.filter((playlist) => playlist.id !== playlistId), favoritePlaylists: state.favoritePlaylists.filter((playlist) => playlist.id !== playlistId) }));
+        saveBackup(get());
+      },
     }),
     {
       name: "audiva-playlists",

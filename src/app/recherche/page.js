@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Album01Icon, ArrowRight01Icon, Cancel01Icon, CompassIcon, FavouriteIcon, LibraryIcon, MusicNote01Icon, PlayIcon, Queue01Icon, Search01Icon, UserIcon } from "@hugeicons/core-free-icons";
@@ -17,6 +17,7 @@ const categories = [
   { name: "Découvertes Jamendo", query: "Lila", image: "/hero-decouverte.jpg", color: "from-[#0f8c78]/70 to-[#061827]" },
 ];
 const filters = ["Tout", "Titres", "Artistes", "Albums", "Playlists"];
+const RECENT_SEARCHES_KEY = "audiva-recent-searches";
 
 export default function RecherchePage() {
   return <Suspense fallback={<SearchFallback />}><RechercheRoute /></Suspense>;
@@ -37,6 +38,30 @@ function RechercheContent({ initialQuery }) {
   const { currentTrack, isPlaying, setCurrentTrack, play, pause, toggleLike, likedTrackIds, addToQueue } = useLecteurStore();
   const localTracks = useBibliothequeStore((state) => state.tracks);
   const normalizedQuery = query.trim().toLocaleLowerCase();
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      let stored = ["Maya K.", "Afro Future", "Lila Sun"];
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(RECENT_SEARCHES_KEY) || "[]");
+        if (Array.isArray(saved) && saved.length) stored = saved.filter((item) => typeof item === "string").slice(0, 8);
+      } catch { /* La liste par défaut reste disponible. */ }
+      const initial = initialQuery.trim();
+      const next = initial ? [initial, ...stored.filter((item) => item.toLocaleLowerCase() !== initial.toLocaleLowerCase())].slice(0, 8) : stored;
+      setRecent(next);
+      if (initial) { try { window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next)); } catch { /* stockage indisponible */ } }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [initialQuery]);
+  const saveRecent = (items) => {
+    const next = items.slice(0, 8);
+    setRecent(next);
+    try { window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next)); } catch { /* stockage indisponible */ }
+  };
+  const addRecentSearch = (value) => {
+    const cleanValue = value.trim();
+    if (!cleanValue) return;
+    saveRecent([cleanValue, ...recent.filter((item) => item.toLocaleLowerCase() !== cleanValue.toLocaleLowerCase())]);
+  };
   const catalog = useMemo(() => [
     ...demoQueue.map((item) => ({ ...item, type: "Titres", image: item.cover })),
     ...localTracks.map((item) => ({ ...item, type: "Titres", image: item.cover, query: `${item.title} ${item.artist} ${item.album || ""} fichier local importé` })),
@@ -50,7 +75,7 @@ function RechercheContent({ initialQuery }) {
   }), [catalog, filter, normalizedQuery]);
   const searching = normalizedQuery.length > 0;
   const notify = (message) => { setNotice(message); window.setTimeout(() => setNotice(""), 2200); };
-  const submit = (event) => { event.preventDefault(); if (!normalizedQuery) return; setRecent((items) => [query.trim(), ...items.filter((item) => item.toLowerCase() !== normalizedQuery)].slice(0, 4)); router.replace(`/recherche?q=${encodeURIComponent(query.trim())}`); };
+  const submit = (event) => { event.preventDefault(); if (!normalizedQuery) return; addRecentSearch(query); router.replace(`/recherche?q=${encodeURIComponent(query.trim())}`); };
   const playTrack = (track) => { if (currentTrack?.id === track.id && isPlaying) pause(); else { setCurrentTrack(track); play(); } };
 
   return <main className="min-h-screen bg-[#060b18] pb-32 text-[#eff4ff] lg:flex">
@@ -62,7 +87,7 @@ function RechercheContent({ initialQuery }) {
       </section>
 
       <section className="mx-auto w-full max-w-[1500px] px-4 py-8 sm:px-7 xl:px-9">
-        {searching ? <SearchResults results={results} filter={filter} setFilter={setFilter} onPlay={playTrack} onLike={(track) => { toggleLike(track); notify(likedTrackIds.includes(track.id) ? "Retiré des favoris" : "Ajouté aux favoris"); }} onQueue={(track) => { addToQueue(track); notify("Ajouté à la file d’attente"); }} onNavigate={(item) => router.push(`/recherche?q=${encodeURIComponent(item.title)}`)} currentTrack={currentTrack} isPlaying={isPlaying} /> : <BrowseView recent={recent} setQuery={setQuery} setRecent={setRecent} onExplore={(category) => { setQuery(category); setFilter("Tout"); }} />}
+        {searching ? <SearchResults results={results} filter={filter} setFilter={setFilter} onPlay={playTrack} onLike={(track) => { toggleLike(track); notify(likedTrackIds.includes(track.id) ? "Retiré des favoris" : "Ajouté aux favoris"); }} onQueue={(track) => { addToQueue(track); notify("Ajouté à la file d’attente"); }} onNavigate={(item) => { addRecentSearch(item.title); router.push(`/recherche?q=${encodeURIComponent(item.title)}`); }} currentTrack={currentTrack} isPlaying={isPlaying} /> : <BrowseView recent={recent} setQuery={setQuery} setRecent={saveRecent} onExplore={(category) => { addRecentSearch(category); setQuery(category); setFilter("Tout"); }} />}
       </section>
     </div>
     {notice ? <p role="status" className="fixed bottom-24 right-5 z-[70] border border-[#72eee7]/30 bg-[#112139] px-4 py-3 text-sm font-bold text-[#c8fffb] shadow-2xl">{notice}</p> : null}

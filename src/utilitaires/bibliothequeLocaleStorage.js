@@ -19,7 +19,7 @@ export async function loadLocalTracks() {
     const request = transaction.objectStore(STORE_NAME).getAll();
     request.onsuccess = () => {
       const validEntries = request.result.filter((entry) => entry.file instanceof Blob);
-      resolve(validEntries.map(({ file, ...track }) => ({ ...track, streamUrl: URL.createObjectURL(file) })));
+      resolve(validEntries.map(({ file, coverBlob, ...track }) => ({ ...track, streamUrl: URL.createObjectURL(file), cover: coverBlob instanceof Blob ? URL.createObjectURL(coverBlob) : track.cover })));
     };
     request.onerror = () => reject(request.error);
     transaction.oncomplete = () => database.close();

@@ -57,7 +57,7 @@ export default function InscriptionPage() {
     <main className="h-dvh overflow-hidden bg-black text-white lg:grid lg:grid-cols-[38.5%_61.5%]">
       <section className="flex h-dvh items-start justify-center overflow-hidden bg-black px-7 pt-3 sm:px-12 sm:pt-4 lg:px-14 xl:px-[62px]">
         <div className="w-full max-w-[420px]">
-          <Image src="/logoAudiva2.png" alt="Audiva" width={1254} height={1254} priority className="mx-auto mb-6 h-auto w-40 sm:mb-7 sm:w-48" />
+          <Image src="/logoAudiva4.png" alt="Audiva" width={1254} height={1254} priority className="mx-auto mb-6 h-auto w-40 sm:mb-7 sm:w-48" />
 
           <h1 className="font-serif text-4xl font-bold tracking-tight sm:text-5xl">Start your journey</h1>
 

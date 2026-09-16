@@ -15,7 +15,7 @@ export default function LandingPage() {
   return (
     <main className="landing-screen" aria-label="Chargement d'Audiva">
 
-      <Image src="/logoAudiva1.png" alt="Audiva" width={500} height={500} priority className="landing-logo" />
+      <Image src="/logoAudiva3.png" alt="Audiva" width={500} height={500} priority className="landing-logo" />
 
     </main>
   );

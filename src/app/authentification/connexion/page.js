@@ -46,7 +46,7 @@ export default function ConnexionPage() {
       <section className="flex h-dvh items-center justify-center overflow-hidden bg-black px-7 py-12 sm:px-12 lg:px-16 xl:px-20">
         <div className="w-full max-w-[420px]">
           <Image
-            src="/logoAudiva2.png"
+            src="/logoAudiva4.png"
             alt="Audiva"
             width={1254}
             height={1254}
