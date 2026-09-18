@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, MusicNote01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Delete02Icon, MusicNote01Icon } from "@hugeicons/core-free-icons";
 import { usePlaylistsStore } from "@/domaines/playlists/stores/playlistsStore";
 
 export default function PlaylistsPage() {
   const playlists = usePlaylistsStore((state) => state.playlists);
   const createPlaylist = usePlaylistsStore((state) => state.createPlaylist);
+  const removePlaylist = usePlaylistsStore((state) => state.removePlaylist);
   const [creationOpen, setCreationOpen] = useState(false);
   const [title, setTitle] = useState("");
 
@@ -18,6 +19,10 @@ export default function PlaylistsPage() {
     createPlaylist({ title });
     setTitle("");
     setCreationOpen(false);
+  };
+  const remove = (playlist) => {
+    if (!window.confirm(`Supprimer définitivement la playlist « ${playlist.title} » ?`)) return;
+    removePlaylist(playlist.id);
   };
 
   return (
@@ -49,14 +54,14 @@ export default function PlaylistsPage() {
             </div>
           ) : (
             <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-              {playlists.map((playlist) => <Link href={`/playlists/${playlist.id}`} key={playlist.id} className="group border border-white/8 bg-[#0a1221] p-3 transition hover:-translate-y-1 hover:border-[#72eee7]/40 hover:bg-[#101b31]">
+              {playlists.map((playlist) => <article key={playlist.id} className="group relative border border-white/8 bg-[#0a1221] p-3 transition hover:-translate-y-1 hover:border-[#72eee7]/40 hover:bg-[#101b31]"><Link href={`/playlists/${playlist.id}`} className="block">
                 <div className="relative aspect-square overflow-hidden bg-[linear-gradient(135deg,#233b77,#10182f)] bg-cover bg-center" style={playlist.cover ? { backgroundImage: `url(${playlist.cover})` } : undefined}>
                   {!playlist.cover && <HugeiconsIcon icon={MusicNote01Icon} size={38} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[#72eee7]/75" />}
                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#050914]/80 to-transparent" />
                 </div>
                 <p className="mt-3 truncate font-extrabold text-white">{playlist.title}</p>
                 <p className="mt-1 text-xs text-[#91a0bd]">{playlist.tracks.length} morceau{playlist.tracks.length > 1 ? "x" : ""} · Créée par vous</p>
-              </Link>)}
+              </Link><button type="button" onClick={() => remove(playlist)} aria-label={`Supprimer ${playlist.title}`} className="absolute right-5 top-5 grid h-9 w-9 place-items-center bg-[#07101e]/85 text-rose-200 opacity-0 shadow-lg transition hover:bg-rose-400/20 group-hover:opacity-100 focus:opacity-100"><HugeiconsIcon icon={Delete02Icon} size={18} /></button></article>)}
             </div>
           )}
         </section>

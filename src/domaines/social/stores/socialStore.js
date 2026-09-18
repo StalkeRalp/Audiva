@@ -36,5 +36,6 @@ export const useSocialStore = create(persist((set, get) => ({
   markConversationRead: (id) => set((state) => ({ conversations: state.conversations.map((conversation) => conversation.id === id ? { ...conversation, unread: 0, messages: conversation.messages.map((message) => ({ ...message, read: true })) } : conversation) })),
   markNotificationRead: (id) => set((state) => ({ notifications: state.notifications.map((item) => item.id === id ? { ...item, read: true } : item) })),
   removeNotification: (id) => set((state) => ({ notifications: state.notifications.filter((item) => item.id !== id) })),
+  clearNotifications: () => set({ notifications: [] }),
   markAllNotificationsRead: () => set((state) => ({ notifications: state.notifications.map((item) => ({ ...item, read: true })) })),
 }), { name: "audiva-social" }));

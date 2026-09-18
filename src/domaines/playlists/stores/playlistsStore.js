@@ -4,13 +4,15 @@ import { savePlaylistsSnapshot } from "@/utilitaires/playlistsStorage";
 
 const makeId = () => `playlist-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const fallbackCover = "/hero-playlist.jpg";
-const safeCover = (cover) => (typeof cover === "string" && (cover.startsWith("data:") || cover.startsWith("blob:")) ? fallbackCover : cover || fallbackCover);
+// Object URLs die after a refresh; data URLs are retained in IndexedDB.
+const safeCover = (cover, keepData = false) => (typeof cover === "string" && (cover.startsWith("blob:") || (!keepData && cover.startsWith("data:"))) ? fallbackCover : cover || fallbackCover);
 const compactPlaylists = (playlists) => playlists.map((playlist) => ({
   ...playlist,
   cover: safeCover(playlist.cover),
   tracks: (playlist.tracks || []).map((track) => ({ ...track, cover: safeCover(track.cover) })),
 }));
-const snapshot = (state) => ({ playlists: compactPlaylists(state.playlists), favoritePlaylists: compactPlaylists(state.favoritePlaylists) });
+const persistentPlaylists = (playlists) => playlists.map((playlist) => ({ ...playlist, cover: safeCover(playlist.cover, true), tracks: (playlist.tracks || []).map((track) => ({ ...track, cover: safeCover(track.cover) })) }));
+const snapshot = (state) => ({ playlists: persistentPlaylists(state.playlists), favoritePlaylists: persistentPlaylists(state.favoritePlaylists) });
 const saveBackup = (state) => { savePlaylistsSnapshot(snapshot(state)).catch(() => {}); };
 
 // Les couvertures chargées depuis un fichier peuvent dépasser le quota de localStorage.
@@ -63,6 +65,16 @@ export const usePlaylistsStore = create(
           : playlist);
         const updated = playlists.find((playlist) => playlist.id === playlistId);
         return { playlists, favoritePlaylists: state.favoritePlaylists.map((playlist) => playlist.id === playlistId ? { ...playlist, ...updated } : playlist) };
+        });
+        saveBackup(get());
+      },
+      removeTrackFromPlaylists: (trackId) => {
+        set((state) => {
+          const withoutTrack = (playlist) => ({ ...playlist, tracks: (playlist.tracks || []).filter((track) => track.id !== trackId), updatedAt: new Date().toISOString() });
+          return {
+            playlists: state.playlists.map(withoutTrack),
+            favoritePlaylists: state.favoritePlaylists.map(withoutTrack),
+          };
         });
         saveBackup(get());
       },

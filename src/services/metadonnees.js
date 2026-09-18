@@ -60,7 +60,10 @@ export async function extractAudioMetadata(file) {
   const fallbackTitle = fileNameWithoutExtension(file);
   const base = { file, fileInfo: { name: file.name, size: file.size, type: file.type || "audio/*", lastModified: file.lastModified }, title: fallbackTitle, artist: "Artiste inconnu", album: "Album inconnu", genre: "Genre inconnu", year: undefined, duration: 0, cover: PLACEHOLDER_COVER, coverBlob: null, pictures: [], tags: {}, technical: {}, rawTags: {}, error: null };
   try {
-    const { parseBlob } = await import("music-metadata-browser");
+    // `music-metadata-browser` is obsolete and depends on private paths from
+    // old music-metadata releases. The current package exposes `parseBlob`
+    // directly for browser builds.
+    const { parseBlob } = await import("music-metadata");
     const metadata = await parseBlob(file, { duration: true, skipCovers: false, includeChapters: true });
     const tags = normalizeTags(metadata.common);
     const pictureEntries = (metadata.common.picture || []).map((picture, index) => {

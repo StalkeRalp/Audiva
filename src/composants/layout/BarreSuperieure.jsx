@@ -6,11 +6,13 @@ import { useRouter, usePathname } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, Home01Icon, Notification03Icon, Search01Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
 import { loadProfileSettings } from "@/utilitaires/profilStorage";
+import { useSocialStore } from "@/domaines/social/stores/socialStore";
 
 export function BarreSuperieure() {
   const router = useRouter();
   const pathname = usePathname();
   const [profile, setProfile] = useState({ name: "Enoch", avatar: "" });
+  const unreadNotifications = useSocialStore((state) => state.notifications.filter((item) => !item.read).length);
 
   useEffect(() => {
     const readProfile = async () => {
@@ -46,7 +48,7 @@ export function BarreSuperieure() {
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
-        <Link href="/notifications" aria-label="Notifications" className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#b9c3dc] transition hover:bg-white/7 hover:text-white"><span className="absolute right-0.5 top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-[#03050a] bg-[#ef4c86] px-1 text-[9px] font-bold text-white">3</span><HugeiconsIcon icon={Notification03Icon} size={20} /></Link>
+        <Link href="/notifications" aria-label={unreadNotifications ? `${unreadNotifications} notification${unreadNotifications > 1 ? "s" : ""} non lue${unreadNotifications > 1 ? "s" : ""}` : "Notifications"} className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#b9c3dc] transition hover:bg-white/7 hover:text-white">{unreadNotifications ? <span className="absolute right-0.5 top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-[#03050a] bg-[#ef4c86] px-1 text-[9px] font-bold text-white">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span> : null}<HugeiconsIcon icon={Notification03Icon} size={20} /></Link>
         <Link href="/amis" aria-label="Amis" className="hidden h-10 w-10 items-center justify-center rounded-full text-[#b9c3dc] transition hover:bg-white/7 hover:text-white lg:flex"><HugeiconsIcon icon={UserGroupIcon} size={20} /></Link>
         <Link href="/parametres" aria-label="Ouvrir les paramètres du profil" className="flex items-center gap-2 rounded-full py-1 pl-1 pr-1 transition hover:bg-white/[.06]">
           <span
