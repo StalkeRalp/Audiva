@@ -1,0 +1,65 @@
+.artist-biography{width:100%;margin:18px 0;padding:22px clamp(16px,3vw,32px);border:1px solid #ffffff10;border-radius:18px;background:linear-gradient(130deg,#14251d,#11181a);color:#ecf4ef}
+.artist-biography>header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.artist-biography>header>span,.artist-profile-kicker,.artist-profile-section>header>div>span,.artist-profile-genres-section>span{color:#8af3d1;font-size:9px;font-weight:700;letter-spacing:.14em}
+.artist-biography>header>small{color:#82988c;font-size:9px}
+.artist-biography>p{max-width:1050px;margin:0;color:#b7c9bf;font-size:13px;line-height:1.85}
+.artist-biography>a{display:inline-block;margin-top:12px;color:#8af3d1;font-size:10px;text-decoration:none}
+.artist-biography>a:hover{text-decoration:underline}
+.artist-profile{width:100%;min-height:70vh;padding:24px clamp(16px,3vw,48px) 45px;background:#080d0d;color:#eef5f0}
+.artist-profile-back{display:inline-flex;align-items:center;gap:7px;margin-bottom:17px;color:#9bb4a6;font-size:11px;text-decoration:none}
+.artist-profile-back:hover{color:#8af3d1}
+.artist-profile-hero{display:flex;align-items:center;gap:clamp(22px,4vw,48px);padding:clamp(22px,4vw,45px);border:1px solid #8af3d118;border-radius:24px;background:radial-gradient(ellipse at 100% 0,#24634555,transparent 57%),linear-gradient(135deg,#14251d,#101817 72%)}
+.artist-profile-portrait{width:clamp(150px,22vw,250px);height:clamp(150px,22vw,250px);flex:0 0 auto;object-fit:cover;border:1px solid #ffffff16;border-radius:20px;box-shadow:0 22px 60px #0005}
+.artist-profile-hero h1{margin:10px 0 12px;font-size:clamp(36px,6vw,72px);font-weight:650;letter-spacing:-.06em;line-height:1.02}
+.artist-profile-meta{display:flex;flex-wrap:wrap;gap:14px;color:#a8bdb1;font-size:10px}
+.artist-profile-meta>span{display:inline-flex;align-items:center;gap:6px}
+.artist-profile-genres{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}
+.artist-profile-genres>span,.artist-profile-genres-section small{padding:7px 10px;border:1px solid #8af3d125;border-radius:30px;background:#8af3d109;color:#c4dfd0;font-size:9px}
+.artist-profile-spotify{display:inline-flex;margin-top:19px;padding:10px 14px;border-radius:25px;background:#8af3d1;color:#0c2419;font-size:10px;font-weight:700;text-decoration:none}
+.artist-profile-section{margin-top:17px;padding:clamp(18px,2.4vw,28px);border:1px solid #ffffff0d;border-radius:19px;background:#111919}
+.artist-profile-section>header{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:13px}
+.artist-profile-section>header h2{margin:5px 0 0;font-size:clamp(19px,2.4vw,27px);font-weight:600;letter-spacing:-.04em}
+.artist-profile-section>header>svg{color:#8db5a0}
+.artist-profile-section>header>button{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border:0;border-radius:25px;background:#8af3d1;color:#0c2418;font-size:10px;font-weight:700}
+.artist-profile-section>header>button:disabled{opacity:.45}
+.artist-profile-tracks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 25px}
+.artist-profile-track{display:flex;align-items:center;gap:12px;min-width:0;padding:11px 2px;border-bottom:1px solid #ffffff09;background:transparent;color:#c7d6cc;text-align:left}
+.artist-profile-track:hover{color:#8af3d1}
+.artist-profile-index{width:20px;color:#637e6d;font-size:9px}
+.artist-profile-track>img{width:46px;height:46px;flex:0 0 46px;border-radius:9px;object-fit:cover}
+.artist-profile-track-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:5px}
+.artist-profile-track-copy strong,.artist-profile-track-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.artist-profile-track-copy strong{font-size:11px;font-weight:550}
+.artist-profile-track-copy small{color:#81958a;font-size:9px}
+.artist-profile-track-duration{color:#8b9d92;font-size:9px}
+.artist-profile-albums{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:13px}
+.artist-profile-album{display:flex;min-width:0;flex-direction:column;gap:7px;padding:10px;border:1px solid #ffffff09;border-radius:13px;background:#ffffff03;color:inherit;text-decoration:none;transition:transform .2s,border-color .2s}
+.artist-profile-album:hover{transform:translateY(-2px);border-color:#8af3d144}
+.artist-profile-album>img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px}
+.artist-profile-album strong{overflow:hidden;font-size:10px;font-weight:550;text-overflow:ellipsis;white-space:nowrap}
+.artist-profile-album small{color:#82958a;font-size:9px}
+.artist-profile-empty,.artist-profile-notice{padding:12px 0;color:#91a69a;font-size:11px}
+.artist-profile-attribution{padding:18px 2px;color:#74867b;font-size:9px}
+.artist-profile-loading,.artist-profile-error{padding:60px 20px;border:1px solid #ffffff0d;border-radius:18px;background:#111919;text-align:center}
+.artist-profile-error p{color:#a4b6aa;font-size:12px}
+.artist-profile-error button,.artist-profile-error>a{display:inline-block;margin:10px 5px;padding:10px 14px;border:1px solid #8af3d126;border-radius:24px;color:#bfead2;font-size:10px;text-decoration:none}
+.artist-profile-genres-section{margin:14px 0;padding:18px clamp(16px,3vw,28px);border:1px solid #ffffff0d;border-radius:15px;background:#111919}
+.artist-profile-genres-section>div{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.taste-artist[href]{color:inherit;text-decoration:none;border-radius:9px;transition:background .18s}
+.taste-artist[href]:hover{background:#ffffff07}
+.taste-connected-grid .taste-artist[href]{padding:7px 3px}
+@media(max-width:680px){.artist-profile{padding:12px 12px 35px}.artist-profile-hero{align-items:flex-start;gap:15px;padding:19px 16px;border-radius:19px}.artist-profile-portrait{width:112px;height:112px;flex-basis:112px;border-radius:13px}.artist-profile-hero h1{font-size:clamp(28px,8vw,42px);overflow-wrap:anywhere}.artist-profile-meta{gap:7px;font-size:9px}.artist-profile-genres{gap:5px;margin-top:10px}.artist-profile-genres>span{padding:6px 8px;font-size:8px}.artist-profile-spotify{margin-top:12px;padding:9px 11px;font-size:9px}.artist-profile-tracks{grid-template-columns:1fr}.artist-profile-albums{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.artist-profile-album{padding:7px}.artist-profile-section{padding:16px 13px;border-radius:16px}}
+
+.artist-profile{--profile-accent:#76eee9;color:#eff4ff}
+.artist-profile-hero,.artist-profile-section,.artist-profile-error,.artist-profile-loading,.artist-biography{border-color:#ffffff14;background:linear-gradient(145deg,#111b30,#0a1221)}
+.artist-profile-kicker,.artist-profile-section>header>div>span,.artist-biography header>span{color:#a6f6ef;font-size:12px}
+.artist-profile-hero h1{font-size:clamp(38px,6vw,68px);color:#f4f7ff}
+.artist-profile-meta,.artist-profile-genres>span,.artist-profile-local-count{font-size:14px;color:#b3c1dc}
+.artist-profile-genres>span{border-color:#76eee92b;background:#76eee90b}
+.artist-profile-spotify,.artist-profile-section>header>button,.artist-profile-error button{border-color:#76eee933;background:#76eee9;color:#081722;font-size:13px}
+.artist-profile-section>header h2{font-size:clamp(23px,3vw,32px)}
+.artist-profile-track-copy strong,.artist-profile-album strong{font-size:14px;color:#eef4ff}
+.artist-profile-track-copy small,.artist-profile-album small,.artist-profile-empty,.artist-profile-notice,.artist-profile-attribution,.artist-biography p,.artist-biography a{font-size:13px;color:#a9b7d0;line-height:1.75}
+.artist-profile-album{border-color:#ffffff15;background:#ffffff05}
+.artist-profile-attribution{color:#8695b2}
+@media(max-width:680px){.artist-profile-hero h1{font-size:clamp(32px,9vw,46px)}.artist-profile-meta{font-size:12px}.artist-profile-track-copy strong,.artist-profile-album strong{font-size:13px}}

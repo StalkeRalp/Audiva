@@ -1,0 +1,11 @@
+"use client";
+
+import { PochetteImage } from "@/composants/ui/PochetteImage";
+import {useEffect,useRef,useState} from 'react';
+import Image from 'next/image';
+import {HugeiconsIcon} from '@hugeicons/react';
+import {Image01Icon,RepeatIcon} from '@hugeicons/core-free-icons';
+import {extractCoverColor,coverGradient} from '@/utilitaires/coverPalette';
+import {readPersistentCover} from '@/utilitaires/musicDisplay';
+import {usePlaylistsStore} from '../stores/playlistsStore';
+export default function PlaylistBanner({playlist,cover,children,onNotice}){const input=useRef(null),[palette,setPalette]=useState(null),[busy,setBusy]=useState(false);useEffect(()=>{let active=true;extractCoverColor(cover).then(rgb=>{if(active)setPalette({src:cover,rgb});});return()=>{active=false;};},[cover]);const banner=playlist?.bannerImage;const rgb=palette?.src===cover?palette.rgb:null;return <header className="collection-banner collection-banner--custom" style={{background:coverGradient(rgb||[45,79,77])}}>{banner?<><PochetteImage unoptimized src={banner} alt="" fill sizes="(min-width:1024px) calc(100vw - 256px),100vw" className="collection-banner-image"/><div className="collection-banner-shade"/></>:!rgb&&<><PochetteImage unoptimized src={cover} alt="" fill sizes="100vw" className="collection-banner-color-fallback"/><div className="collection-banner-shade"/></>}{children}{playlist&&<div className="collection-banner-settings"><input ref={input} type="file" accept="image/*" aria-label="Image de bannière" className="sr-only" disabled={busy} onChange={async e=>{const file=e.target.files?.[0];if(!file)return;setBusy(true);try{const image=await readPersistentCover(file);usePlaylistsStore.getState().updatePlaylist(playlist.id,{bannerImage:image});onNotice('Bannière enregistrée.');}catch(error){onNotice(error.message);}finally{setBusy(false);if(input.current)input.current.value='';}}}/><button disabled={busy} onClick={()=>input.current.click()}><HugeiconsIcon icon={Image01Icon} size={16}/>{busy?'Enregistrement…':'Changer la bannière'}</button>{banner&&<button onClick={()=>usePlaylistsStore.getState().updatePlaylist(playlist.id,{bannerImage:''})}><HugeiconsIcon icon={RepeatIcon} size={16}/>Couleur de la pochette</button>}</div>}</header>;}

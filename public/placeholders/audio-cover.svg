@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Pochette audio par défaut">
+  <rect width="512" height="512" fill="#142345"/>
+  <circle cx="256" cy="256" r="174" fill="#0b1428" stroke="#72eee7" stroke-opacity=".42" stroke-width="12"/>
+  <path fill="#72eee7" d="M310 132v168.2a57 57 0 1 1-26-48.2V180l-116 28v137.2a57 57 0 1 1-26-48.2V188z"/>
+</svg>
