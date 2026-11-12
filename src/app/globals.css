@@ -29,28 +29,34 @@ body {
   font-family: var(--font-geist-sans), "Avenir Next", "Segoe UI", sans-serif;
 }
 
-.landing-screen { position: relative; isolation: isolate; min-height: 100dvh; overflow: hidden; background: #080404; }
-.landing-decoration { position: absolute; z-index: 0; pointer-events: none; }
-.landing-decoration--top-left { top: 0; left: 0; width: 18.57vw; max-width: 198px; min-width: 142px; fill: #7616b7; }
-.landing-decoration--top-right { top: -300px; right: -351px; width: 600px; height: 600px; border-radius: 50%; background: #5e76f8; }
-.landing-decoration--bottom-left { bottom: -151px; left: -150px; width: 320px; height: 315px; border-radius: 50%; background: #5e76f8; }
-.landing-decoration--bottom-right { right: 0; bottom: 0; width: 18.67vw; max-width: 199px; min-width: 142px; fill: #7616b7; }
-.landing-logo { position: absolute; z-index: 1; top: 13.3vh; left: 50%; width: min(52.53vw, 560px); height: auto; max-width: none; transform: translateX(-50%); }
-.landing-loader { position: absolute; z-index: 1; top: 61.13vh; left: 50%; display: flex; align-items: center; gap: 14px; transform: translateX(-50%); }
-.landing-loader__dot { display: block; flex: none; border-radius: 50%; background: #fafafa; animation: landing-pulse 1.15s ease-in-out infinite alternate; }
-.landing-loader__dot--large { width: min(15.95vw, 170px); aspect-ratio: 1; }
-.landing-loader__dot--small { width: min(8.91vw, 95px); aspect-ratio: 1; animation-delay: 180ms; }
-.landing-loader__dot:last-child { animation-delay: 360ms; }
-@keyframes landing-pulse { to { transform: scale(.88); opacity: .72; } }
-@media (max-width: 640px) {
-  .landing-decoration--top-right { top: -90px; right: -190px; }
-  .landing-decoration--bottom-left { bottom: -190px; left: -190px; }
-  .landing-logo { top: 20vh; width: 440px; }
-  .landing-loader { top: 65vh; gap: 9px; }
-  .landing-loader__dot--large { width: 110px; }
-  .landing-loader__dot--small { width: 62px; }
-}
-@media (prefers-reduced-motion: reduce) { .landing-loader__dot { animation: none; } }
+.landing-screen { position: relative; display: grid; min-height: 100dvh; place-items: center; overflow: hidden; isolation: isolate; background: #060b18; color: #f3f6fc; }
+.landing-background-video { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.54) saturate(.72) hue-rotate(165deg); }
+.landing-mobile-image { display: none; }
+.landing-video-tint { position: absolute; z-index: -1; inset: 0; pointer-events: none; background: linear-gradient(112deg,#061126d9 0%,#09275c88 48%,#060b18d9 100%); }
+.landing-topline { position: absolute; top: max(28px,env(safe-area-inset-top)); left: max(28px,5vw); display: flex; align-items: center; gap: 9px; color: #9aa9bf; font-size: 11px; font-weight: 650; letter-spacing: .17em; }
+.landing-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #76eee9; }
+.landing-center { position: relative; display: flex; width: min(100% - 36px,500px); flex-direction: column; align-items: center; padding: 60px 0; text-align: center; animation: landing-appear .55s ease-out both; }
+.landing-logo { width: clamp(104px,15vw,146px); height: auto; margin-bottom: 14px; object-fit: contain; }
+.landing-eyebrow { color: #76eee9; font-family: var(--font-bungee), sans-serif; font-size: 13px; font-weight: 400; letter-spacing: .16em; }
+.landing-title { margin-top: 16px; font-family: var(--font-bungee), sans-serif; font-size: clamp(38px,6.3vw,66px); font-weight: 400; line-height: 1.12; letter-spacing: -.035em; }
+.landing-title span { color: #a8b8ff; }
+.landing-copy { margin-top: 16px; color: #9baac0; font-size: 16px; line-height: 1.6; }
+.landing-loading { display: flex; align-items: center; gap: 15px; margin-top: 33px; color: #9baac0; font-size: 13px; }
+.landing-equalizer-frame { display: grid; width: min(310px,calc(100vw - 52px)); height: 64px; place-items: center; border: 1px solid #76eee92c; border-radius: 12px; background: #0c1828; }
+.landing-equalizer { display: flex; width: calc(100% - 32px); height: 36px; align-items: center; justify-content: space-between; }
+.landing-equalizer i { width: 3px; height: var(--bar-height); border-radius: 3px; background: #76eee9; transform-origin: center; animation: landing-wave .75s ease-in-out infinite alternate; animation-delay: calc(var(--bar) * -75ms); }
+.landing-enter { display: inline-flex; align-items: center; gap: 12px; margin-top: 24px; padding: 12px 18px; border: 1px solid #ffffff20; border-radius: 8px; color: #dce5f3; font-size: 14px; font-weight: 650; transition: border-color .18s, background .18s; }
+.landing-enter:hover { border-color: #76eee966; background: #76eee90b; }
+.landing-enter svg { color: #76eee9; }
+.landing-footer { position: absolute; bottom: max(24px,env(safe-area-inset-bottom)); color: #58677d; font-size: 9px; font-weight: 650; letter-spacing: .18em; }
+@keyframes landing-appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes landing-wave { to { transform: scaleY(.35); opacity: .55; } }
+@media (max-width: 640px) { .landing-background-video { display: none; } .landing-mobile-image { position: absolute; z-index: -2; inset: 0; display: block; background: #060b18 url('/2.jpg') center 45% / cover no-repeat; } .landing-topline { top: max(20px,env(safe-area-inset-top)); left: 20px; font-size: 9px; } .landing-center { padding: 58px 0; } .landing-title { font-size: clamp(34px,9vw,46px); } .landing-copy { max-width: 310px; font-size: 15px; } .landing-loading { flex-direction: column; gap: 9px; font-size: 12px; } .landing-equalizer-frame { width: min(310px,calc(100vw - 40px)); } .landing-footer { bottom: max(18px,env(safe-area-inset-bottom)); } }
+@media (prefers-reduced-motion: reduce) { .landing-screen *, .landing-screen *::before, .landing-screen *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
+
+html[data-navigation-pending="true"]::before { position: fixed; z-index: 99999; top: 0; left: 0; width: 38%; height: 3px; content: ""; pointer-events: none; background: linear-gradient(90deg,transparent,#76eee9 35%,#b4bfff 75%,transparent); box-shadow: 0 0 12px #76eee988; animation: audiva-nav-progress 1.15s cubic-bezier(.45,.05,.55,.95) infinite; }
+html[data-navigation-pending="true"]::after { position: fixed; z-index: 99998; top: 3px; right: 0; left: 0; height: 1px; content: ""; pointer-events: none; background: linear-gradient(90deg,#76eee915,transparent 55%); }
+@keyframes audiva-nav-progress { from { transform: translateX(-105%); } to { transform: translateX(370%); } }
 
 .hero-accueil {
   position: relative;
@@ -70,7 +76,7 @@ body {
 .hero-accueil__slide {
   z-index: 0;
   opacity: 0;
-  transition: opacity 180ms ease;
+  transition: opacity 620ms cubic-bezier(.22, .82, .24, 1);
 }
 
 .hero-accueil__slide--active {
@@ -84,6 +90,9 @@ body {
   transform: translate3d(-8%, 0, 0) scale(1.05);
   transition: transform 760ms cubic-bezier(.22, .82, .24, 1);
 }
+
+.hero-accueil__intro-video { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.62) saturate(.72) hue-rotate(155deg); pointer-events: none; }
+.hero-accueil__intro-shade { position: absolute; z-index: 1; inset: 0; background: linear-gradient(110deg,#061126b8,#09275c55 52%,#060b18a8); pointer-events: none; }
 
 .hero-accueil__slide--active .hero-accueil__image {
   transform: translate3d(0, 0, 0) scale(1.08);
@@ -197,6 +206,7 @@ body { background: var(--background); color: var(--foreground); }
 button, a, input { -webkit-tap-highlight-color: transparent; }
 button:not(:disabled), [role="button"] { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--audiva-accent); outline-offset: 4px; }
+.audiva-topbar input:focus-visible { outline: none; box-shadow: none; }
 ::selection { background: rgb(134 116 255 / .4); color: white; }
 .audiva-app {
   background: radial-gradient(ellipse at 80% 0%, rgb(100 81 210 / .13), transparent 45%),
@@ -281,13 +291,14 @@ button:not(:disabled), [role="button"] { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .audiva-app *, .audiva-player * { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
-.audiva-auth { background: radial-gradient(ellipse at top left, rgb(134 116 255 / .22), transparent 55%), #080c18; }
-.audiva-auth > section:first-child { background: transparent; padding-top: 32px; padding-bottom: 40px; overflow: visible; }
-.audiva-auth form label > span:has(input) { border: 1px solid var(--audiva-glass-border); background: rgb(255 255 255 / .055); color: #c3cbea; box-shadow: inset 0 1px 0 rgb(255 255 255 / .06); backdrop-filter: blur(20px); }
+.audiva-auth { background: #060b18; }
+.audiva-auth > section:first-child { background: transparent; }
+.audiva-auth form label > span:has(input) { border: 0; border-bottom: 1px solid rgb(255 255 255 / .28); border-radius: 0; background: transparent; color: #c3cbea; box-shadow: none; backdrop-filter: none; }
 .audiva-auth input { color: white; }
-.audiva-auth form label > span:focus-within { border-color: var(--audiva-accent); box-shadow: 0 0 0 3px rgb(117 238 232 / .1); }
+.audiva-auth form label > span:focus-within { border: 0; border-bottom: 1px solid #72eee7; border-radius: 0; box-shadow: none; }
+.audiva-auth input:focus, .audiva-auth input:focus-visible { outline: none !important; box-shadow: none !important; }
 .audiva-auth input::placeholder { color: #8e9bb8; }
-.audiva-auth button[type="submit"] { background: linear-gradient(120deg, #7164ed, #9764ed); box-shadow: inset 0 1px 0 rgb(255 255 255 / .2), 0 8px 28px rgb(118 82 225 / .22); }
+.audiva-auth button[type="submit"] { background: #72eee7; box-shadow: none; }
 
 /* Lecteur immersif : une pochette, des commandes et une ambiance diffuse. */
 .audiva-app main.now-playing {
@@ -445,3 +456,47 @@ body.reader-glass-mode .audiva-topbar,body.reader-glass-mode .audiva-sidebar,bod
 .now-playing__transport .now-playing__play,.now-playing__transport .now-playing__play:hover,.now-playing__transport .now-playing__play:focus-visible{background:#76eee9!important;color:#071523!important;border:1px solid #a6f6ef!important;box-shadow:0 6px 24px #76eee944,inset 0 1px 0 #ffffff70}
 .now-playing__transport .now-playing__play svg,.now-playing__transport .now-playing__play svg *{color:#071523!important;fill:#071523!important;stroke:#071523!important}
 .now-playing__transport .now-playing__play:focus-visible{outline:3px solid #fff;outline-offset:4px}
+
+/* Authentification Audiva : transitions discrètes, sans mouvement imposé. */
+@keyframes audiva-auth-arrive {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes audiva-auth-photo {
+  from { opacity: .65; transform: scale(1.025); }
+  to { opacity: 1; transform: scale(1); }
+}
+.audiva-auth > section:first-child > div.relative.z-10,
+.audiva-auth > .auth-card { animation: audiva-auth-arrive .55s cubic-bezier(.2,.7,.2,1) both; }
+.audiva-auth .auth-brand-mark { animation: audiva-auth-arrive .7s cubic-bezier(.2,.7,.2,1) both; }
+.audiva-auth .auth-hero-image > img { animation: audiva-auth-photo 1.1s ease-out both; }
+.audiva-auth .auth-hero-copy { animation: audiva-auth-arrive .75s .18s cubic-bezier(.2,.7,.2,1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .audiva-auth *, .audiva-auth *::before, .audiva-auth *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; }
+}
+.auth-ambient { position: absolute; inset: 0; overflow: hidden; pointer-events: none; color: #398dff; }
+.auth-float { position: absolute; display: block; opacity: .13; filter: drop-shadow(0 0 12px rgb(42 126 255 / .22)); animation: auth-icon-drift 10s ease-in-out infinite; }
+.auth-float svg { display: block; width: 100%; height: 100%; }
+.auth-float--one { top: 11%; left: 12%; animation-delay: -1s; }
+.auth-float--two { top: 22%; right: 12%; color: #52adff; animation-delay: -4s; }
+.auth-float--three { top: 47%; left: 5%; opacity: .1; animation-delay: -7s; }
+.auth-float--four { top: 59%; right: 7%; color: #63c7ff; animation-delay: -2s; }
+.auth-float--five { bottom: 15%; left: 18%; opacity: .09; animation-delay: -5s; }
+.auth-float--six { bottom: 12%; right: 22%; opacity: .12; animation-delay: -8s; }
+.auth-float--seven { top: 36%; right: 18%; color: #69c4ff; opacity: .11; animation-delay: -3s; }
+.auth-float--eight { top: 75%; right: 11%; color: #78d8ff; opacity: .1; animation-delay: -6s; }
+.auth-float--nine { bottom: 7%; left: 8%; color: #398dff; opacity: .1; animation-delay: -9s; }
+@keyframes auth-icon-drift { 0%,100% { transform: translate3d(0,0,0) rotate(-4deg); } 50% { transform: translate3d(0,-12px,0) rotate(4deg); } }
+@media (prefers-reduced-motion: reduce) { .auth-float { animation: none; } }
+
+/* Limelight is reserved for Audiva's large editorial headlines. */
+.hero-accueil__content h1,
+.db-hero h1,
+.music-intelligence .mi-header h1,
+.mh-hero-copy h1,
+.artist-profile-hero h1 {
+  font-family: var(--font-limelight), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.08;
+}

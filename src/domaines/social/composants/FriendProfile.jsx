@@ -6,19 +6,22 @@ import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { FireIcon, LibraryIcon, Message01Icon } from "@hugeicons/core-free-icons";
 import { useSocialStore } from "../stores/socialStore";
+import { useAuthStore } from "@/domaines/authentification/stores/authStore";
 import { getConversationStreak } from "../services/streaks";
 
 export default function FriendProfile({ friendId }) {
   const router = useRouter();
   const { friends, conversations, getOrCreateConversation } = useSocialStore();
+  const user = useAuthStore(state => state.user);
   const friend = friends.find(item => item.id === friendId);
   const conversation = conversations.find(item => item.participantId === friendId);
   const streak = getConversationStreak(conversation);
 
   if (!friend) return <main className="audiva-workspace min-h-screen bg-[#060b18] px-5 py-20 text-[#eff4ff]"><h1 className="text-3xl font-bold">Cet ami est introuvable</h1><p className="mt-3 text-[#91a0bd]">Il a peut-être été retiré de votre cercle.</p><Link href="/amis" className="mt-6 inline-flex items-center gap-2 bg-[#76eee9] px-5 py-3 font-bold text-[#071523]">Retour aux amis</Link></main>;
 
-  const openChat = () => {
-    const id = getOrCreateConversation(friendId);
+  const openChat = async () => {
+    if (!user) { router.push("/authentification/connexion"); return; }
+    const id = await getOrCreateConversation(friendId);
     if (id) router.push(`/chat?conversation=${encodeURIComponent(id)}`);
   };
 

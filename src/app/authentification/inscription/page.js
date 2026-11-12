@@ -1,14 +1,13 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-
-function UserIcon() {
-  return (
-    <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7">
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M5 20c.7-3.1 3.1-5 7-5s6.3 1.9 7 5" />
-    </svg>
-  );
-}
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getAuthSuccessPath, registerWithEmail, signInWithGoogle, signInWithSpotify } from "@/domaines/authentification/services/authService";
+import AuthAmbient from "@/domaines/authentification/composants/AuthAmbient";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { UserCircleIcon } from "@hugeicons/core-free-icons";
 
 function EmailIcon() {
   return (
@@ -42,10 +41,10 @@ function GoogleIcon() {
 function Field({ children, label, type = "text", name, autoComplete, icon }) {
   return (
     <label className="block text-base font-semibold">
-      <span className="mb-3 block">{label}</span>
-      <span className="flex items-center gap-3 rounded-full bg-white px-5 py-3.5 text-[#ad89a6] shadow-sm">
+      <span className="mb-1.5 block text-sm">{label}</span>
+      <span className="flex items-center gap-3 border-b border-white/25 px-0 py-2.5 text-[#a6f6ef] transition focus-within:border-[#72eee7]">
         {icon}
-        <input type={type} name={name} autoComplete={autoComplete} placeholder={children} className="w-full bg-transparent text-base outline-none placeholder:text-[#ad89a6]" />
+        <input required type={type} name={name} autoComplete={autoComplete} placeholder={children} className="w-full bg-transparent text-sm outline-none placeholder:text-white/35" />
         {type === "password" && <EyeIcon />}
       </span>
     </label>
@@ -53,47 +52,77 @@ function Field({ children, label, type = "text", name, autoComplete, icon }) {
 }
 
 export default function InscriptionPage() {
+  return <Suspense fallback={<main className="h-dvh bg-[#060b18]" />}><InscriptionForm /></Suspense>;
+}
+
+function InscriptionForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [busy, setBusy] = useState(false);
+  const redirectPath = getAuthSuccessPath(`?${searchParams.toString()}`);
+  const [message, setMessage] = useState("");
+  async function submit(event) {
+    event.preventDefault(); setBusy(true); setMessage("");
+    const form = new FormData(event.currentTarget);
+    const password = String(form.get("password") || "");
+    if (password.length < 8) { setMessage("Le mot de passe doit contenir au moins 8 caractères."); setBusy(false); return; }
+    if (password !== form.get("passwordConfirmation")) { setMessage("Les deux mots de passe ne correspondent pas."); setBusy(false); return; }
+    try {
+      const result = await registerWithEmail({ email: String(form.get("email") || ""), password, displayName: String(form.get("name") || ""), redirectPath });
+      if (result.session) router.replace(redirectPath);
+      else setMessage("Compte créé. Consultez votre e-mail pour confirmer votre adresse avant de vous connecter.");
+    } catch (error) { setMessage(error.message || "Création du compte impossible."); }
+    finally { setBusy(false); }
+  }
+  async function googleSignup() { setBusy(true); setMessage(""); try { await signInWithGoogle(redirectPath); } catch (error) { setMessage(error.message || "Connexion Google indisponible."); setBusy(false); } }
+  async function spotifySignup() { setBusy(true); setMessage(""); try { await signInWithSpotify(redirectPath); } catch (error) { setMessage(error.message || "Connexion Spotify indisponible. Vérifiez que Spotify est activé dans Supabase."); setBusy(false); } }
   return (
-    <main className="audiva-auth min-h-dvh overflow-x-hidden bg-black text-white lg:grid lg:grid-cols-[38.5%_61.5%]">
-      <section className="flex min-h-dvh items-start justify-center overflow-hidden bg-black px-7 pt-3 sm:px-12 sm:pt-4 lg:px-14 xl:px-[62px]">
-        <div className="w-full max-w-[420px]">
-          <Image src="/logoAudiva4.png" alt="Audiva" width={1254} height={1254} priority className="mx-auto mb-6 h-auto w-40 sm:mb-7 sm:w-48" />
+    <main className="audiva-auth grid h-dvh overflow-hidden bg-[#060b18] text-white lg:grid-cols-[43.2%_56.8%]">
+      <section className="relative flex h-dvh items-center justify-center overflow-hidden bg-[#060b18] px-5 py-2 sm:px-10 lg:px-14 xl:px-[62px]">
+        <AuthAmbient />
+        <div className="relative z-10 w-full max-w-[420px]">
+          <Image src="/logoAudiva4png" alt="Audiva" width={1254} height={1254} priority className="auth-brand-mark mx-auto mb-1 h-auto w-32 sm:mb-2 sm:w-36" />
+          <p className="mb-3 text-center text-[10px] font-semibold uppercase tracking-[.28em] text-[#8ba2bb] sm:text-left">AUDIVA · LE SON DE VOTRE HISTOIRE</p>
 
-          <h1 className="font-sans text-4xl font-bold tracking-tight sm:text-5xl">Start your journey</h1>
+          <h1 className="text-center font-sans text-3xl font-bold tracking-tight sm:text-left sm:text-4xl">Donnez une place à votre musique.</h1>
 
-          <form className="mt-6 space-y-5" action="#">
-            <Field label="Name" name="name" autoComplete="name" icon={<UserIcon />}>Enter your name</Field>
-            <Field label="Email" type="email" name="email" autoComplete="email" icon={<EmailIcon />}>Enter your email</Field>
-            <Field label="Password" type="password" name="password" autoComplete="new-password">Enter your password</Field>
-            <Field label="Confirm password" type="password" name="passwordConfirmation" autoComplete="new-password">Confirm your password</Field>
+          <form className="mt-3 space-y-2.5" onSubmit={submit}>
+            <Field label="Nom" name="name" autoComplete="name" icon={<HugeiconsIcon icon={UserCircleIcon} size={20} strokeWidth={1.7} aria-hidden="true" />}>Votre nom</Field>
+            <Field label="Adresse e-mail" type="email" name="email" autoComplete="email" icon={<EmailIcon />}>vous@exemple.com</Field>
+            <Field label="Mot de passe" type="password" name="password" autoComplete="new-password">8 caractères minimum</Field>
+            <Field label="Confirmer le mot de passe" type="password" name="passwordConfirmation" autoComplete="new-password">Répétez le mot de passe</Field>
 
-            <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#862eff] to-[#9d30f5] px-6 py-3.5 font-sans text-lg font-bold transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:ring-offset-2 focus:ring-offset-black">
-              Sign up <span aria-hidden="true" className="text-2xl leading-none">→</span>
+            <button type="submit" disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#76eee9] px-6 py-2.5 font-bold text-[#071523] transition hover:bg-white disabled:opacity-60">
+              {busy ? "Création…" : "Créer mon compte"}
             </button>
           </form>
+          {message && <p role="status" className="mt-4 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white">{message}</p>}
 
-          <div className="my-5 flex items-center gap-3 text-xs text-white/45">
+          <div className="my-2.5 flex items-center gap-3 text-[10px] text-white/40">
             <span className="h-px flex-1 bg-white/15" />
-            <span>OR</span>
+            <span>OU CONTINUER AVEC</span>
             <span className="h-px flex-1 bg-white/15" />
           </div>
 
-          <button type="button" className="flex w-full items-center justify-center gap-3 rounded-full border border-white/25 bg-white px-6 py-3.5 text-base font-semibold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-white/70">
+          <button type="button" disabled={busy} onClick={spotifySignup} className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#1ed760] px-6 py-2.5 text-sm font-bold text-[#071523] transition hover:bg-[#52e787] disabled:opacity-60"><Image src="/spotify12.png" alt="" width={22} height={22} className="object-contain" />Se connecter avec Spotify</button>
+          <button type="button" disabled={busy} onClick={googleSignup} className="mt-2 flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/[.06] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-60">
             <GoogleIcon />
-            Continue with Google
+            Continuer avec Google
           </button>
 
-          <p className="mt-5 text-center text-base text-white">
-            Do have an account?{" "}
-            <Link href="/authentification/connexion" className="font-sans font-bold text-[#9a37ff] hover:text-[#b36cff]">
-              Login <span aria-hidden="true" className="text-xl">→</span>
+          <p className="mt-3 text-center text-sm text-white/60">
+            Vous avez déjà un compte ?{" "}
+            <Link href={`/authentification/connexion?next=${encodeURIComponent(redirectPath)}`} className="font-sans font-bold text-[#9a37ff] hover:text-[#b36cff]">
+              Se connecter
             </Link>
           </p>
         </div>
       </section>
 
-      <section className="relative hidden h-dvh overflow-hidden lg:block">
+      <section className="auth-hero-image relative hidden h-dvh overflow-hidden lg:block">
         <Image src="/image sign-up.jpg" alt="Personne écoutant de la musique" fill priority sizes="62vw" className="object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#07111e]/90 via-[#07111e]/5 to-[#07111e]/20" />
+        <div className="auth-hero-copy absolute inset-x-0 bottom-0 p-12 xl:p-16"><span className="text-xs font-semibold uppercase tracking-[.24em] text-[#a6f6ef]">AUDIVA · VOTRE UNIVERS MUSICAL</span><p className="mt-4 max-w-xl text-4xl font-semibold leading-tight tracking-tight text-white xl:text-5xl">Vos titres. Vos découvertes. Votre histoire.</p><p className="mt-4 max-w-md text-sm leading-6 text-white/75">Créez votre espace et gardez le fil de ce que vous aimez écouter.</p></div>
       </section>
     </main>
   );

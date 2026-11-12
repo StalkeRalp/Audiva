@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon, PlayIcon, Album01Icon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, PlayIcon } from "@hugeicons/core-free-icons";
 import { PochetteImage } from "@/composants/ui/PochetteImage";
 import { useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
 import { spotifyItem, spotifyRequest } from "@/domaines/statistiques/services/spotify";
@@ -11,7 +11,7 @@ import { spotifyItem, spotifyRequest } from "@/domaines/statistiques/services/sp
 const formatDuration = (seconds = 0) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
 
 export default function SpotifyCollectionPage({ kind, resourceId }) {
-  const [state, setState] = useState({ loading: true, collection: null, tracks: [], error: "" });
+  const [state, setState] = useState({ loading: true, collection: null, tracks: [], error: "", itemsRestricted: false });
   const setQueue = useLecteurStore(player => player.setQueue);
   const setCurrentTrack = useLecteurStore(player => player.setCurrentTrack);
   const startPlayback = useLecteurStore(player => player.play);
@@ -26,15 +26,24 @@ export default function SpotifyCollectionPage({ kind, resourceId }) {
         const itemsEndpoint = album
           ? `${endpoint}/tracks?limit=50&market=from_token`
           : `${endpoint}/items?limit=50&market=from_token`;
-        const page = await spotifyRequest(itemsEndpoint, { signal: controller.signal });
+        let page;
+        try {
+          page = await spotifyRequest(itemsEndpoint, { signal: controller.signal });
+        } catch (error) {
+          if (!album && /\(403\)/.test(error.message || "")) {
+            if (!controller.signal.aborted) setState({ loading: false, collection, tracks: [], error: "Spotify réserve la liste détaillée de cette playlist à son propriétaire et à ses collaborateurs. Le lecteur intégré reste disponible ci-dessous.", itemsRestricted: true });
+            return;
+          }
+          throw error;
+        }
         if (controller.signal.aborted) return;
         const tracks = (page.items || []).map(row => row.item || row.track || row).filter(item => item?.type === "track" && item.id).map(item => spotifyItem(album ? {
           ...item,
           album: { name: collection.name, images: collection.images, external_urls: collection.external_urls },
         } : item));
-        setState({ loading: false, collection, tracks, error: tracks.length ? "" : "Aucun morceau lisible n’est disponible pour cette collection." });
+        setState({ loading: false, collection, tracks, error: tracks.length ? "" : "Aucun morceau lisible n’est disponible pour cette collection.", itemsRestricted: false });
       } catch (error) {
-        if (!controller.signal.aborted) setState({ loading: false, collection: null, tracks: [], error: error?.message || "Cette collection Spotify n’est pas accessible avec votre compte." });
+        if (!controller.signal.aborted) setState({ loading: false, collection: null, tracks: [], error: error?.message || "Cette collection Spotify n’est pas accessible avec votre compte.", itemsRestricted: false });
       }
     };
     load();
@@ -58,14 +67,15 @@ export default function SpotifyCollectionPage({ kind, resourceId }) {
         <div className="min-w-0"><span className="text-xs font-extrabold uppercase tracking-[.16em] text-[#a6f6ef]">{kind === "albums" ? "ALBUM SPOTIFY" : "PLAYLIST SPOTIFY"}</span><h1 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">{collection.name}</h1><p className="mt-3 text-sm text-[#abb9d2]">{kind === "albums" ? (collection.artists || []).map(artist => artist.name).join(", ") : collection.description || collection.owner?.display_name || "Spotify"}</p><p className="mt-2 text-sm text-[#abb9d2]">{state.tracks.length} titres · lecture dans Audiva</p><button type="button" disabled={!state.tracks.length} onClick={() => play()} className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#76eee9] px-5 py-3 text-sm font-extrabold text-[#071523] disabled:opacity-50"><HugeiconsIcon icon={PlayIcon} size={17} fill="currentColor" /> Tout écouter</button></div>
       </header>
       {state.error && <p className="mt-6 rounded-xl border border-white/10 bg-white/[.04] p-4 text-sm text-[#c5d0e4]" role="status">{state.error}</p>}
-      <section className="mt-8" aria-label="Morceaux de la collection">
+      {state.itemsRestricted && <section className="mt-6 overflow-hidden border border-white/10 bg-[#0b1426]" aria-label="Lecteur Spotify intégré"><header className="border-b border-white/10 p-4"><h2 className="font-bold text-white">Écouter cette playlist</h2><p className="mt-1 text-xs text-[#91a0bd]">Lecteur Spotify intégré à Audiva</p></header><iframe title={`Écouter ${collection.name} sur Spotify`} src={`https://open.spotify.com/embed/playlist/${encodeURIComponent(resourceId)}?utm_source=generator&theme=0`} width="100%" height="352" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" className="block w-full border-0" /></section>}
+      {!state.itemsRestricted && <section className="mt-8" aria-label="Morceaux de la collection">
         {state.tracks.map((track, index) => <article key={track.id} className="group flex items-center gap-3 border-b border-white/[.06] px-2 py-3 hover:bg-white/[.04] sm:gap-4 sm:px-4">
           <span className="w-7 text-center text-xs font-bold text-[#7f8da8]">{index + 1}</span><PochetteImage unoptimized src={track.cover} alt="" width={48} height={48} className="h-12 w-12 rounded-lg object-cover" />
           <button type="button" onClick={() => play(track)} className="min-w-0 flex-1 text-left"><strong className="block truncate text-sm text-white group-hover:text-[#a6f6ef]">{track.title}</strong><span className="mt-1 block truncate text-xs text-[#9aa8c0]">{track.artist}</span></button>
           <span className="hidden text-xs text-[#8694ad] sm:block">{track.album}</span><span className="w-12 text-right text-xs tabular-nums text-[#9aa8c0]">{formatDuration(track.duration)}</span>
         </article>)}
-      </section>
-      <a className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#90a0ba] hover:text-[#a6f6ef]" href={collection.external_urls?.spotify} target="_blank" rel="noreferrer"><HugeiconsIcon icon={Album01Icon} size={15} /> Source Spotify ↗</a>
-    </> : <section className="mt-12 max-w-2xl rounded-2xl border border-white/10 bg-[#0b1426] p-6"><h1 className="text-2xl font-bold">Collection indisponible</h1><p className="mt-3 text-sm leading-6 text-[#aab8d2]">{state.error}</p><p className="mt-3 text-sm text-[#8392ad]">Vérifiez que Spotify est connecté et que cette playlist est accessible à votre compte.</p></section>}
+      </section>}
+      <p className="mt-6 text-xs font-medium text-[#8291ad]">Catalogue fourni par Spotify · lecture intégrée au lecteur Audiva.</p>
+    </> : <section className="mt-12 max-w-3xl border border-white/10 bg-[#0b1426] p-6"><h1 className="text-2xl font-bold">Playlist Spotify</h1><p className="mt-3 text-sm leading-6 text-[#aab8d2]">{state.error}</p>{kind === "playlists" && <div className="mt-6 overflow-hidden border border-white/10"><iframe title="Lecteur de playlist Spotify intégré" src={`https://open.spotify.com/embed/playlist/${encodeURIComponent(resourceId)}?utm_source=generator&theme=0`} width="100%" height="352" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" className="block w-full border-0" /></div>}</section>}
   </main>;
 }

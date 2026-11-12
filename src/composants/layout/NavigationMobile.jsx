@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ChartBarBigIcon, CompassIcon, FavouriteIcon, Home01Icon, LibraryIcon, Message01Icon, MoreHorizontalIcon, Notification03Icon, Search01Icon, Settings01Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import { ChartBarBigIcon, CompassIcon, FavouriteIcon, Home01Icon, LibraryIcon, Message01Icon, MoreHorizontalIcon, Notification01Icon, Search01Icon, Settings01Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
 
 const primaryItems = [
   { href: "/accueil", label: "Accueil", icon: Home01Icon },
@@ -17,7 +17,7 @@ const moreItems = [
   { href: "/bibliotheque?vue=statistiques", label: "Statistiques", icon: ChartBarBigIcon, query: "statistiques" },
   { href: "/favoris", label: "Favoris", icon: FavouriteIcon },
   { href: "/amis", label: "Amis", icon: UserGroupIcon },
-  { href: "/notifications", label: "Notifications", icon: Notification03Icon },
+  { href: "/notifications", label: "Notifications", icon: Notification01Icon },
   { href: "/parametres", label: "Paramètres", icon: Settings01Icon },
 ];
 

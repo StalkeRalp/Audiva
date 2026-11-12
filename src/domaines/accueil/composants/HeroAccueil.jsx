@@ -9,31 +9,35 @@ import CreatePlaylistButton from "@/domaines/playlists/composants/CreatePlaylist
 import ShareContentModal from "@/composants/ui/ShareContentModal";
 
 const AUTO_PLAY_DELAY = 6000;
-const HERO_VIDEOS = [
+const INTRO_VIDEOS = [
+  "/videos/videos1.mp4",
+  "/videos/videos2.mp4",
   "/videos/5ieme.mp4",
-  "https://videos.pexels.com/video-files/31540267/13442340_1920_1080_30fps.mp4",
-  "https://videos.pexels.com/video-files/2361938/2361938-uhd_3840_2160_30fps.mp4",
 ];
+const INTRO_SLIDE = { id: "audiva-intro", overline: "AUDIVA / VOTRE MUSIQUE", badge: "VOTRE UNIVERS COMMENCE ICI", title: "Laissez le son donner le ton.", artist: "Des découvertes à votre rythme.", description: "Quelques instants, puis les images et les histoires de votre musique.", actionLabel: "Ouvrir ma bibliothèque", action: "library" };
 
 export function HeroAccueil({ slides, onAction }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [introPlaying, setIntroPlaying] = useState(true);
+  const [introVideoIndex, setIntroVideoIndex] = useState(0);
+  const [introHasStarted, setIntroHasStarted] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
   const [shareOpen, setShareOpen] = useState(false);
   const videoRef = useRef(null);
   const [motionAllowed, setMotionAllowed] = useState(false);
   const visibleIndex = activeIndex % slides.length;
-  const activeSlide = slides[visibleIndex];
+  const activeSlide = introPlaying ? INTRO_SLIDE : slides[visibleIndex];
 
   useEffect(() => {
-    if (isPaused) return undefined;
+    if (isPaused || introPlaying) return undefined;
     const timer = window.setTimeout(() => setActiveIndex((index) => (index + 1) % slides.length), AUTO_PLAY_DELAY);
     return () => window.clearTimeout(timer);
-  }, [activeIndex, isPaused, slides.length]);
+  }, [activeIndex, introPlaying, isPaused, slides.length]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: no-preference)");
-    const sync = () => setMotionAllowed(media.matches);
+    const sync = () => { setMotionAllowed(media.matches); if (!media.matches) setIntroPlaying(false); };
     sync();
     media.addEventListener("change", sync);
     return () => media.removeEventListener("change", sync);
@@ -43,10 +47,38 @@ export function HeroAccueil({ slides, onAction }) {
     if (!video) return;
     if (motionAllowed && !isPaused) video.play().catch(() => {});
     else video.pause();
-  }, [visibleIndex, motionAllowed, isPaused]);
+  }, [introPlaying, introVideoIndex, motionAllowed, isPaused]);
+  useEffect(() => {
+    if (!introPlaying || introHasStarted) return undefined;
+    const fallback = window.setTimeout(() => setIntroPlaying(false), 10000);
+    return () => window.clearTimeout(fallback);
+  }, [introHasStarted, introPlaying, introVideoIndex]);
+  useEffect(() => {
+    if (!introPlaying) return undefined;
+    const nextVideo = INTRO_VIDEOS[introVideoIndex + 1];
+    let nextVideoHint;
+    if (nextVideo) {
+      nextVideoHint = document.createElement("link");
+      nextVideoHint.rel = "prefetch";
+      nextVideoHint.as = "video";
+      nextVideoHint.href = nextVideo;
+      document.head.appendChild(nextVideoHint);
+    }
+    if (introVideoIndex === INTRO_VIDEOS.length - 1) {
+      slides.forEach((slide) => {
+        const image = new window.Image();
+        image.src = slide.image;
+      });
+    }
+    return () => nextVideoHint?.remove();
+  }, [introPlaying, introVideoIndex, slides]);
 
-  const previous = () => setActiveIndex((index) => (index - 1 + slides.length) % slides.length);
-  const next = () => setActiveIndex((index) => (index + 1) % slides.length);
+  const previous = () => { setIntroPlaying(false); setActiveIndex((index) => (index - 1 + slides.length) % slides.length); };
+  const next = () => { setIntroPlaying(false); setActiveIndex((index) => (index + 1) % slides.length); };
+  const advanceIntroVideo = () => {
+    if (introVideoIndex >= INTRO_VIDEOS.length - 1) setIntroPlaying(false);
+    else { setIntroHasStarted(false); setIntroVideoIndex(index => index + 1); }
+  };
   const sharePlaylist = async (playlist) => {
     const shareData = { title: playlist.title, text: `Découvrez « ${playlist.title} » sur Audiva.`, url: `${window.location.origin}/playlists/${playlist.id}` };
     try {
@@ -60,8 +92,8 @@ export function HeroAccueil({ slides, onAction }) {
   };
 
   return <section className="hero-accueil" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)} aria-roledescription="carrousel" aria-label="Recommandations Audiva">
-    {slides.map((slide, index) => <div key={slide.id} aria-hidden={index !== visibleIndex} className={`hero-accueil__slide ${index === visibleIndex ? "hero-accueil__slide--active" : ""}`}>
-      {index === visibleIndex ? <video ref={videoRef} muted loop playsInline preload="none" poster={slide.image} className="hero-accueil__image h-full w-full object-cover" aria-hidden="true"><source src={slide.video || HERO_VIDEOS[index % HERO_VIDEOS.length]} type="video/mp4" /></video> : <Image unoptimized src={slide.image} alt="" fill priority={index === 0} sizes="(max-width: 1024px) 100vw, calc(100vw - 256px)" className={`hero-accueil__image ${slide.position}`} />}
+    {introPlaying ? <div className="hero-accueil__slide hero-accueil__slide--active"><video key={introVideoIndex} ref={videoRef} autoPlay muted playsInline preload="auto" className="hero-accueil__intro-video" aria-hidden="true" onPlaying={() => setIntroHasStarted(true)} onEnded={advanceIntroVideo}><source src={INTRO_VIDEOS[introVideoIndex]} type="video/mp4" /></video><div className="hero-accueil__intro-shade" /></div> : slides.map((slide, index) => <div key={slide.id} aria-hidden={index !== visibleIndex} className={`hero-accueil__slide ${index === visibleIndex ? "hero-accueil__slide--active" : ""}`}>
+      <Image src={slide.image} alt="" fill priority={index === 0} sizes="(max-width: 1024px) 100vw, calc(100vw - 256px)" className="hero-accueil__image" style={{ objectPosition: slide.position || "center" }} />
       <div className={`hero-accueil__shade bg-gradient-to-r ${slide.gradient}`} />
     </div>)}
     <div className="hero-accueil__fade" />
@@ -77,8 +109,8 @@ export function HeroAccueil({ slides, onAction }) {
       </div>
     </div>
     {shareMessage ? <p role="status" className="absolute bottom-24 left-5 z-30 border border-[#76eee9]/30 bg-[#091b32]/90 px-4 py-3 text-sm font-bold text-[#c8fffb] shadow-2xl backdrop-blur sm:left-10 lg:left-14">{shareMessage}</p> : null}
-    <div className="absolute bottom-10 left-5 z-20 flex items-center gap-2 sm:left-10 lg:left-14"><button type="button" onClick={previous} aria-label="Recommandation précédente" className="hero-accueil__control"><HugeiconsIcon icon={ArrowLeft01Icon} size={19} /></button><button type="button" onClick={next} aria-label="Recommandation suivante" className="hero-accueil__control"><HugeiconsIcon icon={ArrowRight01Icon} size={19} /></button></div>
-    <div className="absolute bottom-12 right-5 z-20 flex items-center gap-2 sm:right-10 lg:right-14">{slides.map((slide, index) => <button type="button" key={slide.id} onClick={() => setActiveIndex(index)} aria-label={`Afficher ${slide.title}`} aria-current={index === visibleIndex} className={`h-1.5 rounded-full transition-all ${index === visibleIndex ? "w-9 bg-[#76eee9]" : "w-1.5 bg-white/45 hover:bg-white"}`} />)}</div>
+    {!introPlaying && <><div className="absolute bottom-10 left-5 z-20 flex items-center gap-2 sm:left-10 lg:left-14"><button type="button" onClick={previous} aria-label="Recommandation précédente" className="hero-accueil__control"><HugeiconsIcon icon={ArrowLeft01Icon} size={19} /></button><button type="button" onClick={next} aria-label="Recommandation suivante" className="hero-accueil__control"><HugeiconsIcon icon={ArrowRight01Icon} size={19} /></button></div>
+    <div className="absolute bottom-12 right-5 z-20 flex items-center gap-2 sm:right-10 lg:right-14">{slides.map((slide, index) => <button type="button" key={slide.id} onClick={() => setActiveIndex(index)} aria-label={`Afficher ${slide.title}`} aria-current={index === visibleIndex} className={`h-1.5 rounded-full transition-all ${index === visibleIndex ? "w-9 bg-[#76eee9]" : "w-1.5 bg-white/45 hover:bg-white"}`} />)}</div></>}
     <ShareContentModal isOpen={shareOpen} initialKind="playlist" onClose={() => setShareOpen(false)} onShare={sharePlaylist} />
   </section>;
 }

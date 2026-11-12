@@ -1,7 +1,11 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { BarreSuperieure } from "@/composants/layout/BarreSuperieure";
 import { LecteurPersistant } from "@/composants/layout/LecteurPersistant";
 import { ApplicationShell } from "@/composants/layout/ApplicationShell";
+import { NavigationProgress } from "@/composants/layout/NavigationProgress";
+import AuthProvider from "@/domaines/authentification/composants/AuthProvider";
+import AuthInteractionGate from "@/domaines/authentification/composants/AuthInteractionGate";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,6 +18,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const limelight = localFont({
+  src: "../../Limelight/Limelight-Regular.ttf",
+  variable: "--font-limelight",
+  display: "swap",
+  weight: "400",
+});
+
 export const metadata = {
   title: "Audiva",
   description: "Lecteur musical intelligent avec bibliothèque locale, streaming et communauté.",
@@ -21,11 +32,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} ${limelight.variable} h-full antialiased`}>
       <head>
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
       </head>
-      <body className="min-h-full bg-black text-slate-100"><BarreSuperieure /><ApplicationShell>{children}</ApplicationShell><LecteurPersistant /></body>
+      <body className="min-h-full bg-black text-slate-100"><AuthProvider><NavigationProgress /><AuthInteractionGate /><BarreSuperieure /><ApplicationShell>{children}</ApplicationShell><LecteurPersistant /></AuthProvider></body>
     </html>
   );
 }

@@ -21,8 +21,7 @@ export default function TopPlaylistsSection({ playlists }) {
             <PlaylistCard
               playlist={playlist}
               onClick={() => {
-                if (playlist.externalUrl) window.open(playlist.externalUrl, "_blank", "noopener,noreferrer");
-                else router.push(`/playlists/${encodeURIComponent(playlist.id)}`);
+                router.push(`/playlists/${encodeURIComponent(playlist.id)}`);
               }}
             />
           </div>

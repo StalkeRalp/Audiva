@@ -83,7 +83,7 @@ export default function FeaturedTrack({ track }) {
               className="flex items-center justify-center gap-2 px-6 py-3 bg-[#72eee7] text-[#071426] font-bold hover:bg-white transition transform hover:scale-105 active:scale-95"
             >
               <HugeiconsIcon icon={PlayIcon} size={20} fill="currentColor" />
-              {selectedTrack && !isLocalTrack(selectedTrack) ? "Lire depuis Spotify" : "Lire maintenant"}
+              {selectedTrack ? "Écouter dans Audiva" : "Lire maintenant"}
             </button>
 
             <button

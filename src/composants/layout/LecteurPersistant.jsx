@@ -52,7 +52,7 @@ export function LecteurPersistant() {
       name: "Audiva",
       getOAuthToken: (callback) => getSpotifyAccessToken().then(callback).catch((error) => {
         setSpotifyNeedsConnection(true);
-        setQueueNotice(error.message || "Reconnectez Spotify pour lire dans Audiva.");
+        setQueueNotice("Votre autorisation de lecture a expiré. Reconnectez votre compte pour reprendre.");
       }),
       volume: useLecteurStore.getState().isMuted ? 0 : useLecteurStore.getState().volume,
     });
@@ -69,7 +69,7 @@ export function LecteurPersistant() {
       updateSpotifyPlaybackDevice(null);
       setSpotifyDeviceId(null);
       setSpotifyReady(false);
-      setQueueNotice("Le lecteur Spotify s’est déconnecté. Réessayez dans quelques instants.");
+      setQueueNotice("Le lecteur s’est déconnecté. Réessayez dans quelques instants.");
     });
     player.addListener("player_state_changed", (state) => {
       if (!state) return;
@@ -113,22 +113,22 @@ export function LecteurPersistant() {
       setSpotifyNeedsConnection(true);
       setSpotifyReady(false);
       useLecteurStore.getState().pause();
-      setQueueNotice("Reconnectez Spotify pour autoriser la lecture dans Audiva.");
+      setQueueNotice("Votre autorisation de lecture a expiré. Reconnectez votre compte pour reprendre.");
     });
     player.addListener("account_error", () => {
       setSpotifyReady(false);
       useLecteurStore.getState().pause();
-      setQueueNotice("Le lecteur Spotify intégré exige un compte Spotify Premium.");
+      setQueueNotice("Le lecteur intégré exige un compte Premium.");
     });
     player.addListener("initialization_error", ({ message }) => {
       setSpotifyReady(false);
-      setQueueNotice(message || "Le lecteur Spotify ne peut pas démarrer dans ce navigateur.");
+      setQueueNotice(message || "Le lecteur ne peut pas démarrer dans ce navigateur.");
     });
-    player.addListener("playback_error", ({ message }) => setQueueNotice(message || "Spotify n’a pas pu lire ce titre."));
-    player.addListener("autoplay_failed", () => setQueueNotice("Touchez Lecture pour autoriser Spotify à démarrer dans Audiva."));
+    player.addListener("playback_error", ({ message }) => setQueueNotice(message || "Impossible de lire ce titre pour le moment."));
+    player.addListener("autoplay_failed", () => setQueueNotice("Touchez Lecture pour démarrer le morceau dans Audiva."));
     player.connect().then((connected) => {
-      if (!connected) setQueueNotice("Impossible de connecter le lecteur Spotify à Audiva.");
-    }).catch(() => setQueueNotice("Impossible de connecter le lecteur Spotify à Audiva."));
+      if (!connected) setQueueNotice("Impossible de démarrer le lecteur intégré.");
+    }).catch(() => setQueueNotice("Impossible de démarrer le lecteur intégré."));
   }, [setQueueNotice]);
   useEffect(() => {
     const initializeTimer = window.setTimeout(() => {
@@ -236,7 +236,7 @@ export function LecteurPersistant() {
       queueMicrotask(() => {
         if (!active) return;
         setSpotifyNeedsConnection(true);
-        setQueueNotice(needsAuthorization ? "Reconnectez Spotify pour autoriser le streaming dans Audiva." : "Connectez votre compte Spotify pour écouter dans Audiva.");
+        setQueueNotice(needsAuthorization ? "Votre autorisation de lecture a expiré. Reconnectez votre compte pour reprendre." : "Associez votre compte musical pour écouter ce titre dans Audiva.");
       });
       pause();
       return () => { active = false; };
@@ -246,7 +246,7 @@ export function LecteurPersistant() {
       return () => { active = false; };
     }
     if (!spotifyReady || !spotifyDeviceId || !spotifyPlayer) {
-      setQueueNotice("Connexion au lecteur Spotify d’Audiva…");
+      setQueueNotice("");
       return () => { active = false; };
     }
     const launch = async () => {
@@ -256,7 +256,7 @@ export function LecteurPersistant() {
           const query = [`track:${target.title}`, target.artist && `artist:${target.artist}`].filter(Boolean).join(" ");
           const matches = await searchSpotify(query, { type: "tracks" });
           if (!active) return;
-          if (!matches.length) throw new Error("Ce titre n’a pas été retrouvé dans le catalogue Spotify.");
+          if (!matches.length) throw new Error("Ce titre n’a pas été retrouvé dans le catalogue musical.");
           target = matches[0];
           const store = useLecteurStore.getState();
           const oldIndex = store.queue.findIndex((item) => item.id === currentTrack.id);
@@ -284,7 +284,7 @@ export function LecteurPersistant() {
       } catch (error) {
         if (!active) return;
         pause();
-        setQueueNotice(error?.message || "Impossible de lire ce titre avec Spotify.");
+        setQueueNotice(error?.message || "Impossible de lire ce titre pour le moment.");
       }
     };
     launch();
@@ -318,10 +318,10 @@ export function LecteurPersistant() {
   const controlClass = "flex h-9 w-9 items-center justify-center rounded-full text-[#c9d3e8] transition duration-150 hover:scale-110 hover:bg-white/10 hover:text-white active:scale-90 disabled:cursor-not-allowed disabled:opacity-35";
   const notifyQueue = (message) => { setQueueNotice(message); window.setTimeout(() => setQueueNotice(""), 2200); };
 
-  return <>{spotifySdkEnabled && <Script src="https://sdk.scdn.co/spotify-player.js" strategy="afterInteractive" onReady={initializeSpotifySdk} onError={() => setQueueNotice("Le SDK Spotify n’a pas pu être chargé.")} />}<video data-audiva-media playsInline ref={audioRef} className="audiva-persistent-media" style={videoRect && isLocalTrack(track) && (track.mediaType === "video" || track.fileInfo?.type === "video/mp4" || /\.mp4$/i.test(track.fileInfo?.name || "")) ? {position:"fixed",...videoRect,zIndex:20,objectFit:"contain",background:"#040609",borderRadius:videoRect.borderRadius} : {position:"fixed",width:1,height:1,opacity:0,pointerEvents:"none"}} src={isLocalTrack(track) ? track.streamUrl : undefined} preload={isLocalTrack(track) ? "metadata" : "none"} onPlaying={() => useIntelligenceStore.getState().start(track,audioRef.current?.currentTime || 0)} onTimeUpdate={handleAudioTimeUpdate} onSeeking={() => { listened.current.wall = 0; }} onPause={() => { listened.current.wall = 0; }} onWaiting={() => { listened.current.wall = 0; }} onLoadedMetadata={(event) => { const audio = event.currentTarget; setQueueNotice(""); setDuration(audio.duration); const savedTime = useLecteurStore.getState().currentTime; if (savedTime > 0) audio.currentTime = Math.min(savedTime, Number.isFinite(audio.duration) ? audio.duration : savedTime); }} onError={() => { if (isLocalTrack(track) && track.streamUrl) { pause(); } }} onEnded={() => { useIntelligenceStore.getState().finish(true); handleTrackEnd(); }} />
+  return <>{spotifySdkEnabled && <Script src="https://sdk.scdn.co/spotify-player.js" strategy="afterInteractive" onReady={initializeSpotifySdk} onError={() => setQueueNotice("Le lecteur intégré n’a pas pu être chargé.")} />}<video data-audiva-media playsInline ref={audioRef} className="audiva-persistent-media" style={videoRect && isLocalTrack(track) && (track.mediaType === "video" || track.fileInfo?.type === "video/mp4" || /\.mp4$/i.test(track.fileInfo?.name || "")) ? {position:"fixed",...videoRect,zIndex:20,objectFit:"contain",background:"#040609",borderRadius:videoRect.borderRadius} : {position:"fixed",width:1,height:1,opacity:0,pointerEvents:"none"}} src={isLocalTrack(track) ? track.streamUrl : undefined} preload={isLocalTrack(track) ? "metadata" : "none"} onPlaying={() => useIntelligenceStore.getState().start(track,audioRef.current?.currentTime || 0)} onTimeUpdate={handleAudioTimeUpdate} onSeeking={() => { listened.current.wall = 0; }} onPause={() => { listened.current.wall = 0; }} onWaiting={() => { listened.current.wall = 0; }} onLoadedMetadata={(event) => { const audio = event.currentTarget; setQueueNotice(""); setDuration(audio.duration); const savedTime = useLecteurStore.getState().currentTime; if (savedTime > 0) audio.currentTime = Math.min(savedTime, Number.isFinite(audio.duration) ? audio.duration : savedTime); }} onError={() => { if (isLocalTrack(track) && track.streamUrl) { pause(); } }} onEnded={() => { useIntelligenceStore.getState().finish(true); handleTrackEnd(); }} />
     {!publicRoute && !playerVisible && <button className="audiva-player-restore" onClick={() => setPlayerVisible(true)} aria-label="Afficher le lecteur">♫ <span>{track.title}</span> ↑</button>}
     {!publicRoute && playerVisible && <>
-    {queueNotice && !queueOpen && <p role="status" className="audiva-player-notice">{queueNotice}{spotifyNeedsConnection && <button type="button" className="ml-3 font-bold text-[#a6f6ef] underline underline-offset-2" onClick={() => connectSpotify({ returnTo: `${pathname}${window.location.search}`, resumePlayback: true }).catch((error) => setQueueNotice(error.message))}>Connecter Spotify ↗</button>}</p>}
+    {queueNotice && !queueOpen && <p role="status" className="audiva-player-notice">{queueNotice}{spotifyNeedsConnection && <button type="button" className="ml-3 font-bold text-[#a6f6ef] underline underline-offset-2" onClick={() => connectSpotify({ returnTo: `${pathname}${window.location.search}`, resumePlayback: true }).catch((error) => setQueueNotice(error.message))}>Réassocier mon compte</button>}</p>}
     {lyricsOpen && <aside className="fixed bottom-[88px] sm:bottom-[96px] left-0 right-0 top-[72px] z-40 overflow-hidden bg-[#07132b] text-[#eff4ff] lg:left-64"><div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_10%,rgba(80,128,255,.28),transparent_32%),linear-gradient(135deg,#071120,#0b1730_58%,#060b18)]" /><div className="relative grid h-full grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]"><section className="min-w-0 overflow-y-auto px-5 py-8 sm:px-10 lg:px-14"><div className="mx-auto max-w-4xl"><div className="flex items-start justify-between gap-5"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#a6f6ef]">Paroles synchronisées</p><p className="mt-2 text-sm font-semibold text-[#c3d0e8]">{track.title} · {track.artist}</p></div><button onClick={toggleLyrics} className={`${controlClass} border border-white/10 bg-[#07101e]`} aria-label="Fermer les paroles"><HugeiconsIcon icon={Cancel01Icon} size={20} /></button></div><LyricsPanel track={track}/></div></section><aside className="hidden h-full overflow-y-auto border-l border-white/[.08] bg-[#08101d] p-4 lg:block"><p className="text-xs font-bold uppercase tracking-[.14em] text-[#a6f6ef]">Lecture en cours</p><PochetteImage unoptimized src={cover} alt="" width={480} height={480} className="mt-4 aspect-square w-full object-cover rounded-2xl" /><p className="mt-4 text-lg font-black">{track.title}</p><p className="mt-1 text-sm text-[#aebbd7]">{track.artist}</p></aside></div></aside>}
     {queueOpen && <aside onDragOver={acceptTrackDrag} onDrop={dropTrack} role="dialog" aria-label="File d&apos;attente" className="audiva-queue fixed bottom-[160px] sm:bottom-[120px] right-3 top-[84px] z-50 flex w-[min(420px,calc(100vw-24px))] flex-col border border-white/10 bg-[#101626]/90 backdrop-blur-2xl rounded-3xl shadow-[-16px_0_45px_rgba(0,0,0,.38)] animate-in slide-in-from-right-5 duration-200">
       <header className="flex shrink-0 items-center justify-between border-b border-white/8 px-5 pt-5">

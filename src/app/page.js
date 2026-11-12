@@ -1,22 +1,37 @@
-"use client";
+import SplashScreen from "@/domaines/accueil/composants/SplashScreen";
+import localFont from "next/font/local";
 
-import Image from "next/image";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+const bungee = localFont({
+  src: "../../Bungee/Bungee-Regular.ttf",
+  variable: "--font-bungee",
+  display: "swap",
+  weight: "400",
+});
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+const metadataBase = siteUrl ? new URL(siteUrl) : undefined;
+
+export const metadata = {
+  ...(metadataBase ? { metadataBase, alternates: { canonical: "/" } } : {}),
+  title: "Audiva — Votre musique, à votre façon",
+  description: "Écoutez, explorez et partagez votre musique dans Audiva. Retrouvez vos morceaux, vos découvertes et votre univers musical au même endroit.",
+  applicationName: "Audiva",
+  openGraph: {
+    ...(metadataBase ? { url: "/" } : {}),
+    title: "Audiva — Votre musique, à votre façon",
+    description: "Écoutez, explorez et partagez votre musique dans Audiva.",
+    siteName: "Audiva",
+    type: "website",
+    locale: "fr_FR",
+  },
+  twitter: {
+    card: "summary",
+    title: "Audiva — Votre musique, à votre façon",
+    description: "Écoutez, explorez et partagez votre musique dans Audiva.",
+  },
+  robots: { index: true, follow: true },
+};
 
 export default function LandingPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    const redirectTimer = window.setTimeout(() => router.replace("/accueil"), 1800);
-    return () => window.clearTimeout(redirectTimer);
-  }, [router]);
-
-  return (
-    <main className="landing-screen" aria-label="Chargement d'Audiva">
-
-      <Image src="/logoAudiva3.png" alt="Audiva" width={500} height={500} priority className="landing-logo" />
-
-    </main>
-  );
+  return <SplashScreen bungeeClassName={bungee.variable} />;
 }

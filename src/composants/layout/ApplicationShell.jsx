@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { NavigationMobile } from "@/composants/layout/NavigationMobile";
 import { NavigationPrincipale } from "@/composants/layout/NavigationPrincipale";
@@ -19,6 +19,7 @@ export function ApplicationShell({ children }) {
   const isPublicRoute = pathname === "/" || pathname.startsWith("/authentification");
 
   useEffect(() => {
+    if (isPublicRoute) return undefined;
     let active = true;
     const timer = window.setTimeout(() => {
       loadLocalTracks().then((tracks) => {
@@ -31,19 +32,20 @@ export function ApplicationShell({ children }) {
       });
     }, 0);
     return () => { active = false; window.clearTimeout(timer); };
-  }, [restoreLocalTracks, setTracks]);
+  }, [isPublicRoute, restoreLocalTracks, setTracks]);
 
   useEffect(() => {
+    if (isPublicRoute) return undefined;
     loadPlaylistsSnapshot().then((saved) => { if (saved) restorePlaylists(saved); }).catch(() => {});
-  }, [restorePlaylists]);
+  }, [isPublicRoute, restorePlaylists]);
 
   if (isPublicRoute) return children;
 
   return (
     <div className="audiva-app min-h-[calc(100dvh-72px)] lg:flex">
-      <NavigationPrincipale />
+      <Suspense fallback={<aside aria-hidden="true" className="hidden w-64 shrink-0 lg:block" />}><NavigationPrincipale /></Suspense>
       <div className="min-w-0 flex-1">{children}</div>
-      <NavigationMobile />
+      <Suspense fallback={null}><NavigationMobile /></Suspense>
     </div>
   );
 }

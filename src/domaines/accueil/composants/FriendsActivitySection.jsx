@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Share01Icon, MessageCircleIcon, MusicNote01Icon } from "@hugeicons/core-free-icons";
+import { useSocialStore } from "@/domaines/social/stores/socialStore";
 
 export default function FriendsActivitySection() {
   const router = useRouter();
+  const activities = useSocialStore(state => state.activities).slice(0, 4);
 
   return (
     <section className="mt-12 rounded-2xl border border-white/10 bg-gradient-to-br from-[#1a2a4a] via-[#1a2750]/80 to-[#0f1a2e] p-6 sm:p-8 overflow-hidden relative">
@@ -22,13 +24,9 @@ export default function FriendsActivitySection() {
           </p>
         </div>
 
-        <h3 className="text-xl font-bold text-white mb-2">
-          Retrouvez votre cercle musical
-        </h3>
+        <h3 className="text-xl font-bold text-white mb-2">{activities.length ? "Les dernières nouvelles de votre cercle" : "Retrouvez votre cercle musical"}</h3>
 
-        <p className="text-sm text-white/70 mb-4">
-          Aucune activité de partage réelle n’est disponible pour le moment.
-        </p>
+        {activities.length ? <div className="mb-5 space-y-2">{activities.map(activity => <article key={activity.id} className="border border-white/10 bg-black/15 px-4 py-3"><p className="text-sm text-white"><strong>{activity.actor?.name || "Un ami"}</strong>{activity.activity_type === "listened" ? " a écouté" : activity.activity_type === "playlist_created" ? " a créé la playlist" : " a partagé une activité"}{activity.summary?.title && <> <strong>« {activity.summary.title} »</strong></>}{activity.summary?.artist && <span className="text-white/65"> · {activity.summary.artist}</span>}</p><small className="mt-1 block text-xs text-white/50">{activity.time}</small></article>)}</div> : <p className="text-sm text-white/70 mb-4">Aucune activité partagée pour le moment. Les écoutes ne s’affichent que si leur auteur a activé le partage dans ses paramètres.</p>}
 
         <div className="flex flex-col sm:flex-row gap-3">
           <button

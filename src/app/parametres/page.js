@@ -16,9 +16,12 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useLecteurControlsStore } from "@/domaines/lecteur/stores/lecteurStore";
 import { useAuthStore } from "@/domaines/authentification/stores/authStore";
+import { getAuthProfileImage } from "@/domaines/authentification/utilitaires/profile";
 import { loadProfileSettings, saveProfileSettings } from "@/utilitaires/profilStorage";
+import { signOut, updateEmail, updatePassword } from "@/domaines/authentification/services/authService";
+import { loadCloudAccount, saveCloudAccount } from "@/services/supabase/account";
 
-const defaultProfile = { name: "Enoch", email: "enoch@audiva.app", avatar: "" };
+const defaultProfile = { name: "", email: "", avatar: "", avatarPath: "", bio: "" };
 const defaultPreferences = {
   showStats: true,
   allowFriends: true,
@@ -34,6 +37,8 @@ const defaultPreferences = {
 export default function ParametresPage() {
   const { volume, setVolume } = useLecteurControlsStore();
   const clearUser = useAuthStore((state) => state.clearUser);
+  const user = useAuthStore((state) => state.user);
+  const providerAvatar = getAuthProfileImage(user);
   const router = useRouter();
   const photoInput = useRef(null);
   const [profile, setProfile] = useState(defaultProfile);
@@ -41,21 +46,37 @@ export default function ParametresPage() {
   const [preferences, setPreferences] = useState(defaultPreferences);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [cloudSyncMessage, setCloudSyncMessage] = useState("");
   const [photoError, setPhotoError] = useState("");
   const [logoutConfirmationOpen, setLogoutConfirmationOpen] = useState(false);
+  const [cloudPreferences, setCloudPreferences] = useState({ sync_library_metadata: false, sync_listening_history: false, sync_favorites: false, sync_playlists: false, sync_recommendations: false });
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      loadProfileSettings()
-        .then((stored) => {
-          if (!stored) return;
-          setProfile((current) => ({ ...current, ...stored.profile }));
-          setPreferences((current) => ({ ...current, ...stored.preferences }));
-        })
-        .catch(() => setSaveError("Impossible de charger vos réglages sur cet appareil."));
-    }, 0);
+    let active = true;
+    const load = async () => {
+      try {
+        const stored = await loadProfileSettings();
+        if (!active) return;
+        setProfile(current => ({ ...current, name: user?.user_metadata?.display_name || user?.email?.split("@")[0] || current.name, email: user?.email || "", ...stored?.profile, avatar: stored?.profile?.avatar || providerAvatar || current.avatar }));
+        setPreferences(current => ({ ...current, ...stored?.preferences }));
+      } catch { if (active) setSaveError("Impossible de charger vos réglages sur cet appareil."); }
+      if (!user?.id) return;
+      try {
+        const cloud = await loadCloudAccount(user.id);
+        if (!active) return;
+        setProfile(current => ({ ...current, ...cloud.profile, avatar: cloud.profile.avatar || current.avatar || providerAvatar }));
+        setPreferences(current => ({ ...current, ...(cloud.preferences.preferences || {}) }));
+        setCloudPreferences({ sync_library_metadata: cloud.preferences.sync_library_metadata, sync_listening_history: cloud.preferences.sync_listening_history, sync_favorites: cloud.preferences.sync_favorites, sync_playlists: cloud.preferences.sync_playlists, sync_recommendations: cloud.preferences.sync_recommendations });
+      } catch (error) { if (active) setSaveError(error.message || "Le profil Supabase n’a pas pu être chargé."); }
+    };
+    const timer = window.setTimeout(load, 0);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [user?.id, user?.email, user?.user_metadata?.display_name, providerAvatar]);
 
-    return () => window.clearTimeout(timer);
+  useEffect(() => {
+    const handleSync = event => setCloudSyncMessage(event.detail?.status === "done" ? "Synchronisation Supabase terminée." : event.detail?.message || "La synchronisation Supabase a échoué.");
+    window.addEventListener("audiva-cloud-sync", handleSync);
+    return () => window.removeEventListener("audiva-cloud-sync", handleSync);
   }, []);
 
   const updateProfile = (key, value) => setProfile((current) => ({ ...current, [key]: value }));
@@ -63,14 +84,21 @@ export default function ParametresPage() {
 
   const save = async () => {
     try {
-      await saveProfileSettings(profile, preferences);
+      const profileToSave = profile.avatar === providerAvatar && !profile.avatarPath ? { ...profile, avatar: "" } : profile;
+      await saveProfileSettings(profileToSave, preferences);
+      if (user?.id) {
+        await saveCloudAccount(user.id, profileToSave, preferences, cloudPreferences);
+        if (password) await updatePassword(password);
+        if (profile.email && profile.email !== user.email) await updateEmail(profile.email);
+        window.dispatchEvent(new Event("audiva-sync-requested"));
+      }
       window.dispatchEvent(new Event("audiva-profile-updated"));
       setPassword("");
       setSaveError("");
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2200);
     } catch {
-      setSaveError("Impossible d’enregistrer votre photo de profil. Réessayez avec une image plus légère.");
+      setSaveError("Impossible d’enregistrer les modifications. Vérifiez la connexion, les droits Storage et la taille de la photo.");
     }
   };
 
@@ -140,6 +168,7 @@ export default function ParametresPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Nom affiché" value={profile.name} onChange={(value) => updateProfile("name", value)} />
                 <Field label="E-mail" value={profile.email} type="email" onChange={(value) => updateProfile("email", value)} />
+                <Field label="Biographie" value={profile.bio || ""} onChange={(value) => updateProfile("bio", value)} placeholder="Quelques mots sur vous" />
                 <Field label="Nouveau mot de passe" value={password} type="password" placeholder="••••••••" onChange={setPassword} />
               </div>
               <button type="button" onClick={save} className="mt-5 bg-[#72eee7] px-4 py-3 text-sm font-extrabold text-[#061426] transition hover:brightness-110 active:scale-[.98]">Enregistrer les modifications</button>
@@ -150,6 +179,15 @@ export default function ParametresPage() {
               <Toggle label="Statistiques visibles par mes amis" description="Vos amis peuvent comparer leurs habitudes d’écoute aux vôtres." value={preferences.showStats} onChange={() => togglePreference("showStats")} />
               <Toggle label="Autoriser les invitations d’amis" description="Autorise les autres membres à vous envoyer un lien d’invitation." value={preferences.allowFriends} onChange={() => togglePreference("allowFriends")} />
             </Panel>
+
+            {user && <Panel icon={AccountSetting01Icon} title="Sauvegarde Supabase">
+              <p className="py-3 text-xs leading-5 text-[#91a0bd]">Activez séparément les données que vous souhaitez synchroniser. Les fichiers audio importés restent sur cet appareil.</p>
+              <Toggle label="Métadonnées de la bibliothèque" description="Titres, artistes et pochettes, sans fichier audio. Nécessaire pour synchroniser les favoris ou les titres des playlists." value={cloudPreferences.sync_library_metadata} onChange={() => setCloudPreferences(value => { const enabled = !value.sync_library_metadata; return { ...value, sync_library_metadata: enabled, ...(enabled ? {} : { sync_favorites: false, sync_playlists: false }) }; })} />
+              <Toggle label="Historique d’écoute et statistiques" description="Écoutes, durées et dates pour retrouver vos statistiques." value={cloudPreferences.sync_listening_history} onChange={() => setCloudPreferences(value => ({ ...value, sync_listening_history: !value.sync_listening_history }))} />
+              <Toggle label="Favoris" value={cloudPreferences.sync_favorites} onChange={() => setCloudPreferences(value => ({ ...value, sync_library_metadata: true, sync_favorites: !value.sync_favorites }))} />
+              <Toggle label="Playlists Audiva" description="Noms, descriptions, visibilité, pochettes et ordre des titres." value={cloudPreferences.sync_playlists} onChange={() => setCloudPreferences(value => ({ ...value, sync_library_metadata: true, sync_playlists: !value.sync_playlists }))} />
+              <Toggle label="Préférences de recommandation" value={cloudPreferences.sync_recommendations} onChange={() => setCloudPreferences(value => ({ ...value, sync_recommendations: !value.sync_recommendations }))} />
+            </Panel>}
 
             <Panel icon={Notification03Icon} title="Notifications">
               <Toggle label="Nouvelles sorties" description="Recevez les sorties des artistes et sélections que vous suivez." value={preferences.newReleases} onChange={() => togglePreference("newReleases")} />
@@ -187,12 +225,13 @@ export default function ParametresPage() {
           <aside className="h-fit border border-white/8 bg-[#0a1221] p-5 xl:sticky xl:top-24">
             <p className="text-xs font-bold uppercase tracking-[.14em] text-[#83eee8]">Compte Audiva</p>
             <p className="mt-3 text-xl font-black text-white">Votre compte, vos règles.</p>
-            <p className="mt-2 text-sm leading-6 text-[#aebbd7]">Vos réglages sont enregistrés sur cet appareil et appliqués à votre expérience Audiva.</p>
+            <p className="mt-2 text-sm leading-6 text-[#aebbd7]">{user ? "Votre profil est synchronisé avec Supabase. Choisissez les données à sauvegarder dans le cloud." : "Vos réglages restent enregistrés sur cet appareil. Connectez-vous pour synchroniser votre compte."}</p>
             {saved && <p role="status" className="mt-5 flex items-center gap-2 bg-[#72eee7]/10 p-3 text-xs font-bold text-[#bffffa]"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} />Modifications enregistrées</p>}
-            <button type="button" onClick={() => setLogoutConfirmationOpen(true)} className="mt-6 flex w-full items-center gap-2 border border-rose-300/35 px-3 py-3 text-sm font-bold text-rose-200 transition hover:bg-rose-300/10">
+            {cloudSyncMessage && <p role="status" className={`mt-3 text-xs ${cloudSyncMessage.includes("échoué") || cloudSyncMessage.includes("Impossible") ? "text-rose-200" : "text-[#bffffa]"}`}>{cloudSyncMessage}</p>}
+            {user ? <button type="button" onClick={() => setLogoutConfirmationOpen(true)} className="mt-6 flex w-full items-center gap-2 border border-rose-300/35 px-3 py-3 text-sm font-bold text-rose-200 transition hover:bg-rose-300/10">
               <HugeiconsIcon icon={Cancel01Icon} size={18} />
               Se déconnecter
-            </button>
+            </button> : <button type="button" onClick={() => router.push("/authentification/connexion")} className="mt-6 w-full bg-[#72eee7] px-3 py-3 text-sm font-extrabold text-[#061426]">Se connecter à Supabase</button>}
           </aside>
         </section>
       {logoutConfirmationOpen && (
@@ -203,7 +242,7 @@ export default function ParametresPage() {
             <p className="mt-3 text-sm leading-6 text-[#aebbd7]">Voulez-vous vraiment vous déconnecter de votre compte sur cet appareil ?</p>
             <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button type="button" onClick={() => setLogoutConfirmationOpen(false)} className="border border-white/12 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/5">Annuler</button>
-              <button type="button" onClick={() => { clearUser(); router.push("/"); }} className="bg-rose-400 px-4 py-3 text-sm font-extrabold text-[#220810] transition hover:bg-rose-300">Oui, se déconnecter</button>
+              <button type="button" onClick={async () => { try { await signOut(); clearUser(); router.push("/authentification/connexion"); } catch (error) { setSaveError(error.message || "Déconnexion impossible."); } }} className="bg-rose-400 px-4 py-3 text-sm font-extrabold text-[#220810] transition hover:bg-rose-300">Oui, se déconnecter</button>
             </div>
           </div>
         </div>

@@ -50,6 +50,7 @@ export default function PersonalizedDiscoveries({ artists = [], tracks = [], loc
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState("");
   const [refresh, setRefresh] = useState(0);
+  const [spotifyConnected, setSpotifyConnected] = useState(false);
   const profile = useMemo(() => getTasteProfile({ artists, tracks, likedTracks, recentTracks, plays, localTracks }), [artists, tracks, likedTracks, recentTracks, plays, localTracks]);
   const profileKey = useMemo(() => JSON.stringify(profile), [profile]);
   const stableProfile = useMemo(() => JSON.parse(profileKey), [profileKey]);
@@ -69,7 +70,7 @@ export default function PersonalizedDiscoveries({ artists = [], tracks = [], loc
       .map(({ track }) => ({ ...track, recommendationReason: "À explorer dans votre bibliothèque" }));
   }, [localTracks, likedTracks, listenedIdsKey, stableProfile]);
 
-  useEffect(() => { hydrateHistory(); }, [hydrateHistory]);
+  useEffect(() => { hydrateHistory(); setSpotifyConnected(hasSpotifySession()); }, [hydrateHistory]);
   useEffect(() => {
     const controller = new AbortController();
     const load = async () => {
@@ -108,7 +109,7 @@ export default function PersonalizedDiscoveries({ artists = [], tracks = [], loc
         });
         setRecommendations([...unique.values(), ...localSuggestions.filter(item => !unique.has(item.id) && !hiddenIds.includes(item.id))].slice(0, 16));
         const failed = results.filter(result => result.status === "rejected");
-        if (failed.length === results.length) setNotice(failed[0]?.reason?.message || "Les suggestions Spotify sont temporairement indisponibles.");
+        if (failed.length === results.length) setNotice(failed[0]?.reason?.message || "Les suggestions sont momentanément indisponibles.");
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -132,8 +133,8 @@ export default function PersonalizedDiscoveries({ artists = [], tracks = [], loc
   return <section className="personal-discoveries" aria-labelledby="personal-discoveries-title">
     <header><div><span><HugeiconsIcon icon={SparklesIcon} size={16} /> VOTRE SÉLECTION ÉVOLUE AVEC VOUS</span><h2 id="personal-discoveries-title">À découvrir selon vos goûts</h2><p>Basé sur vos titres favoris, vos écoutes récentes et vos artistes Spotify préférés.</p></div><button type="button" onClick={() => setRefresh(value => value + 1)} disabled={loading} aria-label="Actualiser les recommandations"><HugeiconsIcon icon={RefreshIcon} size={17} />{loading ? " Recherche…" : "Actualiser"}</button></header>
     {stableProfile.genres.length > 0 && <div className="personal-discoveries-taste">Vos couleurs musicales <div>{stableProfile.genres.map(genre => <span key={genre}>{genre}</span>)}</div></div>}
-    {notice && <p className="personal-discoveries-notice" role="status">{notice}{!hasSpotifySession() && <button type="button" onClick={() => connectSpotify().catch(error => setNotice(error.message))}>Connecter Spotify</button>}</p>}
-    {recommendations.length > 0 ? <div className="personal-discoveries-grid">{recommendations.map(track => { const liked = likedTracks.some(item => item.id === track.id); return <article key={track.id}><button type="button" className="personal-discoveries-cover" onClick={() => play(track)} aria-label={`Écouter ${track.title} dans Audiva`}><PochetteImage unoptimized src={track.cover} alt="" width={360} height={360} /><span><HugeiconsIcon icon={PlayIcon} size={20} fill="currentColor" /></span></button><div className="personal-discoveries-copy"><strong title={track.title}>{track.title}</strong><small title={track.artist}>{track.artist}</small><em>{track.recommendationReason}</em></div><button type="button" className="personal-discoveries-like" aria-pressed={liked} onClick={() => useLecteurStore.getState().toggleLike(track)} aria-label={liked ? `Retirer ${track.title} des favoris` : `Ajouter ${track.title} aux favoris`} title={liked ? "Retirer des favoris" : "J’aime ça"}><HugeiconsIcon icon={FavouriteIcon} size={16} fill={liked ? "currentColor" : "none"} /></button><button type="button" className="personal-discoveries-hide" onClick={() => hide(track)} aria-label={`Moins de recommandations comme ${track.title}`} title="Moins comme ça"><HugeiconsIcon icon={ThumbsDownIcon} size={16} /></button></article>; })}</div> : !loading && !notice && <p className="personal-discoveries-empty">{stableProfile.artists.length ? "Pas encore de nouveau titre trouvé à partir de vos goûts. Actualisez pour réessayer." : "Écoutez ou ajoutez quelques titres favoris pour personnaliser vos découvertes."}{!hasSpotifySession() && <button type="button" onClick={() => connectSpotify().catch(error => setNotice(error.message))}>Connecter Spotify</button>}</p>}
+    {notice && <p className="personal-discoveries-notice" role="status">{notice}{!spotifyConnected && <button type="button" onClick={() => connectSpotify().catch(error => setNotice(error.message))}>Associer mon compte</button>}</p>}
+    {recommendations.length > 0 ? <div className="personal-discoveries-grid">{recommendations.map(track => { const liked = likedTracks.some(item => item.id === track.id); return <article key={track.id}><button type="button" className="personal-discoveries-cover" onClick={() => play(track)} aria-label={`Écouter ${track.title} dans Audiva`}><PochetteImage unoptimized src={track.cover} alt="" width={360} height={360} /><span><HugeiconsIcon icon={PlayIcon} size={20} fill="currentColor" /></span></button><div className="personal-discoveries-copy"><strong title={track.title}>{track.title}</strong><small title={track.artist}>{track.artist}</small><em>{track.recommendationReason}</em></div><button type="button" className="personal-discoveries-like" aria-pressed={liked} onClick={() => useLecteurStore.getState().toggleLike(track)} aria-label={liked ? `Retirer ${track.title} des favoris` : `Ajouter ${track.title} aux favoris`} title={liked ? "Retirer des favoris" : "J’aime ça"}><HugeiconsIcon icon={FavouriteIcon} size={16} fill={liked ? "currentColor" : "none"} /></button><button type="button" className="personal-discoveries-hide" onClick={() => hide(track)} aria-label={`Moins de recommandations comme ${track.title}`} title="Moins comme ça"><HugeiconsIcon icon={ThumbsDownIcon} size={16} /></button></article>; })}</div> : !loading && !notice && <p className="personal-discoveries-empty">{stableProfile.artists.length ? "Pas encore de nouveau titre trouvé à partir de vos goûts. Actualisez pour réessayer." : "Écoutez ou ajoutez quelques titres favoris pour personnaliser vos découvertes."}{!spotifyConnected && <button type="button" onClick={() => connectSpotify().catch(error => setNotice(error.message))}>Associer mon compte</button>}</p>}
     <footer>Les suggestions utilisent le catalogue Spotify et, si besoin, les fichiers de votre bibliothèque. « Moins comme ça » masque un titre sur cet appareil.</footer>
   </section>;
 }

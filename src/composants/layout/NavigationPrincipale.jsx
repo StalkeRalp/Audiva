@@ -5,12 +5,12 @@ import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, ArrowLeft01Icon, ArrowRight01Icon, ChartBarBigIcon, CompassIcon, FavouriteIcon, Home01Icon, LibraryIcon, Message01Icon, Notification03Icon, Search01Icon, Settings01Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import { Add01Icon, ArrowLeft01Icon, ArrowRight01Icon, ChartBarBigIcon, CompassIcon, FavouriteIcon, Home01Icon, LibraryIcon, Message01Icon, Notification01Icon, Search01Icon, Settings01Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
 
 const sections = [
   { label: "Découvrir", items: [{ href: "/accueil", label: "Accueil", icon: Home01Icon }, { href: "/recherche", label: "Recherche", icon: Search01Icon }, { href: "/decouverte", label: "Découvrir", icon: CompassIcon }] },
   { label: "Ma musique", items: [{ href: "/bibliotheque", label: "Bibliothèque", icon: LibraryIcon }, { href: "/bibliotheque?vue=statistiques", label: "Statistiques", icon: ChartBarBigIcon, query: "statistiques" }, { href: "/favoris", label: "Favoris", icon: FavouriteIcon }] },
-  { label: "Social", items: [{ href: "/amis", label: "Amis", icon: UserGroupIcon }, { href: "/chat", label: "Messages", icon: Message01Icon }, { href: "/notifications", label: "Notifications", icon: Notification03Icon }] },
+  { label: "Social", items: [{ href: "/amis", label: "Amis", icon: UserGroupIcon }, { href: "/chat", label: "Messages", icon: Message01Icon }, { href: "/notifications", label: "Notifications", icon: Notification01Icon }] },
   { label: "Compte", items: [{ href: "/bibliotheque?import=1", label: "Importer ma musique", icon: Add01Icon, action: true }, { href: "/parametres", label: "Paramètres", icon: Settings01Icon }] },
 ];
 

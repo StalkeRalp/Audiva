@@ -16,7 +16,7 @@ export default function PlaylistCard({ playlist, onClick }) {
 
   const handlePlayClick = (e) => {
     e.stopPropagation();
-    if (playlist.externalUrl) { window.open(playlist.externalUrl, "_blank", "noopener,noreferrer"); return; }
+    if (playlist.externalUrl) { onClick?.(); return; }
     if (!playlist.songs?.length) { onClick?.(); return; }
     const player = useLecteurStore.getState();
     player.setQueue(playlist.songs, playlist.title);

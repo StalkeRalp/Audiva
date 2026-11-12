@@ -5,7 +5,7 @@ export function ChampSaisie({ label, type = "text", ...props }) {
       <input
         type={type}
         {...props}
-        className="w-full rounded-2xl border border-white/10 bg-white/[.045] px-4 py-3 text-slate-100 outline-none placeholder:text-slate-500 focus:border-cyan-500"
+        className="w-full rounded-2xl border border-white/10 bg-white/[.045] px-4 py-3 text-slate-100 outline-none placeholder:text-slate-500 focus:border-[#76eee9] focus:ring-0"
       />
     </label>
   );
