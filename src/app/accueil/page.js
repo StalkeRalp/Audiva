@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HeroAccueil } from "@/domaines/accueil/composants/HeroAccueil";
 import { useAccueil } from "@/domaines/accueil/hooks/useAccueil";
 import { useRouter } from "next/navigation";
@@ -79,11 +81,9 @@ export default function AccueilPage() {
 
       {/* Feedback Toast */}
       {feedback && (
-        <div
-          role="status"
-          className="fixed bottom-24 right-5 z-50 rounded-xl border border-white/25 bg-[#101d36] px-4 py-3 text-sm shadow-2xl"
-        >
-          {feedback}
+        <div role="status" className="fixed bottom-24 right-5 z-50 flex max-w-[calc(100vw-24px)] items-center gap-3 rounded-xl border border-white/25 bg-[#101d36] px-4 py-3 pr-2 text-sm shadow-2xl">
+          <span>{feedback}</span>
+          <button type="button" onClick={() => setFeedback("")} aria-label="Fermer le message" className="grid h-7 w-7 shrink-0 place-items-center rounded-full hover:bg-white/10"><HugeiconsIcon icon={Cancel01Icon} size={16}/></button>
         </div>
       )}
     </main>

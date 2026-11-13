@@ -26,7 +26,7 @@ export default function AddToPlaylistModal({ isOpen, onClose, onAddToPlaylist })
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="rounded-2xl bg-[#0f1a2e] border border-white/10 p-6 w-full max-w-sm max-h-[80vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-white mb-4">Ajouter à la playlist</h2>
+        <header className="mb-4 flex items-center justify-between gap-3"><h2 className="text-xl font-bold text-white">Ajouter à la playlist</h2><button type="button" onClick={onClose} aria-label="Fermer la fenêtre" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-2xl leading-none text-slate-400 transition hover:bg-white/10 hover:text-white">×</button></header>
 
         {!showCreateNew ? (
           <>

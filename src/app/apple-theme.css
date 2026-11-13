@@ -1,0 +1,1196 @@
+/* Audiva's optional Apple inspired light palette. It changes presentation only. */
+html[data-theme="apple"] {
+  color-scheme: light;
+  --background: #f5f5f7;
+  --foreground: #1d1d1f;
+  --apple-surface: #ffffff;
+  --apple-surface-muted: #eceef2;
+  --apple-line: #d9dde4;
+  --apple-ink: #1d1d1f;
+  --apple-secondary: #626b78;
+  --apple-accent: #087f85;
+}
+
+html[data-theme="apple"] body {
+  background: #f5f5f7 !important;
+  color: var(--apple-ink) !important;
+  color-scheme: light;
+}
+
+html[data-theme="apple"] .audiva-app,
+html[data-theme="apple"] .audiva-workspace,
+html[data-theme="apple"] .music-intelligence,
+html[data-theme="apple"] .discovery-board,
+html[data-theme="apple"] .db-surface,
+html[data-theme="apple"] .audiva-chat,
+html[data-theme="apple"] .audiva-collection,
+html[data-theme="apple"] .audiva-favoris,
+html[data-theme="apple"] .audiva-playlists,
+html[data-theme="apple"] .artist-profile {
+  background-color: #f5f5f7 !important;
+  color: var(--apple-ink) !important;
+}
+
+html[data-theme="apple"] :is([class*="text-white"],[class*="text-slate-100"],[class*="text-slate-200"],[class*="text-gray-100"],[class*="text-gray-200"]) {
+  color: var(--apple-ink) !important;
+}
+html[data-theme="apple"] :is(input,textarea,select,[contenteditable="true"]) {
+  border-color: #d6dbe3 !important;
+  background-color: #fff !important;
+  color: #1d1d1f !important;
+  color-scheme: light;
+}
+html[data-theme="apple"] :is(input,textarea,[contenteditable="true"])::placeholder { color: #7b8492 !important; }
+
+/* Convert the app's common dark utility surfaces to layered Apple style cards. */
+html[data-theme="apple"] :is(
+  [class*="bg-[#02050b]"],[class*="bg-[#02050d]"],[class*="bg-[#030612]"],
+  [class*="bg-[#060b18]"],[class*="bg-[#061426]"],[class*="bg-[#06192c]"],
+  [class*="bg-[#07101e]"],[class*="bg-[#07111f]"],[class*="bg-[#07132b]"],
+  [class*="bg-[#07192f]"],[class*="bg-[#071a2b]"],[class*="bg-[#071b3a]"],
+  [class*="bg-[#080e1b]"],[class*="bg-[#080f20]"],[class*="bg-[#08101d]"],
+  [class*="bg-[#08101e]"],[class*="bg-[#081122]"],[class*="bg-[#091322]"],
+  [class*="bg-[#091b32]"],[class*="bg-[#0a1221]"],[class*="bg-[#0a1324]"],
+  [class*="bg-[#0b1221]"],[class*="bg-[#0b1425]"],[class*="bg-[#0b1426]"],
+  [class*="bg-[#0c1422]"],[class*="bg-[#0c1425]"],[class*="bg-[#0c1630]"],
+  [class*="bg-[#0d1527]"],[class*="bg-[#0f1a2e]"],[class*="bg-[#101626]"],
+  [class*="bg-[#101b2d]"],[class*="bg-[#101b31]"],[class*="bg-[#101d36]"],
+  [class*="bg-[#10203a]"],[class*="bg-[#102044]"],[class*="bg-[#112139]"],
+  [class*="bg-[#11213b]"],[class*="bg-[#11284a]"],[class*="bg-[#151d2d]"],
+  [class*="bg-[#152444]"],[class*="bg-[#15294a]"],[class*="bg-[#171a22]"],
+  [class*="bg-[#172237]"],[class*="bg-[#182750]"],[class*="bg-[#1a1f2d]"],
+  [class*="bg-[#202124]"],[class*="bg-[#26375c]"],[class*="bg-[#263b72]"],
+  [class*="bg-[#27334d]"],[class*="bg-black"]
+) {
+  background-color: var(--apple-surface) !important;
+  color: var(--apple-ink) !important;
+}
+
+/* Keep image-led heroes and the landing art dark enough for readable overlays. */
+html[data-theme="apple"] :is(.hero-accueil,.db-hero,.mi-header,.artist-profile-hero,.landing-screen) {
+  color: #f8fafc !important;
+}
+html[data-theme="apple"] :is(.hero-accueil,.db-hero,.mi-header,.artist-profile-hero,.landing-screen) [class*="text-white"],
+html[data-theme="apple"] :is(.hero-accueil,.db-hero,.mi-header,.artist-profile-hero,.landing-screen) h1,
+html[data-theme="apple"] :is(.hero-accueil,.db-hero,.mi-header,.artist-profile-hero,.landing-screen) h2 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="apple"] :is(.audiva-topbar,.audiva-sidebar,.audiva-mobile-nav) {
+  border-color: #dfe2e8 !important;
+  background: rgb(255 255 255 / .92) !important;
+  color: #1d1d1f !important;
+  box-shadow: 0 8px 28px rgb(20 28 42 / .08) !important;
+  backdrop-filter: blur(24px) saturate(160%);
+}
+html[data-theme="apple"] .audiva-topbar :is(button,a),
+html[data-theme="apple"] .audiva-sidebar :is(button,a),
+html[data-theme="apple"] .audiva-mobile-nav :is(button,a) {
+  color: #485363 !important;
+}
+html[data-theme="apple"] :is(.audiva-topbar,.audiva-sidebar,.audiva-mobile-nav) [class*="text-white"] { color: #28313e !important; }
+html[data-theme="apple"] .audiva-theme-toggle {
+  border: 1px solid #dfe2e8;
+  background: #f1f2f5;
+  color: #303a49 !important;
+}
+html[data-theme="apple"] .audiva-theme-toggle:hover { background: #e5e8ed !important; }
+
+html[data-theme="apple"] :is(.audiva-workspace,.audiva-chat,.music-intelligence,.discovery-board,.db-surface,.audiva-collection,.audiva-favoris,.audiva-playlists,.artist-profile) :is(h1,h2,h3,h4,p,span,label,small,strong,li) {
+  color: var(--apple-ink);
+}
+html[data-theme="apple"] :is(.audiva-workspace,.audiva-chat,.music-intelligence,.discovery-board,.db-surface,.audiva-collection,.audiva-favoris,.audiva-playlists,.artist-profile) :is(p,small,label,[class*="text-[#91"],[class*="text-[#8"],[class*="text-[#9"],[class*="text-[#a"],[class*="text-[#b"]) {
+  color: var(--apple-secondary) !important;
+}
+html[data-theme="apple"] :is(.audiva-workspace,.audiva-chat,.music-intelligence,.discovery-board,.db-surface,.audiva-collection,.audiva-favoris,.audiva-playlists,.artist-profile) :is(button,a)[class*="text-white"],
+html[data-theme="apple"] :is(.audiva-workspace,.audiva-chat,.music-intelligence,.discovery-board,.db-surface,.audiva-collection,.audiva-favoris,.audiva-playlists,.artist-profile) [class*="text-[#edf"],
+html[data-theme="apple"] :is(.audiva-workspace,.audiva-chat,.music-intelligence,.discovery-board,.db-surface,.audiva-collection,.audiva-favoris,.audiva-playlists,.artist-profile) [class*="text-[#eff"],
+html[data-theme="apple"] :is(.audiva-workspace,.audiva-chat,.music-intelligence,.discovery-board,.db-surface,.audiva-collection,.audiva-favoris,.audiva-playlists,.artist-profile) [class*="text-[#f"] {
+  color: var(--apple-ink) !important;
+}
+html[data-theme="apple"] .audiva-app [class*="text-white"],
+html[data-theme="apple"] .audiva-app [class*="text-[#edf"],
+html[data-theme="apple"] .audiva-app [class*="text-[#eff"],
+html[data-theme="apple"] .audiva-app [class*="text-[#f4"],
+html[data-theme="apple"] .audiva-app [class*="text-[#f5"],
+html[data-theme="apple"] .audiva-app [class*="text-[#f8"] {
+  color: var(--apple-ink) !important;
+}
+html[data-theme="apple"] :is(.audiva-app,.audiva-topbar,.audiva-sidebar,.audiva-mobile-nav) [class*="text-[#76eee9]"],
+html[data-theme="apple"] :is(.audiva-app,.audiva-topbar,.audiva-sidebar,.audiva-mobile-nav) [class*="text-[#a6f6ef]"],
+html[data-theme="apple"] :is(.audiva-app,.audiva-topbar,.audiva-sidebar,.audiva-mobile-nav) [class*="text-[#b7fffb]"],
+html[data-theme="apple"] :is(.audiva-app,.audiva-topbar,.audiva-sidebar,.audiva-mobile-nav) [class*="text-[#b8fffb]"] {
+  color: var(--apple-accent) !important;
+}
+html[data-theme="apple"] :is(.audiva-workspace,.audiva-chat,.music-intelligence,.discovery-board,.db-surface,.audiva-collection,.audiva-favoris,.audiva-playlists,.artist-profile) :is(article,aside,section,[role="dialog"],[role="menu"],[role="listbox"],[class*="rounded-2xl"],[class*="rounded-3xl"]) {
+  border-color: var(--apple-line);
+}
+html[data-theme="apple"] :is(.audiva-workspace,.music-intelligence,.discovery-board,.db-surface,.audiva-collection,.audiva-favoris,.audiva-playlists,.artist-profile) article {
+  background-color: var(--apple-surface) !important;
+  box-shadow: 0 8px 28px rgb(24 32 46 / .06);
+}
+html[data-theme="apple"] :is(.audiva-workspace,.audiva-chat,.music-intelligence,.discovery-board,.db-surface,.audiva-collection,.audiva-favoris,.audiva-playlists,.artist-profile) :is(input,textarea,select,[contenteditable="true"]) {
+  border-color: #d6dbe3 !important;
+  background-color: #fff !important;
+  color: #1d1d1f !important;
+  color-scheme: light;
+}
+html[data-theme="apple"] :is(.audiva-workspace,.audiva-chat,.music-intelligence,.discovery-board,.db-surface,.audiva-collection,.audiva-favoris,.audiva-playlists,.artist-profile) :is(input,textarea,select)::placeholder {
+  color: #7b8492 !important;
+}
+html[data-theme="apple"] :is(.audiva-workspace,.audiva-chat,.music-intelligence,.discovery-board,.db-surface,.audiva-collection,.audiva-favoris,.audiva-playlists,.artist-profile) [class*="border-white/"] {
+  border-color: #dfe2e8 !important;
+}
+
+/* Dedicated surfaces with hand-authored dark CSS instead of utility classes. */
+html[data-theme="apple"] .audiva-chat>section:nth-child(2),
+html[data-theme="apple"] .audiva-chat>section:nth-child(2)>aside,
+html[data-theme="apple"] .audiva-chat>section:nth-child(2)>section>header,
+html[data-theme="apple"] .audiva-chat>section:nth-child(2)>section>div,
+html[data-theme="apple"] .audiva-chat form,
+html[data-theme="apple"] .chat-gif-library,
+html[data-theme="apple"] .chat-gif-searchbar,
+html[data-theme="apple"] .chat-gif-tabs,
+html[data-theme="apple"] .chat-gif-preview-card,
+html[data-theme="apple"] .chat-gif-preview-frame,
+html[data-theme="apple"] .chat-gif-result,
+html[data-theme="apple"] .mi-metrics article,
+html[data-theme="apple"] .mi-insights article,
+html[data-theme="apple"] .mi-chart,
+html[data-theme="apple"] .mi-hourly,
+html[data-theme="apple"] .mi-analytics-grid,
+html[data-theme="apple"] .mi-rankings,
+html[data-theme="apple"] .mi-profile>div>article {
+  border-color: var(--apple-line) !important;
+  background-color: #fff !important;
+  color: var(--apple-ink) !important;
+  box-shadow: 0 8px 28px rgb(24 32 46 / .06);
+}
+html[data-theme="apple"] .audiva-chat :is(.chat-bubble,[class*="message"]),
+html[data-theme="apple"] .chat-gif-library :is(button,p,small,a),
+html[data-theme="apple"] .audiva-chat :is(h1,h2,h3,p,span,small,label) {
+  color: #28313e;
+}
+html[data-theme="apple"] .audiva-chat .chat-bubble[class*="bg-[#172237]"] { background: #eceef2 !important; color: #202630 !important; }
+html[data-theme="apple"] .audiva-chat .chat-bubble[class*="bg-[#76eee9]"] { background: #087f85 !important; color: #fff !important; }
+html[data-theme="apple"] .audiva-player:not(.audiva-player--apple) {
+  border-color: #dfe2e8 !important;
+  background: rgb(255 255 255 / .96) !important;
+  color: #1d1d1f !important;
+  box-shadow: 0 12px 36px rgb(24 32 46 / .12) !important;
+}
+html[data-theme="apple"] .audiva-player:not(.audiva-player--apple) :is(a,button,span,p) { color: #343d4a; }
+html[data-theme="apple"] .audiva-player .audiva-player-play-toggle { color: #071523 !important; }
+html[data-theme="apple"] .audiva-queue,
+html[data-theme="apple"] .audiva-player-notice,
+html[data-theme="apple"] .audiva-share-dialog:not(.audiva-share-dialog--apple) {
+  border-color: var(--apple-line) !important;
+  background: #fff !important;
+  color: var(--apple-ink) !important;
+}
+html[data-theme="apple"] .audiva-lyrics-panel,
+html[data-theme="apple"] .audiva-lyrics-panel>header,
+html[data-theme="apple"] .audiva-lyrics-panel>footer { color: var(--apple-ink) !important; }
+html[data-theme="apple"] .now-playing {
+  background: #f5f5f7 !important;
+  color: var(--apple-ink) !important;
+}
+html[data-theme="apple"] .now-playing :is(.now-playing__header,.now-playing__appearance,.now-playing__tools,.now-playing__info) {
+  border-color: var(--apple-line) !important;
+  background-color: #ffffffd9 !important;
+  color: var(--apple-ink) !important;
+  box-shadow: 0 12px 34px rgb(24 32 46 / .08);
+}
+html[data-theme="apple"] .now-playing .now-playing__header {
+  width: min(400px,calc(100% - 36px));
+  min-height: 60px;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid rgb(255 255 255 / .8) !important;
+  border-radius: 999px;
+  background: rgb(255 255 255 / .72) !important;
+  box-shadow: 0 10px 28px rgb(25 39 58 / .12),inset 0 1px 0 rgb(255 255 255 / .9) !important;
+  backdrop-filter: blur(24px) saturate(145%);
+}
+html[data-theme="apple"] .now-playing .now-playing__source { flex: 1; }
+html[data-theme="apple"] .now-playing :is(.now-playing__source,.now-playing__identity,.now-playing__volume,.now-playing__timeline,.now-playing__transport) { color: var(--apple-ink); }
+html[data-theme="apple"] .now-playing :is(.now-playing__source span,.now-playing__identity p,.now-playing__identity span) { color: var(--apple-secondary) !important; }
+html[data-theme="apple"] .now-playing .now-playing__glass { border-color: #d6dbe3 !important; background: #ffffffd9 !important; color: #28313e !important; }
+html[data-theme="apple"] .now-playing .now-playing__play { background: #76eee9 !important; color: #071523 !important; box-shadow: 0 8px 22px #087f8526; }
+html[data-theme="apple"] .db-collections :is(.db-albums,.db-artist-spotlight,.db-collection-empty,.db-artist-empty),
+html[data-theme="apple"] .db-collections :is(.db-collection-section,.db-artist-card) {
+  border-color: var(--apple-line) !important;
+  background-color: #fff !important;
+  color: var(--apple-ink) !important;
+}
+html[data-theme="apple"] .audiva-notifications article,
+html[data-theme="apple"] .audiva-friend-profile article,
+html[data-theme="apple"] .audiva-friend-profile>section>div,
+html[data-theme="apple"] .audiva-amis article,
+html[data-theme="apple"] .audiva-amis section {
+  border-color: var(--apple-line) !important;
+  background-color: #fff !important;
+  color: var(--apple-ink) !important;
+}
+
+/* Restore semantic accent, status and media colors after the light surfaces. */
+html[data-theme="apple"] :is(button,a)[class*="bg-[#76eee9]"],
+html[data-theme="apple"] :is(button,a)[class*="bg-[#a6f6ef]"] { color: #092127 !important; }
+html[data-theme="apple"] :is([class*="text-[#76eee9]"],[class*="text-[#a6f6ef]"],[class*="text-[#b7fffb]"],[class*="text-[#b8fffb]"],[class*="text-[#bffcf8]"],[class*="text-[#bffffa]"],[class*="text-[#c8fffb]"],[class*="text-[#c9fffb]"]) { color: var(--apple-accent) !important; }
+html[data-theme="apple"] [role="alert"],
+html[data-theme="apple"] [role="status"] { color: #394657; }
+html[data-theme="apple"] img,
+html[data-theme="apple"] video,
+html[data-theme="apple"] canvas { filter: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme="apple"] :is(button,a,input,select,textarea) { transition-property: background-color,border-color,color,box-shadow,transform; }
+}
+
+/* Final contrast pass: component CSS often sets foreground and gradient in one rule. */
+html[data-theme="apple"] body :is(h1,h2,h3,h4,h5,p,a,button,span,small,strong,em,label,li,time,summary,td,th,dt,dd,legend) {
+  color: #202630 !important;
+}
+html[data-theme="apple"] body :is(input,textarea,select,[contenteditable="true"]) {
+  color: #202630 !important;
+  background: #fff !important;
+  border-color: #d7dce4 !important;
+  color-scheme: light;
+}
+html[data-theme="apple"] body :is(input,textarea,[contenteditable="true"])::placeholder { color: #727d8b !important; }
+html[data-theme="apple"] body :is(.hero-accueil,.db-hero,.mi-header,.artist-profile-hero,.landing-screen,.collection-banner,.audiva-bibliotheque>section:first-child,.audiva-amis>section:first-child,.audiva-favoris>div>section:first-child,.audiva-workspace>section:first-child,main:has(>section>img)>section:first-child) :is(h1,h2,h3,p,a,button,span,small,strong,em,label) {
+  color: #f8fafc !important;
+}
+html[data-theme="apple"] body :is(.hero-accueil,.db-hero,.mi-header,.artist-profile-hero,.landing-screen,.collection-banner,.audiva-bibliotheque>section:first-child,.audiva-amis>section:first-child,.audiva-favoris>div>section:first-child,.audiva-workspace>section:first-child,main:has(>section>img)>section:first-child) :is(button,a) {
+  border-color: #ffffff45;
+}
+html[data-theme="apple"] body :is(.audiva-bibliotheque>section:first-child,.audiva-amis>section:first-child,.audiva-favoris>div>section:first-child,.audiva-workspace>section:first-child,main:has(>section>img)>section:first-child) {
+  background-color: #081122 !important;
+}
+
+/* Personalized discoveries uses its own CSS surface and needs explicit light-theme contrast. */
+html[data-theme="apple"] .personal-discoveries {
+  border-color: var(--apple-line) !important;
+  background: #fff !important;
+  color: var(--apple-ink) !important;
+}
+html[data-theme="apple"] .personal-discoveries :is(h1,h2,h3,h4,p,span,small,strong,button,a) {
+  color: var(--apple-ink) !important;
+}
+html[data-theme="apple"] .personal-discoveries :is(p,small,[class*="muted"],[class*="description"]) {
+  color: var(--apple-secondary) !important;
+}
+html[data-theme="apple"] .personal-discoveries article,
+html[data-theme="apple"] .personal-discoveries [class*="card"] {
+  border-color: var(--apple-line) !important;
+  background: #fff !important;
+}
+
+/* Hand-authored dark gradients and panels across chat, lists, and dialogs. */
+html[data-theme="apple"] :is(
+  .audiva-chat>section:first-child,
+  .audiva-chat>section:nth-child(2),
+  .audiva-chat>section:nth-child(2)>aside,
+  .audiva-chat>section:nth-child(2)>section,
+  .audiva-chat>section:nth-child(2)>section>header,
+  .audiva-chat>section:nth-child(2)>section>div,
+  .audiva-chat .chat-conversation-search,
+  .audiva-chat .chat-conversation-item,
+  .audiva-chat form,
+  .audiva-chat form>div:last-child,
+  .audiva-chat form>div.absolute,
+  .chat-gif-library,
+  .chat-gif-searchbar,
+  .chat-gif-tabs,
+  .chat-gif-trending,
+  .chat-gif-preview-card,
+  .chat-gif-preview-frame,
+  .chat-gif-result,
+  .playlist-add-dialog,
+  .playlist-add-choices>button,
+  .playlist-add-search,
+  .playlist-add-list,
+  .audiva-queue,
+  .audiva-player-notice,
+  .audiva-share-dialog,
+  .mi-feature,
+  .mi-chart,
+  .mi-hourly,
+  .mi-profile,
+  .mi-rankings,
+  .mi-insights,
+  .db-collections .db-albums,
+  .db-collections .db-artist-spotlight,
+  .db-collection-section,
+  .audiva-amis>section:nth-child(2)>section:first-child
+) {
+  background: #fff !important;
+  border-color: #dfe2e8 !important;
+  color: #202630 !important;
+  box-shadow: 0 8px 26px rgb(24 32 46 / .06);
+}
+html[data-theme="apple"] .audiva-chat .chat-bubble[class*="bg-[#76eee9]"],
+html[data-theme="apple"] .audiva-chat form button[type="submit"],
+html[data-theme="apple"] .playlist-add-primary,
+html[data-theme="apple"] .audiva-workspace :is(button,a)[class*="bg-[#76eee9]"],
+html[data-theme="apple"] .now-playing .now-playing__play {
+  background: linear-gradient(135deg,#76eee9,#8bd8ff) !important;
+  color: #092127 !important;
+}
+html[data-theme="apple"] :is(.chat-bubble[class*="bg-[#172237]"],.playlist-add-choices>button:hover) {
+  background: #eef0f4 !important;
+  color: #202630 !important;
+}
+html[data-theme="apple"] :is(.chat-gif-library,.playlist-add-dialog,.audiva-queue,.audiva-share-dialog) :is(button,a,p,span,small,strong,h1,h2,h3,label) {
+  color: #202630 !important;
+}
+html[data-theme="apple"] :is(.chat-gif-library,.playlist-add-dialog,.audiva-queue,.audiva-share-dialog) :is([class*="text-[#76eee9]"],[class*="text-[#a6f6ef]"]) { color: #087f85 !important; }
+html[data-theme="apple"] .audiva-chat>section:first-child,
+html[data-theme="apple"] .audiva-favoris>div>section:first-child:not(:has(img)) {
+  background: linear-gradient(115deg,#ffffff,#f1f3f6) !important;
+  color: #202630 !important;
+}
+html[data-theme="apple"] .audiva-chat>section:first-child :is(h1,h2,p,span,small),
+html[data-theme="apple"] .audiva-favoris>div>section:first-child:not(:has(img)) {
+  background: linear-gradient(115deg,#ffffff,#f1f3f6) !important;
+  color: #202630 !important;
+}
+html[data-theme="apple"] .audiva-favoris>div>section:first-child:not(:has(img)) :is(h1,h2,p,span,small) {
+  color: #202630 !important;
+}
+html[data-theme="apple"] .audiva-favoris>div>section:first-child:has(img)>div.absolute.inset-x-0 {
+  background: linear-gradient(180deg,transparent 12%,rgb(9 14 24 / .35) 100%) !important;
+}
+html[data-theme="apple"] .audiva-favoris>div>section:first-child:has(img) { background: transparent !important; }
+html[data-theme="apple"] .audiva-favoris>div>section:first-child:has(img)>div.absolute:not(.inset-x-0):not(:has(>img)) {
+  background: linear-gradient(90deg,rgb(9 14 24 / .52),rgb(9 14 24 / .2) 55%,rgb(9 14 24 / .03)) !important;
+}
+
+/* Light, luminous plasma for the full-screen player in Apple mode. */
+html[data-theme="apple"] .now-playing__plasma {
+  background: #f5f5f7 !important;
+}
+html[data-theme="apple"] .now-playing__plasma .plasma-artwork {
+  opacity: 0 !important;
+  filter: none !important;
+}
+html[data-theme="apple"] .now-playing__plasma .plasma-canvas {
+  opacity: .96 !important;
+  filter: saturate(1.12) !important;
+}
+html[data-theme="apple"] .now-playing__plasma [class*="shade"] {
+  background: radial-gradient(ellipse at 50% 42%, transparent 26%, rgb(255 255 255 / .12) 100%) !important;
+}
+html[data-theme="apple"] .now-playing {
+  background: #f5f5f7 !important;
+}
+
+/* Apple loading state follows the selected page palette. */
+html[data-theme="apple"] .audiva-route-loading {
+  background: #f5f5f7 !important;
+  color: #303846 !important;
+}
+html[data-theme="apple"] .audiva-route-loading span:first-child {
+  border-color: #c9ced8 !important;
+  border-top-color: #087f85 !important;
+}
+html[data-theme="apple"] .audiva-route-loading span:last-child { color: #687383 !important; }
+
+/* Keep actual banner photography crisp and use neutral contrast overlays. */
+html[data-theme="apple"] .hero-accueil__intro-video { filter: brightness(.9) saturate(.95) !important; }
+html[data-theme="apple"] .hero-accueil__intro-shade {
+  background: linear-gradient(100deg, rgb(12 17 28 / .48), rgb(30 34 47 / .12) 58%, rgb(14 19 30 / .42)) !important;
+}
+html[data-theme="apple"] .hero-accueil__shade { filter: saturate(.4); }
+html[data-theme="apple"] .hero-accueil__fade { background: linear-gradient(180deg, transparent 42%, rgb(20 23 31 / .62) 100%) !important; }
+html[data-theme="apple"] .db-hero-image { filter: none !important; }
+html[data-theme="apple"] .db-hero-shade {
+  background: linear-gradient(90deg, rgb(13 18 28 / .56), rgb(13 18 28 / .08) 42%, rgb(13 18 28 / .54)), linear-gradient(0deg, rgb(13 18 28 / .44), transparent 55%) !important;
+}
+html[data-theme="apple"] .db-backdrop-tint {
+  filter: none !important;
+  background: linear-gradient(90deg, rgb(13 18 28 / .16), rgb(13 18 28 / .25) 55%, rgb(13 18 28 / .43)), linear-gradient(0deg, rgb(13 18 28 / .36), transparent 70%) !important;
+}
+html[data-theme="apple"] .audiva-workspace>section:first-child>img,
+html[data-theme="apple"] main:has(>section>img)>section:first-child>img {
+  filter: none !important;
+  opacity: .94 !important;
+}
+html[data-theme="apple"] .audiva-workspace>section:first-child>div.absolute,
+html[data-theme="apple"] main:has(>section>img)>section:first-child>div.absolute {
+  filter: saturate(.18) !important;
+}
+
+/* Make the reported discovery and friend activity sections readable in both palettes. */
+html[data-theme="apple"] .db-music-panel {
+  background: linear-gradient(145deg,#fff,#f5f6f8) !important;
+  border-color: #dfe2e8 !important;
+  color: #202630 !important;
+}
+html[data-theme="apple"] .db-music-panel :is(h2,h3,p,strong,small,button,a,span) { color: #202630 !important; }
+html[data-theme="apple"] .db-music-panel :is(.db-track-list article,.db-music-empty) {
+  background: #f7f8fa !important;
+  border-color: #e3e6eb !important;
+}
+html[data-theme="apple"] .db-music-panel .db-track-info small,
+html[data-theme="apple"] .db-music-panel .db-music-empty p { color: #697483 !important; }
+html[data-theme="apple"] .featured-track-banner {
+  border-color: #dfe2e8 !important;
+  background: #f5f5f7 !important;
+  box-shadow: 0 14px 38px rgb(24 32 46 / .09);
+}
+html[data-theme="apple"] .featured-track-banner>img {
+  opacity: .32 !important;
+  filter: blur(30px) saturate(.9) brightness(1.12) !important;
+}
+html[data-theme="apple"] .featured-track-banner>div.absolute {
+  background: linear-gradient(90deg,rgb(255 255 255 / .94),rgb(248 249 251 / .84),rgb(245 246 248 / .7)) !important;
+}
+html[data-theme="apple"] .featured-track-banner :is(h2,p) { color: #202630 !important; }
+html[data-theme="apple"] .featured-track-banner :is(p.text-white\/80,p.text-white\/60) { color: #5f6b7a !important; }
+html[data-theme="apple"] .featured-track-banner :is(button.bg-white\/10,button[class*="border-white/20"]) {
+  border-color: #d2d8e1 !important;
+  background: rgb(255 255 255 / .76) !important;
+  color: #303b49 !important;
+}
+html[data-theme="apple"] .featured-track-banner :is(button.bg-white\/10,button[class*="border-white/20"]):hover {
+  background: #fff !important;
+  color: #17212e !important;
+}
+html[data-theme="apple"] .audiva-friends-activity {
+  border-color: #dfe2e8 !important;
+  background: linear-gradient(135deg,#fff,#f1f3f7) !important;
+  color: #202630 !important;
+}
+html[data-theme="apple"] .audiva-friends-activity :is(h3,p,small,strong,article) { color: #202630 !important; }
+html[data-theme="apple"] .audiva-friends-activity article { background: #f7f8fa !important; border-color: #dfe2e8 !important; }
+html[data-theme="apple"] .audiva-friends-activity article small,
+html[data-theme="apple"] .audiva-friends-activity>div>div>p { color: #667282 !important; }
+
+/* The chat hero keeps the same tall photo layout in both color themes. */
+html[data-theme="apple"] .audiva-chat>section:first-child {
+  background: transparent !important;
+}
+html[data-theme="apple"] .audiva-chat>section:first-child>div.absolute.inset-0:not(:has(>img)) {
+  background: linear-gradient(90deg,rgb(5 12 24 / .88),rgb(5 12 24 / .68) 55%,rgb(5 12 24 / .42)), linear-gradient(0deg,rgb(5 12 24 / .5),transparent 75%) !important;
+  filter: none !important;
+}
+html[data-theme="apple"] .audiva-chat>section:first-child div[class*="h-24"] {
+  border-radius: 0 !important;
+  background: rgb(255 255 255 / .14) !important;
+  box-shadow: 0 8px 24px rgb(0 0 0 / .2),inset 0 1px 0 rgb(255 255 255 / .3) !important;
+}
+html[data-theme="apple"] .audiva-chat>section:first-child div[class*="h-24"] svg { color: #fff !important; filter: drop-shadow(0 1px 8px rgb(0 0 0 / .35)); }
+html[data-theme="apple"] .audiva-chat>section:first-child :is(h1,p,a,button,svg) { color: #fff !important; }
+html[data-theme="apple"] .audiva-chat>section:first-child a { border-color: rgb(255 255 255 / .58) !important; background: rgb(255 255 255 / .12) !important; border-radius: 0 !important; }
+html[data-theme="apple"] .audiva-chat>section:first-child>div.mx-auto>div:nth-child(2)>p {
+  display: inline-block;
+  margin: 0 0 4px;
+  padding: 0;
+  border: 0;
+  background: transparent !important;
+  color: #fff !important;
+  font-size: 10px;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgb(0 0 0 / .45);
+}
+html[data-theme="apple"] .audiva-chat>section:first-child h1 { border: 0 !important; background: transparent !important; color: #fff !important; text-shadow: 0 2px 12px rgb(0 0 0 / .55); }
+html[data-theme="apple"] .audiva-chat>section:nth-child(2) { border-bottom: 0 !important; box-shadow: none !important; }
+html[data-theme="apple"] .audiva-notifications>section:first-child div[class*="h-24"] {
+  background: linear-gradient(145deg,#102044,#172b54) !important;
+  box-shadow: 0 12px 30px rgb(4 10 25 / .32) !important;
+}
+html[data-theme="apple"] .audiva-notifications>section:first-child div[class*="h-24"] svg {
+  color: #72eee7 !important;
+  filter: drop-shadow(0 0 11px #72eee777);
+}
+
+/* Settings audio level remains visible against both the dark and light panels. */
+.settings-audio-volume-label { display: block; color: #fff !important; }
+.settings-audio-volume .audiva-range { min-height: 22px; accent-color: #76eee9; }
+html[data-theme="apple"] .settings-audio-volume-label { color: #202630 !important; }
+html[data-theme="apple"] .settings-audio-volume { border-color: #dfe2e8 !important; }
+html[data-theme="apple"] .settings-audio-volume .audiva-range { accent-color: #087f85; }
+
+/* Consistent contrast on image and gradient banners throughout the app. */
+html[data-theme="apple"] .audiva-theme-banner :is(h1,h2,h3,p,a,button,span,small,strong,em,label) {
+  color: #f8fafc !important;
+}
+html[data-theme="apple"] .audiva-theme-banner:has(img) img {
+  opacity: .88 !important;
+  filter: none !important;
+}
+html[data-theme="apple"] .audiva-search-banner > img { opacity: .8 !important; }
+html[data-theme="apple"] .audiva-theme-banner:has(img) > div.absolute:not(:has(>img)) {
+  background: linear-gradient(90deg,rgb(9 14 24 / .66),rgb(9 14 24 / .25) 53%,rgb(9 14 24 / .04)), linear-gradient(0deg,rgb(9 14 24 / .46),transparent 65%) !important;
+  filter: none !important;
+}
+html[data-theme="apple"] .audiva-theme-banner:has(img) > div.absolute:has(>img) { opacity: .9 !important; }
+html[data-theme="apple"] .audiva-theme-banner:not(:has(>img)) > div.absolute { filter: saturate(.35); }
+html[data-theme="apple"] :is(.audiva-theme-banner,.hero-accueil) :is(button,a,span)[class*="bg-white"],
+html[data-theme="apple"] :is(.audiva-theme-banner,.hero-accueil) :is(button,a,span)[class*="bg-[#72eee7]"],
+html[data-theme="apple"] :is(.audiva-theme-banner,.hero-accueil) :is(button,a,span)[class*="bg-[#76eee9]"] {
+  color: #071426 !important;
+}
+
+/* Apple palette for the album and CD strip on the home page. */
+html[data-theme="apple"] .audiva-cover-gallery {
+  border-color: #dfe2e8 !important;
+  background: linear-gradient(105deg,#f5f5f7,#eceef3 55%,#f8f8fa) !important;
+}
+html[data-theme="apple"] .audiva-cover-gallery::before {
+  background: radial-gradient(ellipse at 12% 70%,#76eee928,transparent 36%),radial-gradient(ellipse at 88% 20%,#9078ff20,transparent 38%) !important;
+}
+html[data-theme="apple"] .audiva-cover-gallery header h2 { color: #202630 !important; }
+html[data-theme="apple"] .audiva-cover-gallery .row .disc {
+  border-color: #d7dce4 !important;
+  background: #fff !important;
+  box-shadow: 0 10px 25px rgb(24 32 46 / .12) !important;
+}
+html[data-theme="apple"] .audiva-cover-gallery .row .disc:hover {
+  border-color: #77bfc0 !important;
+  box-shadow: 0 14px 30px rgb(24 32 46 / .17),0 0 18px #76eee922 !important;
+}
+
+/* Discovery panels keep readable light surfaces through the bottom of the page. */
+html[data-theme="apple"] .db-surface .db-genres,
+html[data-theme="apple"] .db-surface .db-artist-spotlight,
+html[data-theme="apple"] .db-surface .db-collection-section,
+html[data-theme="apple"] .db-surface .db-collections,
+html[data-theme="apple"] .db-surface .db-browse,
+html[data-theme="apple"] .db-surface .db-shortcuts {
+  border-color: #dfe2e8 !important;
+  background: #fff !important;
+  color: #202630 !important;
+  box-shadow: 0 10px 30px rgb(24 32 46 / .06) !important;
+}
+html[data-theme="apple"] .db-surface .db-genres :is(h2,h3,p,span,a,small,strong),
+html[data-theme="apple"] .db-surface .db-artist-spotlight :is(h2,h3,p,span,a,small,strong),
+html[data-theme="apple"] .db-surface .db-browse :is(h2,h3,p,span,a,small,strong),
+html[data-theme="apple"] .db-surface .db-shortcuts :is(h2,h3,p,span,a,small,strong) {
+  color: #202630 !important;
+}
+html[data-theme="apple"] .db-surface .db-genres>div>a {
+  min-height: 54px;
+  border-color: #dfe4eb !important;
+  background: #f3f5f8 !important;
+  color: #293545 !important;
+}
+html[data-theme="apple"] .db-surface .db-genres>div>a:nth-child(3n+1) { background: #edf7f5 !important; }
+html[data-theme="apple"] .db-surface .db-genres>div>a:nth-child(3n+2) { background: #f3f0fa !important; }
+html[data-theme="apple"] .db-surface .db-genres>div>a:hover { background: #e5f4f1 !important; border-color: #9bcfca !important; }
+html[data-theme="apple"] .db-surface .db-artist-spotlight>select {
+  border-color: #d9dee6 !important;
+  background: #f5f6f8 !important;
+  color: #283442 !important;
+  color-scheme: light;
+}
+html[data-theme="apple"] .db-surface .db-artist-card,
+html[data-theme="apple"] .db-surface .db-personal,
+html[data-theme="apple"] .db-surface .db-shortcuts>a,
+html[data-theme="apple"] .db-surface .db-collection-card,
+html[data-theme="apple"] .db-surface .db-category-card {
+  border-color: #e0e4ea !important;
+  background: #fff !important;
+  color: #202630 !important;
+  box-shadow: 0 8px 24px rgb(24 32 46 / .07) !important;
+}
+html[data-theme="apple"] .db-surface .db-artist-card :is(strong,small),
+html[data-theme="apple"] .db-surface .db-collection-card :is(strong,small,p),
+html[data-theme="apple"] .db-surface .db-category-card :is(h3,p,span),
+html[data-theme="apple"] .db-surface .db-personal :is(h3,p,span),
+html[data-theme="apple"] .db-surface .db-shortcuts>a :is(h3,p,span) {
+  color: #273241 !important;
+}
+html[data-theme="apple"] .db-surface .db-artist-card small,
+html[data-theme="apple"] .db-surface .db-collection-card small,
+html[data-theme="apple"] .db-surface .db-category-card p,
+html[data-theme="apple"] .db-surface .db-personal p,
+html[data-theme="apple"] .db-surface .db-shortcuts>a p { color: #667282 !important; }
+html[data-theme="apple"] .db-surface .db-collection-section--albums {
+  border-color: #e1e5eb !important;
+  background: linear-gradient(105deg,#f5f7f8,#f9f9fb 52%,#f5f4fa) !important;
+}
+html[data-theme="apple"] .db-surface .db-collection-play,
+html[data-theme="apple"] .db-surface .db-artist-open { color: #092127 !important; }
+html[data-theme="apple"] .db-surface>footer { border-color: #e2e5eb !important; color: #687383 !important; }
+html[data-theme="apple"] .discovery-board,
+html[data-theme="apple"] .db-surface {
+  background: #f5f5f7 !important;
+  color: #202630 !important;
+}
+html[data-theme="apple"] .db-navigation { background: #f5f5f7 !important; }
+html[data-theme="apple"] .db-navigation nav a,
+html[data-theme="apple"] .db-navigation .db-refresh { color: #475363 !important; }
+html[data-theme="apple"] .db-navigation nav a[aria-current="page"] { color: #087f85 !important; }
+html[data-theme="apple"] .db-navigation form {
+  border-color: #dfe3e9 !important;
+  background: #fff !important;
+  color: #5c6877 !important;
+}
+html[data-theme="apple"] .db-navigation input { color: #202630 !important; }
+html[data-theme="apple"] .db-navigation input::placeholder { color: #7b8492 !important; }
+html[data-theme="apple"] .db-navigation .db-spotify-account {
+  border-color: #dfe2e8 !important;
+  background: #fff !important;
+  color: #344152 !important;
+}
+html[data-theme="apple"] .db-surface .db-album-rail>button,
+html[data-theme="apple"] .db-surface .db-album-direction,
+html[data-theme="apple"] .db-surface .db-collection-empty,
+html[data-theme="apple"] .db-surface .db-artist-empty {
+  border-color: #dfe2e8 !important;
+  background: #fff !important;
+  color: #273241 !important;
+}
+html[data-theme="apple"] .db-surface .db-album-direction:hover:not(:disabled) {
+  border-color: #a7d6d3 !important;
+  background: #e7f6f4 !important;
+  color: #087f85 !important;
+}
+html[data-theme="apple"] .db-surface .db-collection-empty :is(h3,p,span),
+html[data-theme="apple"] .db-surface .db-artist-empty :is(h3,p,span) { color: #273241 !important; }
+html[data-theme="apple"] .db-surface .db-collection-empty p,
+html[data-theme="apple"] .db-surface .db-artist-empty p { color: #667282 !important; }
+html[data-theme="apple"] .db-surface .db-browse-filters button {
+  border-color: #dfe3e9 !important;
+  background: #f3f5f8 !important;
+  color: #4a5666 !important;
+}
+html[data-theme="apple"] .db-surface .db-browse-filters button[aria-pressed="true"] {
+  border-color: #76c9c3 !important;
+  background: #76eee9 !important;
+  color: #092127 !important;
+}
+html[data-theme="apple"] .db-surface .db-category-card .db-category-kicker,
+html[data-theme="apple"] .db-surface .db-personal>span { color: #087f85 !important; }
+html[data-theme="apple"] .db-surface .db-shortcuts>a>svg { color: #526071 !important; }
+
+/* Keep secondary actions on cards legible after the global Apple ink pass. */
+html[data-theme="apple"] body :is(.audiva-workspace,.discovery-board,.db-surface,.music-intelligence,.taste-trends) article :is(button,a[role="button"]):not([class*="cover"]):not([class*="play"]):not([class*="bg-[#76eee9]"]):not([class*="bg-[#72eee7]"]) {
+  border-color: #d8dee7 !important;
+  background-color: #f0f2f6 !important;
+  color: #344152 !important;
+}
+html[data-theme="apple"] body :is(.audiva-workspace,.discovery-board,.db-surface,.music-intelligence,.taste-trends) article :is(button,a[role="button"]):not([class*="cover"]):not([class*="play"]):not([class*="bg-[#76eee9]"]):not([class*="bg-[#72eee7]"]):hover {
+  border-color: #a9d4d1 !important;
+  background-color: #e4f3f1 !important;
+  color: #075e64 !important;
+}
+html[data-theme="apple"] body :is(.audiva-workspace,.discovery-board,.db-surface,.music-intelligence,.taste-trends) article :is(button,a[role="button"])[aria-pressed="true"]:not([class*="play"]) {
+  border-color: #76c9c3 !important;
+  background-color: #dff4f1 !important;
+  color: #075e64 !important;
+}
+html[data-theme="apple"] .taste-trends :is(.taste-periods button,.taste-range-tabs button,.taste-spotify-badge) {
+  border-color: #d8dee7 !important;
+  background: #f0f2f6 !important;
+  color: #344152 !important;
+}
+html[data-theme="apple"] .taste-trends :is(.taste-periods button,.taste-range-tabs button)[aria-pressed="true"] {
+  border-color: #76c9c3 !important;
+  background: #76d8d2 !important;
+  color: #092127 !important;
+}
+html[data-theme="apple"] .db-surface .db-genres>div>a {
+  border-color: #d8dee7 !important;
+  background: #f0f2f6 !important;
+  color: #344152 !important;
+}
+html[data-theme="apple"] .db-surface .db-genres>div>a:hover {
+  border-color: #a9d4d1 !important;
+  background: #e4f3f1 !important;
+  color: #075e64 !important;
+}
+
+/* Recommendation actions appear on hover and must stay distinct on light cards. */
+html[data-theme="apple"] .personal-discoveries .personal-discoveries-grid article :is(.personal-discoveries-like,.personal-discoveries-hide) {
+  z-index: 3;
+  border-color: rgb(255 255 255 / .9) !important;
+  background: rgb(255 255 255 / .96) !important;
+  color: #394555 !important;
+  opacity: .98 !important;
+  box-shadow: 0 3px 12px rgb(14 24 38 / .24) !important;
+}
+html[data-theme="apple"] .personal-discoveries .personal-discoveries-grid article .personal-discoveries-like:is(:hover,[aria-pressed="true"]) {
+  border-color: #78c9c3 !important;
+  background: #e0f5f2 !important;
+  color: #087f85 !important;
+}
+html[data-theme="apple"] .personal-discoveries .personal-discoveries-grid article .personal-discoveries-hide:hover {
+  border-color: #e6a6af !important;
+  background: #fff0f1 !important;
+  color: #a13f50 !important;
+}
+
+/* The collapsed player remains visible after closing the expanded player. */
+html[data-theme="apple"] body .audiva-player-restore {
+  border-color: #d8dee7 !important;
+  background: rgb(255 255 255 / .96) !important;
+  color: #273241 !important;
+  box-shadow: 0 10px 32px rgb(24 34 48 / .2) !important;
+}
+html[data-theme="apple"] body .audiva-player-restore:hover {
+  border-color: #9bcac6 !important;
+  background: #e8f6f4 !important;
+  color: #075e64 !important;
+}
+
+/* Discovery page: consistent Apple surfaces, ink, and controls from top to bottom. */
+html[data-theme="apple"] .discovery-board,
+html[data-theme="apple"] .discovery-board .db-surface {
+  background: #f5f5f7 !important;
+  color: #202630 !important;
+}
+html[data-theme="apple"] .discovery-board .db-surface {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+html[data-theme="apple"] .discovery-board .db-navigation {
+  border-bottom: 1px solid #e1e4ea !important;
+  background: rgb(245 245 247 / .94) !important;
+}
+html[data-theme="apple"] .discovery-board .db-navigation nav a,
+html[data-theme="apple"] .discovery-board .db-navigation .db-refresh {
+  color: #4a5665 !important;
+}
+html[data-theme="apple"] .discovery-board .db-navigation nav a[aria-current="page"] {
+  color: #087f85 !important;
+}
+html[data-theme="apple"] .discovery-board .db-navigation nav a[aria-current="page"]::after {
+  background: #087f85 !important;
+}
+html[data-theme="apple"] .discovery-board .db-navigation .db-spotify-account {
+  border-color: #d9dee6 !important;
+  background: #fff !important;
+  color: #334052 !important;
+}
+html[data-theme="apple"] .discovery-board .db-hero-image { filter: none !important; }
+html[data-theme="apple"] .discovery-board .db-hero-shade {
+  background: linear-gradient(90deg,rgb(13 18 28 / .18),rgb(13 18 28 / .08) 36%,rgb(13 18 28 / .56) 78%,rgb(13 18 28 / .74)),linear-gradient(0deg,rgb(13 18 28 / .42),transparent 58%) !important;
+}
+html[data-theme="apple"] .discovery-board .db-hero-copy,
+html[data-theme="apple"] .discovery-board .db-hero-copy :is(h1,p,span) {
+  color: #fff !important;
+  text-shadow: 0 2px 18px rgb(0 0 0 / .45);
+}
+html[data-theme="apple"] .discovery-board .db-hero .db-primary {
+  border: 1px solid #58b8b2 !important;
+  background: #76d8d2 !important;
+  color: #102b30 !important;
+}
+html[data-theme="apple"] .discovery-board .db-hero .db-secondary {
+  border: 1px solid rgb(255 255 255 / .7) !important;
+  background: rgb(255 255 255 / .18) !important;
+  color: #fff !important;
+}
+html[data-theme="apple"] .discovery-board .db-collections,
+html[data-theme="apple"] .discovery-board .db-collection-section,
+html[data-theme="apple"] .discovery-board .db-panels,
+html[data-theme="apple"] .discovery-board .db-charts,
+html[data-theme="apple"] .discovery-board .db-music-panel,
+html[data-theme="apple"] .discovery-board .db-genres,
+html[data-theme="apple"] .discovery-board .db-artist-spotlight,
+html[data-theme="apple"] .discovery-board .db-browse,
+html[data-theme="apple"] .discovery-board .db-shortcuts,
+html[data-theme="apple"] .discovery-board .db-connection {
+  border-color: #dfe3e9 !important;
+  background: #fff !important;
+  color: #202630 !important;
+  box-shadow: 0 8px 26px rgb(24 32 46 / .055) !important;
+}
+html[data-theme="apple"] .discovery-board .db-collections,
+html[data-theme="apple"] .discovery-board .db-panels {
+  box-shadow: none !important;
+}
+html[data-theme="apple"] .discovery-board .db-collection-section--albums {
+  background: linear-gradient(110deg,#f5f7f8,#fff 55%,#f6f4fa) !important;
+}
+html[data-theme="apple"] .discovery-board :is(.db-collection-section,.db-charts,.db-music-panel,.db-genres,.db-artist-spotlight,.db-browse,.db-shortcuts,.db-connection) :is(h2,h3,p,span,strong,small,a,label) {
+  color: #263241 !important;
+}
+html[data-theme="apple"] .discovery-board :is(.db-collection-section,.db-charts,.db-music-panel,.db-genres,.db-artist-spotlight,.db-browse,.db-shortcuts,.db-connection) :is(p,small,.db-duration,.db-position,.db-artist-source,.db-collection-detail) {
+  color: #687485 !important;
+}
+html[data-theme="apple"] .discovery-board :is(.db-collection-label,.db-music-kicker,.db-section-label,.db-category-kicker,.db-personal>span) {
+  color: #087f85 !important;
+}
+html[data-theme="apple"] .discovery-board .db-collection-section>header>a,
+html[data-theme="apple"] .discovery-board .db-music-panel>header>a,
+html[data-theme="apple"] .discovery-board .db-personal>a,
+html[data-theme="apple"] .discovery-board .db-artist-search,
+html[data-theme="apple"] .discovery-board .db-surface>footer a {
+  color: #087f85 !important;
+}
+html[data-theme="apple"] .discovery-board .db-collection-card {
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #202630 !important;
+  box-shadow: none !important;
+}
+html[data-theme="apple"] .discovery-board .db-collection-card:hover {
+  border-color: #e0e5ec !important;
+  background: #f8f9fb !important;
+}
+html[data-theme="apple"] .discovery-board .db-collection-card :is(strong,small,.db-collection-detail) {
+  color: #263241 !important;
+}
+html[data-theme="apple"] .discovery-board .db-collection-type {
+  border: 1px solid rgb(255 255 255 / .75) !important;
+  background: rgb(255 255 255 / .9) !important;
+  color: #344152 !important;
+  text-shadow: none !important;
+}
+html[data-theme="apple"] .discovery-board .db-collection-play,
+html[data-theme="apple"] .discovery-board .db-artist-open {
+  border: 1px solid rgb(255 255 255 / .75) !important;
+  background: #76d8d2 !important;
+  color: #102b30 !important;
+}
+html[data-theme="apple"] .discovery-board .db-track-list article {
+  border-color: #e7e9ee !important;
+  background: transparent !important;
+}
+html[data-theme="apple"] .discovery-board .db-track-list article:hover,
+html[data-theme="apple"] .discovery-board .db-track-list article.is-playing {
+  background: #f1f8f7 !important;
+}
+html[data-theme="apple"] .discovery-board .db-track-info :is(strong,small,em),
+html[data-theme="apple"] .discovery-board .db-track-info,
+html[data-theme="apple"] .discovery-board .db-icon,
+html[data-theme="apple"] .discovery-board .db-track-list details,
+html[data-theme="apple"] .discovery-board .db-track-list summary {
+  color: #364354 !important;
+}
+html[data-theme="apple"] .discovery-board .db-track-info em { color: #087f85 !important; }
+html[data-theme="apple"] .discovery-board .db-icon {
+  border: 1px solid #e0e4eb !important;
+  background: #f4f6f8 !important;
+}
+html[data-theme="apple"] .discovery-board .db-icon:hover,
+html[data-theme="apple"] .discovery-board .db-icon[aria-pressed="true"] {
+  border-color: #94c9c5 !important;
+  background: #e3f4f2 !important;
+  color: #087f85 !important;
+}
+html[data-theme="apple"] .discovery-board .db-music-toolbar button,
+html[data-theme="apple"] .discovery-board .db-browse-filters button,
+html[data-theme="apple"] .discovery-board .db-artist-spotlight>select,
+html[data-theme="apple"] .discovery-board .db-genres>div>a {
+  border-color: #dfe3e9 !important;
+  background: #f2f4f7 !important;
+  color: #3b4858 !important;
+}
+html[data-theme="apple"] .discovery-board .db-music-toolbar button[aria-pressed="true"],
+html[data-theme="apple"] .discovery-board .db-browse-filters button[aria-pressed="true"] {
+  border-color: #73c7c1 !important;
+  background: #76d8d2 !important;
+  color: #102b30 !important;
+}
+html[data-theme="apple"] .discovery-board .db-track-list details>div {
+  border-color: #dfe3e9 !important;
+  background: #fff !important;
+  box-shadow: 0 14px 36px rgb(24 32 46 / .14) !important;
+}
+html[data-theme="apple"] .discovery-board .db-track-list details>div :is(button,a) {
+  color: #344152 !important;
+}
+html[data-theme="apple"] .discovery-board .db-track-list details>div :is(button,a):hover {
+  background: #eef4f4 !important;
+  color: #087f85 !important;
+}
+html[data-theme="apple"] .discovery-board .db-artist-photo,
+html[data-theme="apple"] .discovery-board .db-collection-empty,
+html[data-theme="apple"] .discovery-board .db-artist-empty,
+html[data-theme="apple"] .discovery-board .db-music-empty {
+  border-color: #e1e5eb !important;
+  background: #f7f8fa !important;
+  color: #344152 !important;
+}
+html[data-theme="apple"] .discovery-board .db-category-card:nth-child(4n+1) { background: linear-gradient(140deg,#e6f5f1,#f6fbfa) !important; }
+html[data-theme="apple"] .discovery-board .db-category-card:nth-child(4n+2) { background: linear-gradient(140deg,#f1eefa,#fbf9fd) !important; }
+html[data-theme="apple"] .discovery-board .db-category-card:nth-child(4n+3) { background: linear-gradient(140deg,#eaf1fb,#f8faff) !important; }
+html[data-theme="apple"] .discovery-board .db-category-card:nth-child(4n) { background: linear-gradient(140deg,#fbf0ec,#fff9f6) !important; }
+html[data-theme="apple"] .discovery-board .db-category-card:hover { border-color: #b7d9d5 !important; }
+html[data-theme="apple"] .discovery-board .db-category-cover { box-shadow: -8px 9px 22px rgb(24 32 46 / .2) !important; }
+html[data-theme="apple"] .discovery-board .db-category-arrow {
+  border: 1px solid #d8e4e2 !important;
+  background: rgb(255 255 255 / .78) !important;
+  color: #087f85 !important;
+}
+html[data-theme="apple"] .discovery-board .db-shortcuts>a {
+  border-color: #e0e4ea !important;
+  background: #fff !important;
+}
+html[data-theme="apple"] .discovery-board .db-shortcuts>a:hover { background: #f4f8f8 !important; }
+html[data-theme="apple"] .discovery-board .db-shortcuts>a>span {
+  border: 1px solid #dce9e7 !important;
+  background: #edf7f5 !important;
+  color: #087f85 !important;
+}
+html[data-theme="apple"] .discovery-board .db-surface>footer {
+  border-top: 1px solid #e1e5eb !important;
+  color: #687485 !important;
+}
+html[data-theme="apple"] .discovery-board .db-connection {
+  background: #f0f8f7 !important;
+}
+html[data-theme="apple"] .discovery-board .db-connection button {
+  border-color: #b9d9d6 !important;
+  background: #fff !important;
+  color: #087f85 !important;
+}
+@media(max-width:700px){
+  html[data-theme="apple"] .discovery-board { padding-bottom: 120px !important; }
+  html[data-theme="apple"] .discovery-board .db-category-card { box-shadow: 0 5px 16px rgb(24 32 46 / .07) !important; }
+}
+
+/* Statistics theme overrides change color only; layout stays in intelligence.css. */
+html[data-theme="apple"] .audiva-bibliotheque:has(.music-intelligence) { background: #f5f5f7 !important; }
+html[data-theme="apple"] .music-intelligence { color: #202630 !important; }
+html[data-theme="apple"] .music-intelligence :is(.mi-metrics article,.mi-detail-metrics article,.mi-feature,.mi-insights article,.mi-calendar,.mi-donuts,.mi-donut-card,.mi-rankings,.mi-rankings>article,.mi-chart,.mi-genres,.mi-profile,.mi-profile>div>article,.mi-shortcuts,.mi-notice) {
+  border-color: #dfe2e8 !important; background: #fff !important; color: #202630 !important; box-shadow: 0 8px 26px rgb(24 32 46 / .06) !important;
+}
+html[data-theme="apple"] .music-intelligence .mi-header { background-color: #142238 !important; border-color: #d6e0ee !important; color: #f8fafc !important; }
+html[data-theme="apple"] .music-intelligence .mi-header :is(h1,h2,p,span,small,a,button,em) { color: #f8fafc !important; }
+html[data-theme="apple"] .music-intelligence .mi-header h1 em,
+html[data-theme="apple"] .music-intelligence .mi-header .mi-header-artist>div>span { color: #9ce8e3 !important; }
+html[data-theme="apple"] .music-intelligence :is(.mi-detail-metrics,.mi-detail-metrics>summary,.mi-methodology>summary) { color: #344152 !important; }
+html[data-theme="apple"] .music-intelligence :is(.mi-detail-metrics>summary>span,.mi-ranking-row small,.mi-ranking-row b,.mi-feature p,.mi-insights p,.mi-calendar>footer,.mi-profile p,.mi-genres>p,.mi-genres small,.mi-chart .mi-bars small,.mi-chart .mi-bars b,.mi-donut-detail,.mi-donut-legend small,.mi-methodology p,.mi-genre-coverage) { color: #687485 !important; }
+html[data-theme="apple"] .music-intelligence :is(h2,h3,.mi-ranking-row strong,.mi-detail-metrics strong,.mi-insights strong,.mi-calendar-grid b,.mi-profile h3,.mi-donut-card>header h3,.mi-donut-center strong,.mi-donut-legend span,.mi-feature h2,.mi-chart h2,.mi-genres h2) { color: #202630 !important; }
+html[data-theme="apple"] .music-intelligence :is(.mi-feature>div>span,.mi-insights>header>span,.mi-calendar>header span,.mi-chart header>div>span,.mi-profile>span) { color: #087f85 !important; }
+html[data-theme="apple"] .music-intelligence :is(.mi-periods button,.mi-donut-modes button,.mi-shortcuts>a,.mi-ranking-row button,.mi-chart select,.mi-donut-legend button) { border-color: #dfe3e9 !important; background: #f3f5f7 !important; color: #344152 !important; }
+html[data-theme="apple"] .music-intelligence :is(.mi-periods button[aria-pressed="true"],.mi-donut-modes button[aria-pressed="true"]) { border-color: #79c7c2 !important; background: #dff4f2 !important; color: #075e63 !important; }
+html[data-theme="apple"] .music-intelligence .mi-donut-visual { --donut-track: #e8edf2; }
+html[data-theme="apple"] .music-intelligence .mi-donut-center { background: #fff !important; color: #344152 !important; }
+html[data-theme="apple"] .music-intelligence .mi-donut-center :is(strong,small) { color: #087f85 !important; }
+html[data-theme="apple"] .music-intelligence .mi-donut-slice { stroke-opacity: 1 !important; }
+html[data-theme="apple"] .music-intelligence .mi-donut-legend button:hover,
+html[data-theme="apple"] .music-intelligence .mi-donut-legend button[aria-pressed="true"] { border-color: #b9ddda !important; background: #eff8f7 !important; }
+html[data-theme="apple"] .music-intelligence .mi-donut-card>header { border-color: #e8ebf0 !important; }
+html[data-theme="apple"] .music-intelligence .mi-bars i { background: linear-gradient(to top,color-mix(in srgb,var(--bar-color),white 22%),var(--bar-color)) !important; }
+html[data-theme="apple"] .music-intelligence .mi-methodology p,
+html[data-theme="apple"] .music-intelligence>footer p { color: #687485 !important; }
+html[data-theme="apple"] .music-intelligence .mi-header .mi-periods button { border-color: rgb(255 255 255 / .46) !important; background: rgb(16 27 44 / .82) !important; color: #f8fafc !important; }
+html[data-theme="apple"] .music-intelligence .mi-header .mi-periods button[aria-pressed="true"] { border-color: #a5f4ed !important; background: #76d8d2 !important; color: #102b30 !important; }
+html[data-theme="apple"] .music-intelligence .mi-header .mi-periods button:hover { background: rgb(35 54 78 / .96) !important; }
+html[data-theme="apple"] .music-intelligence .mi-header .mi-share-trigger { background: linear-gradient(120deg,#76d8d2,#a8d8f5) !important; color: #102b30 !important; }
+html[data-theme="apple"] .music-intelligence .mi-header-photo::after { background: linear-gradient(90deg,rgba(7,15,29,.86),rgba(7,15,29,.62) 54%,rgba(7,15,29,.4)),linear-gradient(0deg,rgba(7,15,29,.62),transparent 55%) !important; }
+html[data-theme="apple"] .music-intelligence .mi-donut-card { background-image: linear-gradient(145deg,#fff,#fafbfd) !important; }
+html[data-theme="apple"] .music-intelligence .mi-donuts-header>div:first-child>span,
+html[data-theme="apple"] .music-intelligence .mi-calendar>header>div>span { color: #087f85 !important; }
+html[data-theme="apple"] .music-intelligence .mi-calendar :is(h2,b) { color: #202630 !important; }
+html[data-theme="apple"] .music-intelligence .mi-calendar :is(p,small,footer) { color: #687485 !important; }
+html[data-theme="apple"] .music-intelligence .mi-calendar-grid button {
+  border-color: #dfe3e9 !important;
+  background: #f3f5f7 !important;
+}
+html[data-theme="apple"] .music-intelligence .mi-calendar-grid button[aria-pressed="true"] {
+  border-color: #79c7c2 !important;
+  background: #dff4f2 !important;
+}
+html[data-theme="apple"] .music-intelligence .mi-calendar-grid button>span,
+html[data-theme="apple"] .music-intelligence .mi-calendar-grid button>b>small { color: #687485 !important; }
+html[data-theme="apple"] .music-intelligence .mi-calendar-grid button>b { color: #202630 !important; }
+html[data-theme="apple"] .music-intelligence .mi-calendar-detail {
+  border: 1px solid #dfe3e9 !important;
+  background: #f3f5f7 !important;
+  color: #344152 !important;
+}
+
+/* Light-theme treatment for album, playlist, artist and catalogue headers. */
+html[data-theme="apple"] body .audiva-collection .collection-banner {
+  border-color: #e0e4ea !important;
+  background-color: #e9edf2 !important;
+  background-image: linear-gradient(100deg, rgb(250 251 253 / .94), rgb(245 247 250 / .80) 58%, rgb(239 243 247 / .66)) !important;
+  box-shadow: 0 16px 44px rgb(26 38 54 / .10);
+}
+html[data-theme="apple"] body .audiva-collection .collection-banner--spotify > .collection-banner-backdrop,
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom > .collection-banner-image,
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom > .collection-banner-color-fallback {
+  filter: blur(22px) saturate(.78) brightness(1.08) !important;
+  opacity: .42 !important;
+}
+html[data-theme="apple"] body .audiva-collection .collection-banner-shade {
+  background: linear-gradient(100deg, rgb(250 251 253 / .93), rgb(245 247 250 / .78) 60%, rgb(239 243 247 / .66)) !important;
+}
+html[data-theme="apple"] body .audiva-collection .collection-banner .collection-heading,
+html[data-theme="apple"] body .audiva-collection .collection-banner .collection-heading :is(h1,p,small,b),
+html[data-theme="apple"] body .audiva-collection .collection-banner .collection-heading > span {
+  color: #202630 !important;
+  text-shadow: none !important;
+}
+html[data-theme="apple"] body .audiva-collection .collection-banner .collection-heading > span { color: #087f85 !important; }
+html[data-theme="apple"] body .audiva-collection .collection-banner .collection-heading p { color: #596575 !important; }
+html[data-theme="apple"] body .audiva-collection .collection-banner .collection-heading small { color: #667283 !important; }
+html[data-theme="apple"] body .audiva-collection .collection-banner .collection-heading small i { background: #087f85 !important; }
+html[data-theme="apple"] body .audiva-collection .collection-banner-equalizer i { background: linear-gradient(180deg,#21a7a1,#718be8) !important; }
+html[data-theme="apple"] body .audiva-collection .collection-banner-settings button {
+  border-color: rgb(255 255 255 / .82) !important;
+  background: rgb(255 255 255 / .82) !important;
+  color: #263342 !important;
+  box-shadow: 0 4px 18px rgb(25 38 55 / .10);
+}
+html[data-theme="apple"] body .artist-profile .artist-profile-hero {
+  border-color: #e0e4ea !important;
+  background: radial-gradient(ellipse at 92% 4%,rgb(112 197 197 / .20),transparent 39%),radial-gradient(ellipse at 8% 100%,rgb(116 145 223 / .13),transparent 42%),linear-gradient(125deg,#fff,#f1f3f6 72%,#e9edf2) !important;
+  box-shadow: 0 18px 48px rgb(26 38 54 / .10) !important;
+}
+html[data-theme="apple"] body .artist-profile .artist-profile-hero:after { border-color: rgb(8 127 133 / .12) !important; }
+html[data-theme="apple"] body .artist-profile .artist-profile-hero :is(h1,.artist-profile-subtitle,.artist-profile-metrics strong,.artist-profile-metrics span,.artist-profile-secondary) {
+  color: #202630 !important;
+  text-shadow: none !important;
+}
+html[data-theme="apple"] body .artist-profile .artist-profile-kicker { color: #087f85 !important; }
+html[data-theme="apple"] body .artist-profile .artist-profile-metrics > div {
+  border-color: #dfe3e9 !important;
+  background: rgb(255 255 255 / .78) !important;
+}
+html[data-theme="apple"] body .artist-profile .artist-profile-genres > span {
+  border-color: #c9e2e0 !important;
+  background: #edf8f7 !important;
+  color: #176c70 !important;
+}
+html[data-theme="apple"] body .artist-profile .artist-profile-primary {
+  border-color: #087f85 !important;
+  background: #087f85 !important;
+  color: #fff !important;
+}
+html[data-theme="apple"] body .artist-profile .artist-profile-secondary {
+  border-color: #d7dce4 !important;
+  background: rgb(255 255 255 / .78) !important;
+}
+html[data-theme="apple"] body main:has(> section > img) > section:first-child {
+  background-color: #edf0f4 !important;
+}
+html[data-theme="apple"] body main:has(> section > img) > section:first-child > div:first-of-type {
+  background: linear-gradient(100deg,rgb(250 251 253 / .94),rgb(245 247 250 / .78) 60%,rgb(239 243 247 / .68)) !important;
+}
+html[data-theme="apple"] body main:has(> section > img) > section:first-child :is(h1,h2,h3,p,span,small,strong) {
+  color: #202630 !important;
+  text-shadow: none !important;
+}
+html[data-theme="apple"] body main:has(> section > img) > section:first-child :is(button,a) {
+  border-color: #087f85 !important;
+  background-color: #087f85 !important;
+  color: #fff !important;
+}
+
+/* Apple reader: genuinely different plasma silhouettes and materials. */
+html[data-theme="apple"] .now-playing__plasma {
+  isolation: isolate;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 42%,#fff 0%,#edf1f6 68%,#e5e9ef 100%) !important;
+}
+html[data-theme="apple"] .now-playing__plasma .plasma-artwork { display: none !important; }
+html[data-theme="apple"] .now-playing__plasma .plasma-canvas {
+  opacity: .86 !important;
+  filter: saturate(.92) contrast(1.03) !important;
+  transition: transform 1s cubic-bezier(.2,.75,.2,1),filter 1s ease,clip-path 1s ease,opacity .7s ease;
+}
+html[data-theme="apple"] .now-playing__plasma::before,
+html[data-theme="apple"] .now-playing__plasma::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .8s ease, transform 1.2s cubic-bezier(.2,.75,.2,1);
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-mercury .plasma-canvas {
+  transform: scale(1.18) rotate(-7deg);
+  filter: grayscale(.82) contrast(1.28) brightness(1.14) !important;
+  mix-blend-mode: multiply;
+  clip-path: ellipse(70% 56% at 50% 50%);
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-mercury::before {
+  opacity: 1;
+  background: radial-gradient(ellipse at 36% 25%,rgb(255 255 255 / .92),transparent 20%),radial-gradient(ellipse at 63% 73%,rgb(54 69 86 / .22),transparent 34%),linear-gradient(155deg,transparent 36%,rgb(255 255 255 / .5) 45%,transparent 53%);
+  mix-blend-mode: screen;
+  animation: apple-mercury-glint 9s ease-in-out infinite alternate;
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-orb .plasma-canvas {
+  transform: scale(.86);
+  clip-path: circle(36% at 50% 50%);
+  filter: saturate(.82) brightness(1.12) !important;
+  border-radius: 50%;
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-orb::before {
+  inset: 13% 31%;
+  border: 1px solid rgb(255 255 255 / .85);
+  border-radius: 50%;
+  opacity: 1;
+  box-shadow: inset -22px -18px 45px rgb(87 100 145 / .16),inset 13px 10px 24px rgb(255 255 255 / .8),0 18px 55px rgb(81 101 145 / .14);
+  animation: apple-orb-float 8s ease-in-out infinite alternate;
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-orb::after {
+  inset: 24% 36%;
+  border: 1px solid rgb(255 255 255 / .54);
+  border-radius: 50%;
+  opacity: .8;
+  transform: rotate(-24deg) scaleX(1.65);
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-aurora .plasma-canvas {
+  transform: scale(1.45) rotate(-12deg);
+  clip-path: polygon(0 23%,100% 0,100% 78%,0 100%);
+  filter: hue-rotate(20deg) saturate(.88) brightness(1.1) !important;
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-aurora::before {
+  opacity: .9;
+  background: linear-gradient(116deg,transparent 13%,rgb(91 206 176 / .22) 26%,transparent 40%),linear-gradient(72deg,transparent 37%,rgb(122 153 225 / .20) 52%,transparent 67%),linear-gradient(131deg,transparent 56%,rgb(207 143 218 / .18) 69%,transparent 83%);
+  filter: blur(22px);
+  animation: apple-aurora-drift 12s ease-in-out infinite alternate;
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-waves .plasma-canvas {
+  transform: scale(1.28) skewY(-8deg);
+  clip-path: polygon(0 20%,100% 0,100% 82%,0 100%);
+  filter: saturate(.78) brightness(1.12) !important;
+  mask-image: repeating-linear-gradient(0deg,#000 0 7px,transparent 7px 18px);
+  animation: apple-wave-flow 16s linear infinite;
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-waves::before {
+  opacity: .82;
+  background: repeating-linear-gradient(174deg,transparent 0 25px,rgb(36 145 155 / .15) 26px 29px,transparent 30px 48px);
+  mask-image: linear-gradient(transparent 8%,#000 30% 72%,transparent 95%);
+  animation: apple-wave-flow 11s linear infinite reverse;
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-ribbon .plasma-canvas {
+  transform: scale(1.4) rotate(9deg);
+  clip-path: polygon(0 58%,15% 44%,32% 38%,49% 42%,67% 31%,84% 23%,100% 29%,100% 70%,82% 64%,65% 75%,48% 68%,31% 78%,14% 73%,0 86%);
+  filter: saturate(.9) brightness(1.1) !important;
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-ribbon::before {
+  opacity: .9;
+  background: linear-gradient(162deg,transparent 39%,rgb(255 255 255 / .78) 47%,rgb(113 169 205 / .18) 51%,transparent 58%);
+  filter: blur(8px);
+  animation: apple-ribbon-flow 10s ease-in-out infinite alternate;
+}
+html[data-theme="apple"] .now-playing__plasma.plasma-style-ocean .plasma-canvas { transform: scale(1.2); clip-path: ellipse(75% 48% at 50% 50%); }
+html[data-theme="apple"] .now-playing__plasma.plasma-style-violet .plasma-canvas { transform: scale(1.13) rotate(25deg); clip-path: ellipse(48% 74% at 50% 48%); }
+html[data-theme="apple"] .now-playing__plasma.plasma-style-sunset .plasma-canvas { transform: scale(1.32) rotate(-9deg); clip-path: ellipse(82% 43% at 50% 60%); }
+html[data-theme="apple"] .now-playing__plasma.plasma-style-mono .plasma-canvas { filter: grayscale(1) contrast(1.12) !important; opacity: .72 !important; }
+html[data-theme="apple"] .now-playing__appearance {
+  border-color: #dce1e8 !important;
+  background: rgb(255 255 255 / .94) !important;
+  color: #202630 !important;
+  box-shadow: 0 22px 70px rgb(30 42 58 / .18),inset 0 1px #fff !important;
+}
+html[data-theme="apple"] .now-playing__appearance :is(strong,button,p,span,small) { color: #28313e !important; }
+html[data-theme="apple"] .now-playing__appearance .appearance-caption,
+html[data-theme="apple"] .now-playing__appearance>header span { color: #087f85 !important; }
+html[data-theme="apple"] .now-playing__appearance .appearance-presets>button.is-selected { border-color: #8fc9c5 !important; background: #edf8f7 !important; }
+html[data-theme="apple"] .now-playing__appearance .appearance-swatch { border-color: #cdd4de; box-shadow: inset 0 1px #fff,0 4px 10px rgb(22 35 52 / .12); }
+html[data-theme="apple"] .now-playing__appearance .appearance-swatch--mercury i { background: linear-gradient(135deg,#fff,#758293); box-shadow: 0 0 12px #fff; }
+html[data-theme="apple"] .now-playing__appearance .appearance-swatch--orb i { width: 23px;height: 23px;background: radial-gradient(circle at 30% 25%,#fff,#8edbd7 35%,#7784d6 75%); }
+html[data-theme="apple"] .now-playing__appearance .appearance-swatch--waves i { width: 28px;height: 18px;border-radius: 4px;background: repeating-linear-gradient(0deg,#fff 0 2px,#548fbb 2px 4px); }
+@keyframes apple-mercury-glint { from { transform: translateX(-9%) rotate(-4deg); } to { transform: translateX(9%) rotate(4deg); } }
+@keyframes apple-orb-float { from { transform: translateY(1.5%) scale(.98); } to { transform: translateY(-1.5%) scale(1.02); } }
+@keyframes apple-aurora-drift { from { transform: translateX(-3%) skewX(-4deg); } to { transform: translateX(3%) skewX(4deg); } }
+@keyframes apple-wave-flow { from { background-position: 0 0; } to { background-position: 0 220px; } }
+@keyframes apple-ribbon-flow { from { transform: translateX(-3%) skewY(-2deg); } to { transform: translateX(3%) skewY(2deg); } }
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="apple"] .now-playing__plasma::before,
+  html[data-theme="apple"] .now-playing__plasma::after,
+  html[data-theme="apple"] .now-playing__plasma .plasma-canvas { animation: none !important; transition: none !important; }
+}

@@ -126,7 +126,7 @@ export default function ParametresPage() {
 
   return (
     <main className="min-h-screen bg-[#060b18] pb-32 text-[#eff4ff]">
-        <section className="relative isolate min-h-[300px] overflow-hidden border-b border-white/8 bg-[#081122] px-5 py-12 sm:px-10 lg:px-14">
+        <section className="audiva-theme-banner relative isolate min-h-[300px] overflow-hidden border-b border-white/8 bg-[#081122] px-5 py-12 sm:px-10 lg:px-14">
           <Image src="/parametre1.jpg" alt="" fill priority className="-z-20 object-cover object-center opacity-60" />
           <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,#060b18_4%,rgba(6,11,24,.74)_48%,rgba(6,11,24,.3)),linear-gradient(180deg,transparent_45%,#060b18)]" />
           <div className="mx-auto flex min-h-[204px] max-w-[1500px] items-end gap-5">
@@ -211,8 +211,8 @@ export default function ParametresPage() {
                   </select>
                 </label>
               </div>
-              <div className="border-t border-white/8 py-4">
-                <p className="text-sm font-bold text-white">Volume par défaut</p>
+              <div className="settings-audio-volume border-t border-white/8 py-4">
+                <p className="settings-audio-volume-label text-sm font-bold text-white">Volume par défaut</p>
                 <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(event) => setVolume(Number(event.target.value))} className="audiva-range mt-4 w-full" />
               </div>
             </Panel>
@@ -237,7 +237,7 @@ export default function ParametresPage() {
       {logoutConfirmationOpen && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-[#02050d]/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="logout-title">
           <div className="w-full max-w-md border border-white/10 bg-[#0b1426] p-6 shadow-2xl">
-            <p className="text-xs font-bold uppercase tracking-[.15em] text-[#83eee8]">Compte Audiva</p>
+            <div className="flex items-start justify-between gap-4"><p className="text-xs font-bold uppercase tracking-[.15em] text-[#83eee8]">Compte Audiva</p><button type="button" onClick={() => setLogoutConfirmationOpen(false)} aria-label="Fermer la fenêtre" className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-2xl leading-none text-[#aebbd7] hover:bg-white/10 hover:text-white">×</button></div>
             <h2 id="logout-title" className="mt-3 text-2xl font-black text-white">Se déconnecter ?</h2>
             <p className="mt-3 text-sm leading-6 text-[#aebbd7]">Voulez-vous vraiment vous déconnecter de votre compte sur cet appareil ?</p>
             <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">

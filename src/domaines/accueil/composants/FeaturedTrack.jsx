@@ -22,7 +22,7 @@ export default function FeaturedTrack({ track }) {
   };
 
   return (
-    <section className="relative mt-10 overflow-hidden border border-white/10 bg-[#101626]">
+    <section className="featured-track-banner relative mt-10 overflow-hidden border border-white/10 bg-[#101626]">
       <PochetteImage unoptimized src={displayTrack.cover || "/placeholders/audio-cover.svg"} alt="" fill className="scale-110 object-cover opacity-20 blur-3xl transition-opacity duration-500" />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(13,19,34,.97),rgba(13,19,34,.89),rgba(13,19,34,.73))]" />
       <div

@@ -26,7 +26,7 @@ export default function FriendProfile({ friendId }) {
   };
 
   return <main className="audiva-workspace audiva-friend-profile min-h-screen bg-[#060b18] pb-32 text-[#eff4ff]">
-    <header className="relative isolate overflow-hidden border-b border-[#76eee91d] bg-[#091322] px-5 py-12 sm:px-9 lg:px-12">
+    <header className="audiva-theme-banner relative isolate overflow-hidden border-b border-[#76eee91d] bg-[#091322] px-5 py-12 sm:px-9 lg:px-12">
       <Image src={friend.avatar || "/hero-playlist.jpg"} alt="" fill priority className="-z-20 scale-110 object-cover opacity-25 blur-sm" />
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(100deg,#060b18_8%,rgba(6,11,24,.82)_53%,rgba(8,17,34,.35)),linear-gradient(0deg,#060b18,transparent_80%)]" />
       <div className="mx-auto flex w-full max-w-none flex-col items-start gap-5 sm:flex-row sm:items-end">

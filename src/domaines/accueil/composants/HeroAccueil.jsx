@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Album01Icon, ArrowLeft01Icon, ArrowRight01Icon, PlayIcon, PlusSignIcon, Search01Icon, Share01Icon } from "@hugeicons/core-free-icons";
+import { Album01Icon, ArrowLeft01Icon, ArrowRight01Icon, Cancel01Icon, PlayIcon, PlusSignIcon, Search01Icon, Share01Icon } from "@hugeicons/core-free-icons";
 import CreatePlaylistButton from "@/domaines/playlists/composants/CreatePlaylistButton";
 import ShareContentModal from "@/composants/ui/ShareContentModal";
 
@@ -108,7 +108,7 @@ export function HeroAccueil({ slides, onAction }) {
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-bold"><Link href="/albums" className="inline-flex items-center gap-2 text-[#bffffa] transition hover:text-white"><HugeiconsIcon icon={Album01Icon} size={17} />Explorer les albums</Link><Link href="/recherche?type=Artistes" className="inline-flex items-center gap-2 text-[#d8e4ff] transition hover:text-[#72eee7]"><HugeiconsIcon icon={Search01Icon} size={17} />Rechercher un artiste</Link></div>
       </div>
     </div>
-    {shareMessage ? <p role="status" className="absolute bottom-24 left-5 z-30 border border-[#76eee9]/30 bg-[#091b32]/90 px-4 py-3 text-sm font-bold text-[#c8fffb] shadow-2xl backdrop-blur sm:left-10 lg:left-14">{shareMessage}</p> : null}
+    {shareMessage ? <div role="status" className="absolute bottom-24 left-5 z-30 flex max-w-[calc(100%-2.5rem)] items-center gap-3 border border-[#76eee9]/30 bg-[#091b32]/90 px-4 py-3 text-sm font-bold text-[#c8fffb] shadow-2xl backdrop-blur sm:left-10 lg:left-14"><span>{shareMessage}</span><button type="button" onClick={() => setShareMessage("")} aria-label="Fermer le message" className="grid h-7 w-7 shrink-0 place-items-center rounded-full transition hover:bg-white/10"><HugeiconsIcon icon={Cancel01Icon} size={16} /></button></div> : null}
     {!introPlaying && <><div className="absolute bottom-10 left-5 z-20 flex items-center gap-2 sm:left-10 lg:left-14"><button type="button" onClick={previous} aria-label="Recommandation précédente" className="hero-accueil__control"><HugeiconsIcon icon={ArrowLeft01Icon} size={19} /></button><button type="button" onClick={next} aria-label="Recommandation suivante" className="hero-accueil__control"><HugeiconsIcon icon={ArrowRight01Icon} size={19} /></button></div>
     <div className="absolute bottom-12 right-5 z-20 flex items-center gap-2 sm:right-10 lg:right-14">{slides.map((slide, index) => <button type="button" key={slide.id} onClick={() => setActiveIndex(index)} aria-label={`Afficher ${slide.title}`} aria-current={index === visibleIndex} className={`h-1.5 rounded-full transition-all ${index === visibleIndex ? "w-9 bg-[#76eee9]" : "w-1.5 bg-white/45 hover:bg-white"}`} />)}</div></>}
     <ShareContentModal isOpen={shareOpen} initialKind="playlist" onClose={() => setShareOpen(false)} onShare={sharePlaylist} />

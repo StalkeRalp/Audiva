@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, FavouriteIcon, MoreHorizontalIcon, PlayIcon, Queue01Icon, Search01Icon, Share01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Cancel01Icon, FavouriteIcon, MoreHorizontalIcon, PlayIcon, Queue01Icon, Search01Icon, Share01Icon } from "@hugeicons/core-free-icons";
 import CreatePlaylistButton from "@/domaines/playlists/composants/CreatePlaylistButton";
 import { useLecteurControlsStore } from "@/domaines/lecteur/stores/lecteurStore";
 import { useBibliothequeStore } from "@/domaines/bibliotheque/stores/bibliothequeStore";
@@ -66,11 +66,11 @@ export default function FavorisPage() {
 
   return <main className="audiva-workspace audiva-favoris min-h-screen bg-[#060b18] pb-32 text-[#eff4ff] lg:flex">
     <div className="min-w-0 flex-1">
-      <section className="relative isolate min-h-[390px] overflow-hidden border-b border-white/[.07] bg-[#080e1b] px-5 pb-12 pt-12 sm:px-10 lg:px-14">
+      <section className="audiva-theme-banner relative isolate min-h-[410px] overflow-hidden border-b border-white/[.07] bg-[#080e1b] px-5 pb-12 pt-12 sm:px-10 lg:px-14">
         <div className="absolute inset-0 opacity-72"><Image src="/favoris2.jpg" alt="" fill priority className="scale-[1.06] object-cover object-[center_63%]" /></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,rgba(81,124,255,.28),transparent_38%),linear-gradient(90deg,rgba(6,11,24,.93)_4%,rgba(6,11,24,.68)_48%,rgba(6,11,24,.24))]" />
         <div className="absolute inset-x-0 bottom-0 h-[84%] bg-gradient-to-b from-transparent via-[#060b18]/38 to-[#060b18]" />
-        <div className="relative mx-auto flex max-w-[1500px] flex-col justify-end gap-7 sm:min-h-[338px] sm:flex-row sm:items-end sm:justify-between">
+        <div className="relative mx-auto flex max-w-[1500px] flex-col justify-end gap-7 min-h-[300px] sm:min-h-[340px] sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-end gap-5"><div className="grid h-28 w-28 shrink-0 place-items-center bg-[linear-gradient(145deg,#2e3a8e,#17254a_50%,#0d172c)] shadow-[0_18px_42px_rgba(0,0,0,.35)] sm:h-40 sm:w-40"><HugeiconsIcon icon={FavouriteIcon} size={55} strokeWidth={1.65} className="text-[#76eee9]" fill="rgba(114,238,231,.22)" /></div><div className="pb-1"><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#a6f6ef]">Votre collection</p><h1 className="mt-2 text-4xl font-semibold tracking-[-.055em] text-white sm:text-5xl">Mes favoris</h1><p className="mt-3 text-sm font-medium text-[#bdc9e6]">Enoch · <b className="text-white">{displayFavorites.length} titre{displayFavorites.length !== 1 ? "s" : ""}</b>{displayFavorites.length ? ` · ${formatTime(totalDuration)}` : ""}</p></div></div>
           <div className="flex flex-wrap gap-2"><CreatePlaylistButton className="rounded-full" /><button type="button" onClick={shareFavorites} className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[.08] px-4 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:border-[#76eee9]/45 hover:bg-white/[.14]"><HugeiconsIcon icon={Share01Icon} size={18} strokeWidth={2.3} />Partager</button></div>
         </div>
@@ -83,7 +83,7 @@ export default function FavorisPage() {
         {displayFavorites.length ? <div className="rounded-2xl overflow-hidden border border-white/[.08] bg-[#0a1221]"><div className="grid grid-cols-[32px_minmax(200px,1.5fr)_minmax(120px,1fr)_68px_34px] border-b border-white/[.08] px-4 py-3 text-[10px] font-bold uppercase tracking-[.15em] text-[#72809d]"><span>#</span><span>Titre</span><span className="hidden sm:block">Album</span><span>Durée</span><span /></div>{displayFavorites.map((track, index) => <FavoriteRow key={track.id} track={track} index={index} active={currentTrack?.id === track.id && isPlaying} menuOpen={menuId === track.id} onPlay={() => launch(track)} onToggleLike={() => { toggleLike(track); notify("Titre retiré de vos favoris"); }} onQueue={() => { addToQueue(track); notify("Titre ajouté à la file"); }} onMenu={() => setMenuId(menuId === track.id ? null : track.id)} onMenuClose={() => setMenuId(null)} onArtist={() => router.push(`/recherche?q=${encodeURIComponent(track.artist)}`)} />)}</div> : <EmptyFavorites onDiscover={() => router.push("/decouverte")} />}
       </section>
     </div>
-    {notice ? <p role="status" className="fixed bottom-24 right-5 z-[70] border border-[#76eee9]/30 bg-[#112139] px-4 py-3 text-sm font-bold text-[#c8fffb] shadow-lg">{notice}</p> : null}
+    {notice ? <div role="status" className="fixed bottom-24 right-5 z-[70] flex max-w-[calc(100vw-24px)] items-center gap-3 border border-[#76eee9]/30 bg-[#112139] px-4 py-3 pr-2 text-sm font-bold text-[#c8fffb] shadow-lg"><span>{notice}</span><button type="button" onClick={() => setNotice("")} aria-label="Fermer le message" className="grid h-7 w-7 shrink-0 place-items-center rounded-full hover:bg-white/10"><HugeiconsIcon icon={Cancel01Icon} size={16}/></button></div> : null}
   </main>;
 }
 

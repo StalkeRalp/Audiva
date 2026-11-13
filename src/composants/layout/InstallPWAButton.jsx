@@ -72,7 +72,8 @@ export function InstallPWAButton() {
         <span className="hidden min-[380px]:inline">{isInstalled ? "Installée" : "Installer"}</span>
       </button>
       {notice ? (
-        <div role="status" className="absolute right-0 top-[calc(100%+10px)] z-[70] w-[min(300px,calc(100vw-24px))] rounded-2xl border border-white/10 bg-[#0b1425] p-4 text-sm leading-5 text-[#dce5fa] shadow-2xl shadow-black/40">
+        <div role="status" className="absolute right-0 top-[calc(100%+10px)] z-[70] w-[min(300px,calc(100vw-24px))] rounded-2xl border border-white/10 bg-[#0b1425] p-4 pr-11 text-sm leading-5 text-[#dce5fa] shadow-2xl shadow-black/40">
+          <button type="button" onClick={() => setNotice("")} aria-label="Fermer le message d’installation" className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full text-[#aab8d2] transition hover:bg-white/10 hover:text-white">×</button>
           <p>{notice}</p>
           <button type="button" onClick={() => setNotice("")} className="mt-3 text-xs font-bold text-[#76eee9] hover:text-white">Compris</button>
         </div>

@@ -5,4 +5,9 @@ export const useUiStore = create((set) => ({
   setSidebarOpen: (v) => set({ sidebarOpen: v }),
   playerVisible: true,
   setPlayerVisible: (playerVisible) => set({ playerVisible }),
+  playerStyle: "audiva",
+  setPlayerStyle: (playerStyle) => {
+    if (typeof window !== "undefined") window.localStorage.setItem("audiva-player-style", playerStyle);
+    set({ playerStyle });
+  },
 }));

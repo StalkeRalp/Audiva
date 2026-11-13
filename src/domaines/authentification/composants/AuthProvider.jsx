@@ -22,15 +22,22 @@ export default function AuthProvider({ children }) {
     if (!isSupabaseConfigured) { setSession(null, false, "missing-config"); return; }
     const client = getSupabaseBrowserClient();
     let active = true, receivedAuthEvent = false;
-    client.auth.getUser().then(({ data, error }) => {
-      if (active && !receivedAuthEvent) setSession(error ? null : data.user, false, error ? "session-error" : "ready");
+    // Read the locally persisted Supabase session. getUser() always calls the
+    // network and would repeatedly fail while Audiva is offline.
+    client.auth.getSession().then(({ data, error }) => {
+      if (active && !receivedAuthEvent) setSession(error ? null : data.session?.user || null, false, error ? "session-error" : "ready");
     }).catch(() => { if (active) setSession(null, false, "session-error"); });
+    const stopRefreshOffline = () => client.auth.stopAutoRefresh();
+    const resumeRefreshOnline = () => client.auth.startAutoRefresh();
+    if (!navigator.onLine) stopRefreshOffline();
+    window.addEventListener("offline", stopRefreshOffline);
+    window.addEventListener("online", resumeRefreshOnline);
     const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
       receivedAuthEvent = true;
       storeSpotifyProviderSession(session);
       setSession(session?.user || null, false, "ready");
     });
-    return () => { active = false; subscription.unsubscribe(); };
+    return () => { active = false; subscription.unsubscribe(); window.removeEventListener("offline", stopRefreshOffline); window.removeEventListener("online", resumeRefreshOnline); };
   }, [setSession]);
   useEffect(() => {
     if (!user?.id || !isSupabaseConfigured) {
@@ -40,29 +47,43 @@ export default function AuthProvider({ children }) {
       }
       return;
     }
-    hydrateSocial(user.id);
-    const channel = subscribeSocial(user.id, () => hydrateSocial(user.id), conversationIds);
-    return () => { getSupabaseBrowserClient().removeChannel(channel); };
+    let channel = null;
+    const connect = () => {
+      if (!navigator.onLine || channel) return;
+      const social = useSocialStore.getState();
+      if (social.activeUserId !== user.id || social.cloudError) hydrateSocial(user.id);
+      channel = subscribeSocial(user.id, () => hydrateSocial(user.id), conversationIds);
+    };
+    const disconnect = () => {
+      if (!channel) return;
+      getSupabaseBrowserClient().removeChannel(channel);
+      channel = null;
+    };
+    connect();
+    window.addEventListener("online", connect);
+    window.addEventListener("offline", disconnect);
+    return () => { disconnect(); window.removeEventListener("online", connect); window.removeEventListener("offline", disconnect); };
   }, [user?.id, hydrateSocial, conversationIds]);
   useEffect(() => {
     if (!user?.id || !isSupabaseConfigured) return;
     let active = true, timer = null, running = false, rerun = false, ready = false;
     const sync = async () => {
-      if (!ready) return;
+      if (!ready || !navigator.onLine) return;
       if (running) { rerun = true; return; }
       running = true;
       try {
         await syncPersonalData(user.id);
         if (active) window.dispatchEvent(new CustomEvent("audiva-cloud-sync", { detail: { status: "done" } }));
       } catch (error) {
-        console.warn("Audiva cloud sync:", error.message);
-        if (active) window.dispatchEvent(new CustomEvent("audiva-cloud-sync", { detail: { status: "error", message: error.message } }));
+        if (navigator.onLine) console.warn("Audiva cloud sync:", error.message);
+        if (active && navigator.onLine) window.dispatchEvent(new CustomEvent("audiva-cloud-sync", { detail: { status: "error", message: error.message } }));
       }
       running = false;
       if (rerun && active) { rerun = false; schedule(); }
     };
     const schedule = () => { if (!ready) return; window.clearTimeout(timer); timer = window.setTimeout(sync, 1400); };
     const restore = async () => {
+      if (!navigator.onLine) { ready = true; return; }
       try {
         const cloud = await restoreCloudPersonalData(user.id);
         if (!active) return;
@@ -82,7 +103,7 @@ export default function AuthProvider({ children }) {
         }
         ready = true;
         schedule();
-      } catch (error) { console.warn("Audiva cloud restore:", error.message); }
+      } catch (error) { if (navigator.onLine) console.warn("Audiva cloud restore:", error.message); ready = true; }
     };
     const unsubscribers = [
       useBibliothequeStore.subscribe((state, previous) => { if (state.tracks !== previous.tracks) schedule(); }),
@@ -91,9 +112,13 @@ export default function AuthProvider({ children }) {
       useIntelligenceStore.subscribe((state, previous) => { if (state.plays !== previous.plays) schedule(); }),
     ];
     const onManualSync = () => schedule();
+    const onOnline = () => { restore(); };
+    const onOffline = () => { window.clearTimeout(timer); };
     window.addEventListener("audiva-sync-requested", onManualSync);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
     restore();
-    return () => { active = false; window.clearTimeout(timer); unsubscribers.forEach(unsubscribe => unsubscribe()); window.removeEventListener("audiva-sync-requested", onManualSync); };
+    return () => { active = false; window.clearTimeout(timer); unsubscribers.forEach(unsubscribe => unsubscribe()); window.removeEventListener("audiva-sync-requested", onManualSync); window.removeEventListener("online", onOnline); window.removeEventListener("offline", onOffline); };
   }, [user?.id]);
   return children;
 }

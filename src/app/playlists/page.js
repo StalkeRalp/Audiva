@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Delete02Icon, MusicNote01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Cancel01Icon, Delete02Icon, MusicNote01Icon } from "@hugeicons/core-free-icons";
 import { usePlaylistsStore } from "@/domaines/playlists/stores/playlistsStore";
 
 export default function PlaylistsPage() {
@@ -67,6 +67,7 @@ export default function PlaylistsPage() {
         </section>
       {creationOpen && <div className="fixed inset-0 z-[70] grid place-items-center bg-[#02050d]/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="new-playlist-title">
         <form onSubmit={create} className="w-full max-w-md border border-white/10 bg-[#0b1426] p-6 shadow-2xl">
+          <button type="button" onClick={() => setCreationOpen(false)} aria-label="Fermer la fenêtre" className="float-right grid h-9 w-9 place-items-center rounded-full text-[#aebbd7] hover:bg-white/10 hover:text-white"><HugeiconsIcon icon={Cancel01Icon} size={20}/></button>
           <p className="text-xs font-bold uppercase tracking-[.15em] text-[#83eee8]">Nouvelle playlist</p>
           <h2 id="new-playlist-title" className="mt-2 text-2xl font-black text-white">Donnez-lui un nom</h2>
           <p className="mt-2 text-sm text-[#aebbd7]">Votre playlist sera créée vide. Vous pourrez ensuite y ajouter vos morceaux.</p>

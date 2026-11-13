@@ -6,8 +6,8 @@ export function Modale({ isOpen, onClose, title, children }) {
       <div className="w-full max-w-lg audiva-glass rounded-[28px] p-6 text-slate-100">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold">{title}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-200">
-            Fermer
+          <button type="button" onClick={onClose} aria-label="Fermer la fenêtre" className="grid h-9 w-9 place-items-center rounded-full text-2xl leading-none text-slate-400 hover:bg-white/10 hover:text-slate-100">
+            ×
           </button>
         </div>
         {children}

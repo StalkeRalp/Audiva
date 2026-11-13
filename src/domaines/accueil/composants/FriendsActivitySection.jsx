@@ -10,7 +10,7 @@ export default function FriendsActivitySection() {
   const activities = useSocialStore(state => state.activities).slice(0, 4);
 
   return (
-    <section className="mt-12 rounded-2xl border border-white/10 bg-gradient-to-br from-[#1a2a4a] via-[#1a2750]/80 to-[#0f1a2e] p-6 sm:p-8 overflow-hidden relative">
+    <section className="audiva-friends-activity mt-12 rounded-2xl border border-white/10 bg-gradient-to-br from-[#1a2a4a] via-[#1a2750]/80 to-[#0f1a2e] p-6 sm:p-8 overflow-hidden relative">
       {/* Background decoration */}
       <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#72eee7]/10 rounded-full blur-3xl" />
       <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-[#72eee7]/5 rounded-full blur-3xl" />

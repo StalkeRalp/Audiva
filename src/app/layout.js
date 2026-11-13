@@ -6,6 +6,8 @@ import { ApplicationShell } from "@/composants/layout/ApplicationShell";
 import { NavigationProgress } from "@/composants/layout/NavigationProgress";
 import AuthProvider from "@/domaines/authentification/composants/AuthProvider";
 import AuthInteractionGate from "@/domaines/authentification/composants/AuthInteractionGate";
+import OfflineSupport from "@/composants/layout/OfflineSupport";
+import ThemeProvider from "@/composants/layout/ThemeProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,7 +38,7 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
       </head>
-      <body className="min-h-full bg-black text-slate-100"><AuthProvider><NavigationProgress /><AuthInteractionGate /><BarreSuperieure /><ApplicationShell>{children}</ApplicationShell><LecteurPersistant /></AuthProvider></body>
+      <body className="min-h-full bg-black text-slate-100"><ThemeProvider /><AuthProvider><OfflineSupport /><NavigationProgress /><AuthInteractionGate /><BarreSuperieure /><ApplicationShell>{children}</ApplicationShell><LecteurPersistant /></AuthProvider></body>
     </html>
   );
 }

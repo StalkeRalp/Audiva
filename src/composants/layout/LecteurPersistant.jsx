@@ -156,7 +156,12 @@ export function LecteurPersistant() {
   },[pathname,currentTrack?.id]);
   useEffect(()=>{useIntelligenceStore.getState().hydrate();const flush=()=>useIntelligenceStore.getState().commit();window.addEventListener('pagehide',flush);document.addEventListener('visibilitychange',flush);return()=>{flush();window.removeEventListener('pagehide',flush);document.removeEventListener('visibilitychange',flush);};},[]);
   useEffect(()=>{useIntelligenceStore.getState().finish(false);},[currentTrack?.id]);
-  const { playerVisible, setPlayerVisible } = useUiStore();
+  const { playerVisible, setPlayerVisible, playerStyle, setPlayerStyle } = useUiStore();
+  useEffect(() => {
+    const savedStyle = window.localStorage.getItem("audiva-player-style");
+    if (savedStyle === "apple" || savedStyle === "audiva") setPlayerStyle(savedStyle);
+  }, [setPlayerStyle]);
+  const togglePlayerStyle = () => setPlayerStyle(playerStyle === "apple" ? "audiva" : "apple");
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -321,7 +326,7 @@ export function LecteurPersistant() {
   return <>{spotifySdkEnabled && <Script src="https://sdk.scdn.co/spotify-player.js" strategy="afterInteractive" onReady={initializeSpotifySdk} onError={() => setQueueNotice("Le lecteur intégré n’a pas pu être chargé.")} />}<video data-audiva-media playsInline ref={audioRef} className="audiva-persistent-media" style={videoRect && isLocalTrack(track) && (track.mediaType === "video" || track.fileInfo?.type === "video/mp4" || /\.mp4$/i.test(track.fileInfo?.name || "")) ? {position:"fixed",...videoRect,zIndex:20,objectFit:"contain",background:"#040609",borderRadius:videoRect.borderRadius} : {position:"fixed",width:1,height:1,opacity:0,pointerEvents:"none"}} src={isLocalTrack(track) ? track.streamUrl : undefined} preload={isLocalTrack(track) ? "metadata" : "none"} onPlaying={() => useIntelligenceStore.getState().start(track,audioRef.current?.currentTime || 0)} onTimeUpdate={handleAudioTimeUpdate} onSeeking={() => { listened.current.wall = 0; }} onPause={() => { listened.current.wall = 0; }} onWaiting={() => { listened.current.wall = 0; }} onLoadedMetadata={(event) => { const audio = event.currentTarget; setQueueNotice(""); setDuration(audio.duration); const savedTime = useLecteurStore.getState().currentTime; if (savedTime > 0) audio.currentTime = Math.min(savedTime, Number.isFinite(audio.duration) ? audio.duration : savedTime); }} onError={() => { if (isLocalTrack(track) && track.streamUrl) { pause(); } }} onEnded={() => { useIntelligenceStore.getState().finish(true); handleTrackEnd(); }} />
     {!publicRoute && !playerVisible && <button className="audiva-player-restore" onClick={() => setPlayerVisible(true)} aria-label="Afficher le lecteur">♫ <span>{track.title}</span> ↑</button>}
     {!publicRoute && playerVisible && <>
-    {queueNotice && !queueOpen && <p role="status" className="audiva-player-notice">{queueNotice}{spotifyNeedsConnection && <button type="button" className="ml-3 font-bold text-[#a6f6ef] underline underline-offset-2" onClick={() => connectSpotify({ returnTo: `${pathname}${window.location.search}`, resumePlayback: true }).catch((error) => setQueueNotice(error.message))}>Réassocier mon compte</button>}</p>}
+    {queueNotice && !queueOpen && <div role="status" className="audiva-player-notice fixed bottom-24 right-3 z-[80] flex max-w-[min(480px,calc(100vw-24px))] items-center justify-between gap-3 rounded-2xl border border-[#76eee9]/30 bg-[#112139] px-4 py-3 text-sm font-semibold text-[#c8fffb] shadow-xl sm:right-5"><span>{queueNotice}{spotifyNeedsConnection && <button type="button" className="ml-3 font-bold text-[#a6f6ef] underline underline-offset-2" onClick={() => connectSpotify({ returnTo: `${pathname}${window.location.search}`, resumePlayback: true }).catch((error) => setQueueNotice(error.message))}>Réassocier mon compte</button>}</span><button type="button" onClick={() => setQueueNotice("")} aria-label="Fermer le message du lecteur" className="grid h-7 w-7 shrink-0 place-items-center rounded-full hover:bg-white/10"><HugeiconsIcon icon={Cancel01Icon} size={16}/></button></div>}
     {lyricsOpen && <aside className="fixed bottom-[88px] sm:bottom-[96px] left-0 right-0 top-[72px] z-40 overflow-hidden bg-[#07132b] text-[#eff4ff] lg:left-64"><div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_10%,rgba(80,128,255,.28),transparent_32%),linear-gradient(135deg,#071120,#0b1730_58%,#060b18)]" /><div className="relative grid h-full grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]"><section className="min-w-0 overflow-y-auto px-5 py-8 sm:px-10 lg:px-14"><div className="mx-auto max-w-4xl"><div className="flex items-start justify-between gap-5"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#a6f6ef]">Paroles synchronisées</p><p className="mt-2 text-sm font-semibold text-[#c3d0e8]">{track.title} · {track.artist}</p></div><button onClick={toggleLyrics} className={`${controlClass} border border-white/10 bg-[#07101e]`} aria-label="Fermer les paroles"><HugeiconsIcon icon={Cancel01Icon} size={20} /></button></div><LyricsPanel track={track}/></div></section><aside className="hidden h-full overflow-y-auto border-l border-white/[.08] bg-[#08101d] p-4 lg:block"><p className="text-xs font-bold uppercase tracking-[.14em] text-[#a6f6ef]">Lecture en cours</p><PochetteImage unoptimized src={cover} alt="" width={480} height={480} className="mt-4 aspect-square w-full object-cover rounded-2xl" /><p className="mt-4 text-lg font-black">{track.title}</p><p className="mt-1 text-sm text-[#aebbd7]">{track.artist}</p></aside></div></aside>}
     {queueOpen && <aside onDragOver={acceptTrackDrag} onDrop={dropTrack} role="dialog" aria-label="File d&apos;attente" className="audiva-queue fixed bottom-[160px] sm:bottom-[120px] right-3 top-[84px] z-50 flex w-[min(420px,calc(100vw-24px))] flex-col border border-white/10 bg-[#101626]/90 backdrop-blur-2xl rounded-3xl shadow-[-16px_0_45px_rgba(0,0,0,.38)] animate-in slide-in-from-right-5 duration-200">
       <header className="flex shrink-0 items-center justify-between border-b border-white/8 px-5 pt-5">
@@ -333,10 +338,10 @@ export function LecteurPersistant() {
       </header>
       <p className="audiva-queue-drop">Déposez vos titres ici pour les écouter ensuite</p>
       {queueTab === "queue" ? <QueueList queue={queue} currentIndex={currentIndex} currentTrack={track} upNextQueue={upNextQueue} queueSourceName={queueSourceName} onPlay={(item) => { setCurrentTrack(item); play(); }} onRemove={removeFromQueue} onRemoveUpNext={removeUpNext} onMove={moveQueueItem} onMoveUpNext={moveUpNext} onPlayNext={playNext} onLike={toggleLike} onLyrics={(item) => { setCurrentTrack(item); if (!lyricsOpen) toggleLyrics(); }} onNavigate={(query) => router.push(`/recherche?q=${encodeURIComponent(query)}`)} onNotice={notifyQueue} /> : <RecentList tracks={recentTracks} onPlay={(item) => { setCurrentTrack(item); play(); }} />}
-      {queueNotice ? <p role="status" className="absolute bottom-5 left-5 right-5 border border-[#a6f6ef]/30 bg-[#14263a] px-3 py-2 text-xs font-semibold text-[#bffcf8] shadow-xl">{queueNotice}</p> : null}
+      {queueNotice ? <div role="status" className="absolute bottom-5 left-5 right-5 flex items-center justify-between gap-3 border border-[#a6f6ef]/30 bg-[#14263a] px-3 py-2 text-xs font-semibold text-[#bffcf8] shadow-xl"><span>{queueNotice}</span><button type="button" onClick={() => setQueueNotice("")} aria-label="Fermer le message du lecteur" className="grid h-7 w-7 shrink-0 place-items-center rounded-full hover:bg-white/10"><HugeiconsIcon icon={Cancel01Icon} size={16}/></button></div> : null}
     </aside>}
     {isLecteurPage ? null : (
-    <footer onDragOver={acceptTrackDrag} onDrop={dropTrack} className="audiva-player fixed z-50 px-4 sm:px-6 py-3 text-white">
+    <footer onDragOver={acceptTrackDrag} onDrop={dropTrack} className={`audiva-player ${playerStyle === "apple" ? "audiva-player--apple" : ""} fixed z-50 px-4 sm:px-6 py-3 text-white`}>
       {/* Desktop / Tablet layout */}
       <div className="hidden sm:flex items-center justify-between gap-6 lg:gap-8">
         {/* Left: Track Info */}
@@ -510,6 +515,10 @@ export function LecteurPersistant() {
             <HugeiconsIcon icon={Queue01Icon} size={18} strokeWidth={2} />
           </button>
 
+          <button type="button" onClick={togglePlayerStyle} aria-pressed={playerStyle === "apple"} title={`Style ${playerStyle === "apple" ? "Apple" : "Audiva"} — cliquer pour changer`} className="audiva-player-style-button">
+            {playerStyle === "apple" ? "Apple" : "Audiva"}
+          </button>
+
           <button
             type="button"
             onClick={() => setPlayerVisible(false)}
@@ -578,6 +587,10 @@ export function LecteurPersistant() {
               aria-label="Titre suivant"
             >
               <HugeiconsIcon icon={NextIcon} size={18} strokeWidth={2} />
+            </button>
+
+            <button type="button" onClick={togglePlayerStyle} aria-pressed={playerStyle === "apple"} title={`Style ${playerStyle === "apple" ? "Apple" : "Audiva"} — cliquer pour changer`} className="audiva-player-style-button audiva-player-style-button--mobile">
+              {playerStyle === "apple" ? "Apple" : "Audiva"}
             </button>
 
             <button

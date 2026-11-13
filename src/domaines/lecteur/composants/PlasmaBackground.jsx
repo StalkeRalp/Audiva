@@ -7,6 +7,9 @@ import { DEFAULT_PLASMA_PALETTE, extractPlasmaPalette } from "@/domaines/lecteur
 import styles from "./PlasmaBackground.module.css";
 
 const paletteCache = new Map();
+const APPLE_PLASMA_PALETTE = [
+  [0.38, 0.66, 0.9], [0.62, 0.56, 0.86], [0.48, 0.78, 0.78], [0.92, 0.62, 0.72],
+];
 const VERTEX = `
 attribute vec2 a_position;
 void main() { gl_Position = vec4(a_position, 0.0, 1.0); }
@@ -21,6 +24,7 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform vec2 u_pointer;
 uniform vec3 u_colors[4];
+uniform float u_light;
 float hash(vec2 p) {
   vec3 q = fract(vec3(p.xyx) * 0.1031);
   q += dot(q, q.yzx + 33.33);
@@ -62,7 +66,8 @@ void main() {
   color = mix(color, u_colors[3], ribbon * 0.48);
   color *= 0.7 + bloom * 0.3;
   float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
-  color *= min(1.0, 0.34 / max(luminance, 0.001));
+  color *= mix(min(1.0, 0.34 / max(luminance, 0.001)), min(1.35, 0.78 / max(luminance, 0.001)), u_light);
+  color = mix(color, vec3(0.94, 0.95, 0.98), u_light * 0.12);
   float grain = (hash(gl_FragCoord.xy) - 0.5) / 255.0;
   gl_FragColor = vec4(color + grain, 1.0);
 }
@@ -87,7 +92,7 @@ export function PlasmaBackground({ cover, style = "auto" }) {
     const canvas = canvasRef.current;
     const applyPalette = (palette) => {
       if (!active) return;
-      paletteRef.current = palette;
+      paletteRef.current = document.documentElement.dataset.theme === "apple" ? APPLE_PLASMA_PALETTE : palette;
       canvas.dataset.palette = "ready";
       refreshRef.current?.();
     };
@@ -144,7 +149,7 @@ export function PlasmaBackground({ cover, style = "auto" }) {
     const position = gl.getAttribLocation(program, "a_position");
     gl.enableVertexAttribArray(position);
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
-    const uniforms = Object.fromEntries(["resolution", "time", "pointer"].map((name) => [name, gl.getUniformLocation(program, `u_${name}`)]));
+    const uniforms = Object.fromEntries(["resolution", "time", "pointer", "light"].map((name) => [name, gl.getUniformLocation(program, `u_${name}`)]));
     const colors = gl.getUniformLocation(program, "u_colors[0]");
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const current = paletteRef.current.map((color) => [...color]);
@@ -166,6 +171,7 @@ export function PlasmaBackground({ cover, style = "auto" }) {
         pointer.forEach((value, index) => { pointer[index] = value + (targetPointer[index] - value) * 0.035; });
         gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
         gl.uniform1f(uniforms.time, time);
+        gl.uniform1f(uniforms.light, document.documentElement.dataset.theme === "apple" ? 1 : 0);
         gl.uniform2f(uniforms.pointer, pointer[0], pointer[1]);
         gl.uniform3fv(colors, colorBuffer);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -190,6 +196,11 @@ export function PlasmaBackground({ cover, style = "auto" }) {
     };
     const pointerLeave = () => { targetPointer[0] = 0; targetPointer[1] = 0; };
     const contextLost = (event) => { event.preventDefault(); stopped = true; cancelAnimationFrame(frame); delete canvas.dataset.rendered; };
+    const syncTheme = (event) => {
+      const apple = event.detail?.theme === "apple" || document.documentElement.dataset.theme === "apple";
+      paletteRef.current = apple ? APPLE_PLASMA_PALETTE : (paletteCache.get(cover) || DEFAULT_PLASMA_PALETTE);
+      refreshRef.current?.();
+    };
     const parent = canvas.closest("main");
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
@@ -198,6 +209,8 @@ export function PlasmaBackground({ cover, style = "auto" }) {
     document.addEventListener("visibilitychange", restart);
     reduced.addEventListener("change", restart);
     canvas.addEventListener("webglcontextlost", contextLost);
+    window.addEventListener("audiva-theme-change", syncTheme);
+    syncTheme({ detail: { theme: document.documentElement.dataset.theme } });
     refreshRef.current = restart;
     resize();
     return () => {
@@ -209,6 +222,7 @@ export function PlasmaBackground({ cover, style = "auto" }) {
       document.removeEventListener("visibilitychange", restart);
       reduced.removeEventListener("change", restart);
       canvas.removeEventListener("webglcontextlost", contextLost);
+      window.removeEventListener("audiva-theme-change", syncTheme);
       refreshRef.current = null;
       gl.deleteBuffer(buffer);
       gl.deleteProgram(program);

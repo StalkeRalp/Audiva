@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Audiva</title>
+  <defs>
+    <linearGradient id="audiva-mark" x1="28" y1="28" x2="132" y2="132" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14C9D7"/>
+      <stop offset=".52" stop-color="#258CFA"/>
+      <stop offset="1" stop-color="#5B63F6"/>
+    </linearGradient>
+  </defs>
+  <g stroke="url(#audiva-mark)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M48 119 72 43c2-7 6-11 12-11s10 4 12 11l24 76" stroke-width="15"/>
+    <path d="M59 88h49" stroke-width="12"/>
+    <path d="M24 76v28M36 68v44M136 68v44M148 76v28" stroke-width="7"/>
+  </g>
+  <path d="m76 65 24 15-24 15V65Z" fill="url(#audiva-mark)" stroke="#fff" stroke-linejoin="round" stroke-width="2"/>
+</svg>

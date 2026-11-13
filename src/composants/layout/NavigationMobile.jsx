@@ -14,7 +14,7 @@ const primaryItems = [
 ];
 const moreItems = [
   { href: "/recherche", label: "Recherche", icon: Search01Icon },
-  { href: "/bibliotheque?vue=statistiques", label: "Statistiques", icon: ChartBarBigIcon, query: "statistiques" },
+  { href: "/statistiques", label: "Statistiques", icon: ChartBarBigIcon },
   { href: "/favoris", label: "Favoris", icon: FavouriteIcon },
   { href: "/amis", label: "Amis", icon: UserGroupIcon },
   { href: "/notifications", label: "Notifications", icon: Notification01Icon },

@@ -1,20 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, Home01Icon, Notification01Icon, Search01Icon, UserCircleIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, Home01Icon, Notification01Icon, PaletteIcon, Search01Icon, UserCircleIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
 import { loadProfileSettings } from "@/utilitaires/profilStorage";
 import { useSocialStore } from "@/domaines/social/stores/socialStore";
 import { useAuthStore } from "@/domaines/authentification/stores/authStore";
 import { getAuthProfileImage } from "@/domaines/authentification/utilitaires/profile";
 import { InstallPWAButton } from "@/composants/layout/InstallPWAButton";
+import { toggleAppleTheme } from "@/composants/layout/ThemeProvider";
 
 export function BarreSuperieure() {
   const router = useRouter();
   const pathname = usePathname();
   const [profile, setProfile] = useState({ name: "Auditeur", avatar: "" });
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState("");
   const user = useAuthStore(state => state.user);
   const authName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Auditeur";
   const providerAvatar = getAuthProfileImage(user);
@@ -55,15 +58,13 @@ export function BarreSuperieure() {
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+        <button type="button" onClick={toggleAppleTheme} aria-label="Basculer entre le thème Audiva et le thème Apple" title="Thème Apple / Audiva" className="audiva-theme-toggle flex h-10 w-10 items-center justify-center rounded-full text-[#b9c3dc] transition hover:bg-white/7 hover:text-white"><HugeiconsIcon icon={PaletteIcon} size={22} strokeWidth={1.7} /></button>
         <InstallPWAButton />
         <Link href="/notifications" aria-label={unreadNotifications ? `${unreadNotifications} notification${unreadNotifications > 1 ? "s" : ""} non lue${unreadNotifications > 1 ? "s" : ""}` : "Notifications"} className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#b9c3dc] transition hover:bg-white/7 hover:text-white">{unreadNotifications ? <span className="absolute right-0.5 top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-[#03050a] bg-[#ef4c86] px-1 text-[9px] font-bold text-white">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span> : null}<HugeiconsIcon icon={Notification01Icon} size={23} strokeWidth={1.7} /></Link>
         <Link href="/amis" aria-label="Amis" className="hidden h-10 w-10 items-center justify-center rounded-full text-[#b9c3dc] transition hover:bg-white/7 hover:text-white lg:flex"><HugeiconsIcon icon={UserGroupIcon} size={23} strokeWidth={1.7} /></Link>
         <Link href={user ? "/parametres" : "/authentification/connexion"} aria-label={user ? "Ouvrir les paramètres du profil" : "Se connecter à Audiva"} className="flex items-center gap-2 rounded-full py-1 pl-1 pr-1 transition hover:bg-white/[.06]">
-          <span
-            className={`relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/25 bg-cover bg-center text-white ring-2 ring-[#17223f] ${profile.avatar ? "bg-gradient-to-br from-[#7588ff] to-[#5452c9]" : "bg-[#182750] text-[#a6f6ef]"}`}
-            style={profile.avatar ? { backgroundImage: `url(${profile.avatar})` } : undefined}
-          >
-            {!profile.avatar && <HugeiconsIcon icon={UserCircleIcon} size={25} strokeWidth={1.65} aria-hidden="true" />}
+          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/25 bg-[#182750] text-[#a6f6ef] ring-2 ring-[#17223f]">
+            {profile.avatar && profile.avatar !== failedAvatarUrl ? <Image unoptimized src={profile.avatar} alt="" fill sizes="40px" onError={() => setFailedAvatarUrl(profile.avatar)} className="object-cover" /> : <HugeiconsIcon icon={UserCircleIcon} size={25} strokeWidth={1.65} aria-hidden="true" />}
           </span>
           <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="hidden text-[#9eabcf] sm:block" />
         </Link>
