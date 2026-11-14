@@ -4,17 +4,27 @@ import { useEffect } from "react";
 
 const THEME_KEY = "audiva-color-theme";
 
+function persistThemeCookie(theme) {
+  try {
+    document.cookie = `${THEME_KEY}=${theme}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  } catch {}
+}
+
 export default function ThemeProvider() {
   useEffect(() => {
+    let theme = document.documentElement.dataset.theme === "apple" ? "apple" : "audiva";
     try {
-      document.documentElement.dataset.theme =
-        window.localStorage.getItem(THEME_KEY) === "apple" ? "apple" : "audiva";
-    } catch {
-      document.documentElement.dataset.theme = "audiva";
-    }
+      const savedTheme = window.localStorage.getItem(THEME_KEY);
+      if (savedTheme === "apple" || savedTheme === "audiva") theme = savedTheme;
+      else window.localStorage.setItem(THEME_KEY, theme);
+    } catch {}
+    document.documentElement.dataset.theme = theme;
+    persistThemeCookie(theme);
 
     const onThemeChange = event => {
-      document.documentElement.dataset.theme = event.detail?.theme === "apple" ? "apple" : "audiva";
+      const nextTheme = event.detail?.theme === "apple" ? "apple" : "audiva";
+      document.documentElement.dataset.theme = nextTheme;
+      persistThemeCookie(nextTheme);
     };
     window.addEventListener("audiva-theme-change", onThemeChange);
     return () => window.removeEventListener("audiva-theme-change", onThemeChange);
@@ -30,5 +40,6 @@ export function toggleAppleTheme() {
   try {
     window.localStorage.setItem(THEME_KEY, theme);
   } catch {}
+  persistThemeCookie(theme);
   window.dispatchEvent(new CustomEvent("audiva-theme-change", { detail: { theme } }));
 }

@@ -497,13 +497,33 @@ html[data-theme="apple"] .audiva-chat>section:first-child>div.mx-auto>div:nth-ch
 html[data-theme="apple"] .audiva-chat>section:first-child h1 { border: 0 !important; background: transparent !important; color: #fff !important; text-shadow: 0 2px 12px rgb(0 0 0 / .55); }
 html[data-theme="apple"] .audiva-chat>section:nth-child(2) { border-bottom: 0 !important; box-shadow: none !important; }
 html[data-theme="apple"] .audiva-notifications>section:first-child div[class*="h-24"] {
-  background: linear-gradient(145deg,#102044,#172b54) !important;
-  box-shadow: 0 12px 30px rgb(4 10 25 / .32) !important;
+  background: linear-gradient(145deg,#f4f8fb,#dce8ee) !important;
+  border: 1px solid rgb(255 255 255 / .78);
+  box-shadow: 0 12px 30px rgb(4 10 25 / .22) !important;
 }
 html[data-theme="apple"] .audiva-notifications>section:first-child div[class*="h-24"] svg {
-  color: #72eee7 !important;
-  filter: drop-shadow(0 0 11px #72eee777);
+  color: #087f85 !important;
+  filter: none;
 }
+html[data-theme="apple"] .audiva-amis>section:first-child div[class*="h-24"] {
+  background: linear-gradient(145deg,#f4f8fb,#dce8ee) !important;
+  border: 1px solid rgb(255 255 255 / .78);
+  box-shadow: 0 12px 30px rgb(4 10 25 / .22) !important;
+}
+html[data-theme="apple"] .audiva-amis>section:first-child div[class*="h-24"] svg { color: #087f85 !important; filter: none; }
+html[data-theme="apple"] .audiva-notifications>section:first-child button {
+  min-height: 44px;
+  border: 1px solid rgb(255 255 255 / .58) !important;
+  border-radius: 12px !important;
+  background: rgb(12 22 38 / .76) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 24px rgb(0 0 0 / .2);
+  text-shadow: 0 1px 2px rgb(0 0 0 / .35);
+  backdrop-filter: blur(12px);
+}
+html[data-theme="apple"] .audiva-notifications>section:first-child button:hover:not(:disabled) { background: rgb(8 127 133 / .9) !important; border-color: #c9f7f1 !important; }
+html[data-theme="apple"] .audiva-notifications>section:first-child button:disabled { opacity: .72 !important; }
+html[data-theme="apple"] .audiva-notifications>section:first-child button svg { color: #fff !important; filter: none; }
 
 /* Settings audio level remains visible against both the dark and light panels. */
 .settings-audio-volume-label { display: block; color: #fff !important; }
@@ -531,6 +551,28 @@ html[data-theme="apple"] :is(.audiva-theme-banner,.hero-accueil) :is(button,a,sp
 html[data-theme="apple"] :is(.audiva-theme-banner,.hero-accueil) :is(button,a,span)[class*="bg-[#72eee7]"],
 html[data-theme="apple"] :is(.audiva-theme-banner,.hero-accueil) :is(button,a,span)[class*="bg-[#76eee9]"] {
   color: #071426 !important;
+}
+
+/* Keep Apple theme banners photographic, with a dark enough veil for white copy. */
+html[data-theme="apple"] :is(.audiva-amis,.audiva-notifications,.audiva-search-banner) > .audiva-theme-banner img,
+html[data-theme="apple"] :is(.audiva-amis,.audiva-notifications) > section:first-child img,
+html[data-theme="apple"] .audiva-search-banner > img {
+  opacity: .58 !important;
+  filter: brightness(.72) saturate(.82) !important;
+}
+html[data-theme="apple"] :is(.audiva-amis,.audiva-notifications) > section:first-child > div.absolute:not(:has(>img)),
+html[data-theme="apple"] .audiva-search-banner > div.absolute {
+  background: linear-gradient(90deg,rgb(5 10 20 / .82),rgb(5 10 20 / .58) 54%,rgb(5 10 20 / .3)),linear-gradient(0deg,rgb(5 10 20 / .72),transparent 78%) !important;
+}
+html[data-theme="apple"] .hero-accueil__content > span {
+  color: #f7fbff !important;
+  background: rgb(5 14 28 / .78) !important;
+  border-color: rgb(210 238 255 / .5) !important;
+}
+html[data-theme="apple"] .audiva-amis>section:first-child svg,
+html[data-theme="apple"] .audiva-notifications>section:first-child svg {
+  color: #fff !important;
+  filter: drop-shadow(0 2px 8px rgb(0 0 0 / .35));
 }
 
 /* Apple palette for the album and CD strip on the home page. */
@@ -1082,7 +1124,11 @@ html[data-theme="apple"] .now-playing__plasma {
   overflow: hidden;
   background: radial-gradient(ellipse at 50% 42%,#fff 0%,#edf1f6 68%,#e5e9ef 100%) !important;
 }
-html[data-theme="apple"] .now-playing__plasma .plasma-artwork { display: none !important; }
+html[data-theme="apple"] .now-playing__plasma .plasma-artwork {
+  display: block !important;
+  opacity: .2 !important;
+  filter: blur(62px) saturate(1.55) brightness(.92) !important;
+}
 html[data-theme="apple"] .now-playing__plasma .plasma-canvas {
   opacity: .86 !important;
   filter: saturate(.92) contrast(1.03) !important;
@@ -1194,3 +1240,26 @@ html[data-theme="apple"] .now-playing__appearance .appearance-swatch--waves i { 
   html[data-theme="apple"] .now-playing__plasma::after,
   html[data-theme="apple"] .now-playing__plasma .plasma-canvas { animation: none !important; transition: none !important; }
 }
+
+/* Reader share dialogs use a light Apple surface with readable text. */
+html[data-theme="apple"] .now-playing .now-playing__share {
+  border: 1px solid #dfe3e9 !important;
+  background: #fff !important;
+  color: #202630 !important;
+  box-shadow: 0 28px 90px rgb(20 28 42 / .24) !important;
+}
+html[data-theme="apple"] .now-playing .now-playing__share :is(h2,button,span) { color: #202630 !important; }
+html[data-theme="apple"] .now-playing .now-playing__share p { color: #687485 !important; }
+html[data-theme="apple"] .now-playing .now-playing__share > div > button {
+  border: 1px solid #e5e8ed;
+  background: #f7f8fa;
+}
+html[data-theme="apple"] .now-playing .now-playing__share > div > button:hover { background: #edf8f7; }
+html[data-theme="apple"] .now-playing .now-playing__share > div > button svg { color: #087f85 !important; }
+html[data-theme="apple"] .now-playing .now-playing__header .audiva-share-trigger {
+  border: 1px solid #d6dbe3 !important;
+  border-radius: 50%;
+  background: #ffffffd9 !important;
+  color: #28313e !important;
+}
+html[data-theme="apple"] .now-playing .now-playing__header .audiva-share-trigger:hover { background: #edf8f7 !important; color: #087f85 !important; }

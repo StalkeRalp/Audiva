@@ -11,7 +11,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Album01Icon, ArrowDown01Icon, ArrowUp01Icon, BluetoothIcon, BluetoothNotConnectedIcon, Cancel01Icon, FavouriteIcon, Mic01Icon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, Queue01Icon, RepeatIcon, ShuffleIcon, Share01Icon, UserIcon, VolumeHighIcon, VolumeLowIcon, VolumeMute01Icon, MoreHorizontalIcon, Clock01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Album01Icon, ArrowDown01Icon, ArrowUp01Icon, BluetoothIcon, BluetoothNotConnectedIcon, Cancel01Icon, CastIcon, FavouriteIcon, Mic01Icon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, Queue01Icon, RepeatIcon, ShuffleIcon, Share01Icon, UserIcon, VolumeHighIcon, VolumeLowIcon, VolumeMute01Icon, MoreHorizontalIcon, Clock01Icon } from "@hugeicons/core-free-icons";
 import { isLocalTrack, useLecteurControlsStore, useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
 import { clearSpotifyPlayback, getSpotifyPlayback, registerSpotifyPlayback, updateSpotifyPlaybackDevice } from "@/domaines/lecteur/services/spotifyPlayback";
 import { connectSpotify, getSpotifyAccessToken, hasSpotifySession, searchSpotify, spotifyHasStreamingScope, spotifyRequest } from "@/domaines/statistiques/services/spotify";
@@ -27,25 +27,59 @@ export function LecteurPersistant() {
   const audioRef = useRef(null);
   const spotifyPlayerRef = useRef(null);
   const spotifyEndedTrackRef = useRef(null);
+  const locallyEndedTrackRef = useRef(null);
+  const castContextRef = useRef(null);
+  const castListenersRef = useRef(null);
   const [outputName, setOutputName] = useState("");
   const [outputError, setOutputError] = useState("");
+  const [castAvailable, setCastAvailable] = useState(false);
+  const [castState, setCastState] = useState("disconnected");
+  const [castSdkReady, setCastSdkReady] = useState(false);
   const [videoRect,setVideoRect]=useState(null);
   const [spotifySdkEnabled, setSpotifySdkEnabled] = useState(false);
   const [spotifyDeviceId, setSpotifyDeviceId] = useState(null);
   const [spotifyReady, setSpotifyReady] = useState(false);
   const [spotifyNeedsConnection, setSpotifyNeedsConnection] = useState(false);
   const listened = useRef({ position: 0, wall: 0, id: null });
+  const spotifyClock = useRef({ position: 0, wall: 0, duration: 0, trackId: null, playing: false, lastUiUpdate: 0 });
   const handleAudioTimeUpdate = event => {
     const audio = event.currentTarget, now = event.timeStamp, track = useLecteurStore.getState().currentTrack;
+    if (Number.isFinite(audio.duration) && audio.currentTime < audio.duration - 0.75) locallyEndedTrackRef.current = null;
     const previous = listened.current, delta = audio.currentTime - previous.position, elapsed = (now - previous.wall) / 1000;
     if (previous.id === track?.id && previous.wall && !audio.paused && !audio.seeking && audio.readyState >= 2 && delta > 0 && delta <= 2 && elapsed > 0 && elapsed < 3 && Math.abs(delta - elapsed * audio.playbackRate) < .5) { useEcouteStore.getState().record(track, Math.min(delta / audio.playbackRate, elapsed)); useIntelligenceStore.getState().sample(track,Math.min(delta / audio.playbackRate,elapsed),audio.currentTime,audio.duration); }
     listened.current = { position: audio.currentTime, wall: now, id: track?.id };
     setCurrentTime(audio.currentTime);
   };
+  const handleLocalMediaEnded = event => {
+    const audio = event.currentTarget;
+    const state = useLecteurStore.getState();
+    const activeTrack = state.currentTrack;
+    // A queued `ended` from the previous source must not advance the new track.
+    if (!audio.ended || audio.readyState < 2 || !isLocalTrack(activeTrack) || audio.getAttribute("src") !== activeTrack.streamUrl || audio.currentSrc !== activeTrack.streamUrl) return;
+    if (Number.isFinite(audio.duration) && audio.currentTime < audio.duration - 0.75) return;
+    if (locallyEndedTrackRef.current === activeTrack.id) return;
+    locallyEndedTrackRef.current = activeTrack.id;
+    useIntelligenceStore.getState().finish(true);
+    state.handleTrackEnd();
+  };
   const [queueTab, setQueueTab] = useState("queue");
   const [queueNotice, setQueueNotice] = useState("");
   useEffect(()=>{if(!queueNotice||spotifyNeedsConnection)return;const timer=setTimeout(()=>setQueueNotice(''),3500);return()=>clearTimeout(timer);},[queueNotice,spotifyNeedsConnection]);
   const { currentTrack, queue, currentIndex, upNextQueue, queueSourceName, recentTracks, isPlaying, volume, isMuted, isShuffled, repeatMode, lyricsOpen, queueOpen, likedTrackIds, play, pause, setCurrentTime, setDuration, setVolume, toggleMute, toggleShuffle, cycleRepeatMode, toggleLyrics, toggleQueue, toggleLike, nextTrack, previousTrack, handleTrackEnd, setCurrentTrack, removeFromQueue, removeUpNext, moveQueueItem, moveUpNext, playNext } = useLecteurControlsStore();
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const clock = spotifyClock.current;
+      const store = useLecteurStore.getState();
+      if (!clock.playing || !clock.trackId || store.currentTrack?.provider !== "spotify" || store.currentTrack.providerId !== clock.trackId) return;
+      const now = Date.now();
+      if (now - clock.lastUiUpdate < 220) return;
+      const position = Math.min(clock.duration || Infinity, clock.position + Math.max(0, now - clock.wall) / 1000);
+      clock.lastUiUpdate = now;
+      setCurrentTime(position);
+      if (clock.duration) setDuration(clock.duration);
+    }, 100);
+    return () => window.clearInterval(timer);
+  }, [setCurrentTime, setDuration]);
   const initializeSpotifySdk = useCallback(() => {
     if (!window.Spotify?.Player || spotifyPlayerRef.current) return;
     const player = new window.Spotify.Player({
@@ -79,6 +113,7 @@ export function LecteurPersistant() {
       const position = Math.max(0, state.position || 0) / 1000;
       const duration = Math.max(0, state.duration || 0) / 1000;
       const now = Date.now();
+      spotifyClock.current = { position, wall: now, duration, trackId: spotifyTrack.id, playing: !state.paused, lastUiUpdate: now };
       const previous = listened.current;
       if (previous.id !== store.currentTrack.id) {
         useIntelligenceStore.getState().start(store.currentTrack, position);
@@ -210,6 +245,43 @@ export function LecteurPersistant() {
   }, []);
 
   useEffect(() => {
+    const remote = audioRef.current?.remote;
+    if (castSdkReady || !remote?.watchAvailability) return;
+    let active = true, watchId;
+    const onAvailability = available => { if (active) setCastAvailable(Boolean(available)); };
+    const onConnecting = () => { if (active) setCastState("connecting"); };
+    const onConnect = () => { if (active) setCastState("connected"); };
+    const onDisconnect = () => { if (active) setCastState("disconnected"); };
+    remote.addEventListener("connecting", onConnecting);
+    remote.addEventListener("connect", onConnect);
+    remote.addEventListener("disconnect", onDisconnect);
+    queueMicrotask(() => { if (active) setCastState(remote.state || "disconnected"); });
+    remote.watchAvailability(onAvailability).then(id => {
+      if (!active && remote.cancelWatchAvailability) Promise.resolve(remote.cancelWatchAvailability(id)).catch(() => {});
+      else watchId = id;
+    }).catch(() => { if (active) setCastAvailable(null); });
+    return () => {
+      active = false;
+      remote.removeEventListener("connecting", onConnecting);
+      remote.removeEventListener("connect", onConnect);
+      remote.removeEventListener("disconnect", onDisconnect);
+      if (watchId !== undefined && remote.cancelWatchAvailability) Promise.resolve(remote.cancelWatchAvailability(watchId)).catch(() => {});
+    };
+  }, [castSdkReady, currentTrack?.id, currentTrack?.streamUrl]);
+  useEffect(() => {
+    const media = audioRef.current;
+    if (!media) return;
+    const onAirPlayAvailability = event => setCastAvailable(event.availability === "available");
+    const onAirPlayState = () => setCastState(media.webkitCurrentPlaybackTargetIsWireless ? "connected" : "disconnected");
+    media.addEventListener("webkitplaybacktargetavailabilitychanged", onAirPlayAvailability);
+    media.addEventListener("webkitcurrentplaybacktargetiswirelesschanged", onAirPlayState);
+    return () => {
+      media.removeEventListener("webkitplaybacktargetavailabilitychanged", onAirPlayAvailability);
+      media.removeEventListener("webkitcurrentplaybacktargetiswirelesschanged", onAirPlayState);
+    };
+  }, []);
+
+  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     if (!isLocalTrack(currentTrack)) {
@@ -322,8 +394,98 @@ export function LecteurPersistant() {
 
   const controlClass = "flex h-9 w-9 items-center justify-center rounded-full text-[#c9d3e8] transition duration-150 hover:scale-110 hover:bg-white/10 hover:text-white active:scale-90 disabled:cursor-not-allowed disabled:opacity-35";
   const notifyQueue = (message) => { setQueueNotice(message); window.setTimeout(() => setQueueNotice(""), 2200); };
+  const chooseCastDevice = async () => {
+    const media = audioRef.current;
+    if (typeof media?.webkitShowPlaybackTargetPicker === "function") {
+      media.webkitShowPlaybackTargetPicker();
+      return;
+    }
+    const castContext = castContextRef.current;
+    if (castContext) {
+      try {
+        await castContext.requestSession();
+        setCastState("connected");
+        if (track?.streamUrl?.startsWith("blob:")) setQueueNotice("Écran connecté. Ce fichier importé reste stocké sur cet appareil et ne peut pas être chargé directement sur l’écran.");
+        else setQueueNotice("Écran connecté.");
+      } catch (error) {
+        const code = String(error?.code || error?.message || error).toLowerCase();
+        if (code.includes("cancel")) return;
+        if (code.includes("receiver_unavailable") || castAvailable === false) setQueueNotice("Aucun écran Google Cast détecté. Vérifiez qu’il est allumé et sur le même réseau Wi-Fi.");
+        else setQueueNotice("Le sélecteur Google Cast n’a pas pu s’ouvrir. Vérifiez Chrome/Edge, HTTPS et le réseau Wi-Fi.");
+      }
+      return;
+    }
+    const remote = audioRef.current?.remote;
+    if (!remote?.prompt) {
+      setQueueNotice("La diffusion d’écran n’est pas prise en charge par ce navigateur. Essayez Chrome ou Edge et vérifiez que l’écran est sur le même réseau.");
+      return;
+    }
+    if (!track?.streamUrl) {
+      setQueueNotice("Choisissez un titre lisible dans Audiva avant de rechercher un écran.");
+      return;
+    }
+    try {
+      await remote.prompt();
+      setCastState(remote.state || "connecting");
+      if (remote.state === "connected") setQueueNotice("Lecture diffusée sur l’écran sélectionné.");
+    } catch (error) {
+      if (error?.name === "NotFoundError") setQueueNotice("Aucun écran compatible détecté. Vérifiez qu’il est allumé et connecté au même réseau Wi-Fi.");
+      else if (error?.name === "NotSupportedError") setQueueNotice("Cette source ne peut pas être diffusée par le navigateur. Les fichiers locaux peuvent rester limités à cet appareil.");
+      else if (error?.name !== "NotAllowedError" && error?.name !== "AbortError") setQueueNotice(error?.message || "Impossible de démarrer la diffusion.");
+    }
+  };
+  const castTitle = castState === "connected" ? "Diffusion active · gérer ou déconnecter" : castAvailable === false ? "Aucun écran détecté · rechercher à nouveau" : "Rechercher un écran ou une enceinte compatible";
+  const initializeCastSdk = useCallback(() => {
+    const framework = window.cast?.framework;
+    const chromeCast = window.chrome?.cast;
+    if (!framework || !chromeCast) return false;
+    const context = framework.CastContext.getInstance();
+    if (!castContextRef.current) {
+      context.setOptions({
+        receiverApplicationId: chromeCast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+        autoJoinPolicy: chromeCast.AutoJoinPolicy.ORIGIN_SCOPED,
+      });
+      const onCastState = event => {
+        const state = event.castState;
+        setCastAvailable(state !== framework.CastState.NO_DEVICES_AVAILABLE);
+        setCastState(state === framework.CastState.CONNECTED ? "connected" : state === framework.CastState.CONNECTING ? "connecting" : "disconnected");
+      };
+      const onSessionState = event => {
+        setCastState(event.sessionState === framework.SessionState.SESSION_STARTED || event.sessionState === framework.SessionState.SESSION_RESUMED ? "connected" : event.sessionState === framework.SessionState.SESSION_STARTING ? "connecting" : "disconnected");
+      };
+      context.addEventListener(framework.CastContextEventType.CAST_STATE_CHANGED, onCastState);
+      context.addEventListener(framework.CastContextEventType.SESSION_STATE_CHANGED, onSessionState);
+      castListenersRef.current = { context, onCastState, onSessionState };
+      castContextRef.current = context;
+    }
+    setCastSdkReady(true);
+    setCastState(context.getCastState() === framework.CastState.CONNECTED ? "connected" : "disconnected");
+    setCastAvailable(context.getCastState() !== framework.CastState.NO_DEVICES_AVAILABLE);
+    return true;
+  }, []);
+  useEffect(() => {
+    const previousCallback = window.__onGCastApiAvailable;
+    const onCastApiAvailable = available => { if (available) initializeCastSdk(); };
+    window.__onGCastApiAvailable = onCastApiAvailable;
+    if (window.cast?.framework) initializeCastSdk();
+    return () => {
+      if (window.__onGCastApiAvailable === onCastApiAvailable) window.__onGCastApiAvailable = previousCallback;
+      const listeners = castListenersRef.current;
+      if (listeners) {
+        listeners.context.removeEventListener(window.cast.framework.CastContextEventType.CAST_STATE_CHANGED, listeners.onCastState);
+        listeners.context.removeEventListener(window.cast.framework.CastContextEventType.SESSION_STATE_CHANGED, listeners.onSessionState);
+      }
+      castContextRef.current = null;
+      castListenersRef.current = null;
+    };
+  }, [initializeCastSdk]);
+  useEffect(() => {
+    const requestCast = () => { chooseCastDevice(); };
+    window.addEventListener("audiva-cast-request", requestCast);
+    return () => window.removeEventListener("audiva-cast-request", requestCast);
+  }, [chooseCastDevice]);
 
-  return <>{spotifySdkEnabled && <Script src="https://sdk.scdn.co/spotify-player.js" strategy="afterInteractive" onReady={initializeSpotifySdk} onError={() => setQueueNotice("Le lecteur intégré n’a pas pu être chargé.")} />}<video data-audiva-media playsInline ref={audioRef} className="audiva-persistent-media" style={videoRect && isLocalTrack(track) && (track.mediaType === "video" || track.fileInfo?.type === "video/mp4" || /\.mp4$/i.test(track.fileInfo?.name || "")) ? {position:"fixed",...videoRect,zIndex:20,objectFit:"contain",background:"#040609",borderRadius:videoRect.borderRadius} : {position:"fixed",width:1,height:1,opacity:0,pointerEvents:"none"}} src={isLocalTrack(track) ? track.streamUrl : undefined} preload={isLocalTrack(track) ? "metadata" : "none"} onPlaying={() => useIntelligenceStore.getState().start(track,audioRef.current?.currentTime || 0)} onTimeUpdate={handleAudioTimeUpdate} onSeeking={() => { listened.current.wall = 0; }} onPause={() => { listened.current.wall = 0; }} onWaiting={() => { listened.current.wall = 0; }} onLoadedMetadata={(event) => { const audio = event.currentTarget; setQueueNotice(""); setDuration(audio.duration); const savedTime = useLecteurStore.getState().currentTime; if (savedTime > 0) audio.currentTime = Math.min(savedTime, Number.isFinite(audio.duration) ? audio.duration : savedTime); }} onError={() => { if (isLocalTrack(track) && track.streamUrl) { pause(); } }} onEnded={() => { useIntelligenceStore.getState().finish(true); handleTrackEnd(); }} />
+  return <>{!publicRoute && <Script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" strategy="afterInteractive" onReady={initializeCastSdk} onError={() => setCastSdkReady(false)} />}{spotifySdkEnabled && <Script src="https://sdk.scdn.co/spotify-player.js" strategy="afterInteractive" onReady={initializeSpotifySdk} onError={() => setQueueNotice("Le lecteur intégré n’a pas pu être chargé.")} />}<video data-audiva-media playsInline x-webkit-airplay="allow" ref={audioRef} className="audiva-persistent-media" style={videoRect && isLocalTrack(track) && (track.mediaType === "video" || track.fileInfo?.type === "video/mp4" || /\.mp4$/i.test(track.fileInfo?.name || "")) ? {position:"fixed",...videoRect,zIndex:20,objectFit:"contain",background:"#040609",borderRadius:videoRect.borderRadius} : {position:"fixed",width:1,height:1,opacity:0,pointerEvents:"none"}} src={isLocalTrack(track) ? track.streamUrl : undefined} preload={isLocalTrack(track) ? "metadata" : "none"} onPlaying={() => useIntelligenceStore.getState().start(track,audioRef.current?.currentTime || 0)} onTimeUpdate={handleAudioTimeUpdate} onSeeking={() => { listened.current.wall = 0; }} onPause={() => { listened.current.wall = 0; }} onWaiting={() => { listened.current.wall = 0; }} onLoadedMetadata={(event) => { const audio = event.currentTarget; setQueueNotice(""); setDuration(audio.duration); const savedTime = useLecteurStore.getState().currentTime; if (savedTime > 0) audio.currentTime = Math.min(savedTime, Number.isFinite(audio.duration) ? audio.duration : savedTime); }} onError={() => { if (isLocalTrack(track) && track.streamUrl) { pause(); } }} onEnded={handleLocalMediaEnded} />
     {!publicRoute && !playerVisible && <button className="audiva-player-restore" onClick={() => setPlayerVisible(true)} aria-label="Afficher le lecteur">♫ <span>{track.title}</span> ↑</button>}
     {!publicRoute && playerVisible && <>
     {queueNotice && !queueOpen && <div role="status" className="audiva-player-notice fixed bottom-24 right-3 z-[80] flex max-w-[min(480px,calc(100vw-24px))] items-center justify-between gap-3 rounded-2xl border border-[#76eee9]/30 bg-[#112139] px-4 py-3 text-sm font-semibold text-[#c8fffb] shadow-xl sm:right-5"><span>{queueNotice}{spotifyNeedsConnection && <button type="button" className="ml-3 font-bold text-[#a6f6ef] underline underline-offset-2" onClick={() => connectSpotify({ returnTo: `${pathname}${window.location.search}`, resumePlayback: true }).catch((error) => setQueueNotice(error.message))}>Réassocier mon compte</button>}</span><button type="button" onClick={() => setQueueNotice("")} aria-label="Fermer le message du lecteur" className="grid h-7 w-7 shrink-0 place-items-center rounded-full hover:bg-white/10"><HugeiconsIcon icon={Cancel01Icon} size={16}/></button></div>}
@@ -441,6 +603,7 @@ export function LecteurPersistant() {
 
         {/* Right: Volume & Utilities */}
         <div className="flex items-center justify-end gap-3 sm:w-[260px] lg:w-[280px] shrink-0 text-[#8c8d99]">
+          <button type="button" onClick={chooseCastDevice} className={`audiva-cast-button ${castState === "connected" ? "audiva-cast-button--connected" : ""}`} aria-label={castTitle} aria-pressed={castState === "connected"} title={castTitle}><HugeiconsIcon icon={CastIcon} size={18}/></button>
           <button type="button" onClick={chooseAudioOutput} className={`audiva-output-button ${outputName && bluetoothOutputPattern.test(outputName) ? "audiva-output-button--connected" : ""}`} aria-label={outputError || (outputName ? `Sortie audio : ${outputName}. Cliquer pour changer` : "Choisir une sortie audio ou Bluetooth")} title={outputError || outputName || "Choisir une sortie audio / Bluetooth"}>
             <HugeiconsIcon icon={outputName && bluetoothOutputPattern.test(outputName) ? BluetoothIcon : BluetoothNotConnectedIcon} size={18} />
             {outputName && <span>{outputName}</span>}
@@ -539,6 +702,7 @@ export function LecteurPersistant() {
           <button type="button" onClick={toggleMute} className="grid h-8 w-8 shrink-0 place-items-center rounded-full hover:bg-white/10" aria-label={isMuted ? "Réactiver le son" : "Couper le son"}><HugeiconsIcon icon={isMuted ? VolumeMute01Icon : VolumeLowIcon} size={17} /></button>
           <ElasticSlider ariaLabel="Volume" value={isMuted ? 0 : volume} startingValue={0} maxValue={1} stepSize={0.01} leftIcon={null} rightIcon={null} valuePosition="bubble" formatValue={(value) => `${Math.round(value * 100)}%`} jumpToClick thumb thickness={4} activeThickness={7} rangeColor="#76eee9" trackColor="rgba(255,255,255,.14)" className="w-full" style={{ width: "100%" }} onChange={setVolume} />
           <span className="w-9 shrink-0 text-right text-[10px] font-semibold tabular-nums">{Math.round((isMuted ? 0 : volume) * 100)}%</span>
+          <button type="button" onClick={chooseCastDevice} className={`audiva-cast-button audiva-cast-button--mobile ${castState === "connected" ? "audiva-cast-button--connected" : ""}`} aria-label={castTitle} aria-pressed={castState === "connected"} title={castTitle}><HugeiconsIcon icon={CastIcon} size={18}/></button>
           <button type="button" onClick={chooseAudioOutput} className={`audiva-output-button audiva-output-button--mobile ${outputName && bluetoothOutputPattern.test(outputName) ? "audiva-output-button--connected" : ""}`} aria-label={outputError || (outputName ? `Sortie audio : ${outputName}. Cliquer pour changer` : "Choisir une sortie audio ou Bluetooth")} title={outputError || outputName || "Choisir une sortie audio / Bluetooth"}><HugeiconsIcon icon={outputName && bluetoothOutputPattern.test(outputName) ? BluetoothIcon : BluetoothNotConnectedIcon} size={18} />{outputName && <span>{outputName}</span>}</button>
         </div>
 

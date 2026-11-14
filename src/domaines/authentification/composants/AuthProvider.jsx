@@ -22,22 +22,52 @@ export default function AuthProvider({ children }) {
     if (!isSupabaseConfigured) { setSession(null, false, "missing-config"); return; }
     const client = getSupabaseBrowserClient();
     let active = true, receivedAuthEvent = false;
+    let lastSessionCheck = 0;
+    const refreshSession = async (force = false) => {
+      if (!active || !navigator.onLine) return;
+      const now = Date.now();
+      if (!force && now - lastSessionCheck < 1500) return;
+      lastSessionCheck = now;
+      try {
+        const { data, error } = await client.auth.getSession();
+        if (!active) return;
+        if (error) {
+          // Keep a previously restored identity during transient refresh/network errors.
+          const currentUser = useAuthStore.getState().user;
+          setSession(currentUser, false, currentUser ? "ready" : "session-error");
+          return;
+        }
+        setSession(data.session?.user || null, false, "ready");
+      } catch {
+        if (!active) return;
+        const currentUser = useAuthStore.getState().user;
+        setSession(currentUser, false, currentUser ? "ready" : "session-error");
+      }
+    };
     // Read the locally persisted Supabase session. getUser() always calls the
     // network and would repeatedly fail while Audiva is offline.
     client.auth.getSession().then(({ data, error }) => {
-      if (active && !receivedAuthEvent) setSession(error ? null : data.session?.user || null, false, error ? "session-error" : "ready");
-    }).catch(() => { if (active) setSession(null, false, "session-error"); });
+      if (active && !receivedAuthEvent) {
+        if (error) {
+          const currentUser = useAuthStore.getState().user;
+          setSession(currentUser, false, currentUser ? "ready" : "session-error");
+        } else setSession(data.session?.user || null, false, "ready");
+      }
+    }).catch(() => { if (active) setSession(useAuthStore.getState().user, false, "session-error"); });
     const stopRefreshOffline = () => client.auth.stopAutoRefresh();
-    const resumeRefreshOnline = () => client.auth.startAutoRefresh();
+    const resumeRefreshOnline = () => { client.auth.startAutoRefresh(); refreshSession(true); };
     if (!navigator.onLine) stopRefreshOffline();
     window.addEventListener("offline", stopRefreshOffline);
     window.addEventListener("online", resumeRefreshOnline);
+    const onTabVisible = () => { if (document.visibilityState === "visible") refreshSession(); };
+    window.addEventListener("focus", onTabVisible);
+    document.addEventListener("visibilitychange", onTabVisible);
     const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
       receivedAuthEvent = true;
       storeSpotifyProviderSession(session);
       setSession(session?.user || null, false, "ready");
     });
-    return () => { active = false; subscription.unsubscribe(); window.removeEventListener("offline", stopRefreshOffline); window.removeEventListener("online", resumeRefreshOnline); };
+    return () => { active = false; subscription.unsubscribe(); window.removeEventListener("offline", stopRefreshOffline); window.removeEventListener("online", resumeRefreshOnline); window.removeEventListener("focus", onTabVisible); document.removeEventListener("visibilitychange", onTabVisible); };
   }, [setSession]);
   useEffect(() => {
     if (!user?.id || !isSupabaseConfigured) {

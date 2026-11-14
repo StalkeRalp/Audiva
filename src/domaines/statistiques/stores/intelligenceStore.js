@@ -10,4 +10,5 @@ export const useIntelligenceStore=create((set,get)=>({plays:[],ready:false,error
  sample:(track,seconds,position,duration)=>{get().start(track,position);if(!current||seconds<=0||seconds>5)return;current={...current,seconds:current.seconds+seconds,position,duration:Number.isFinite(duration)?duration:current.duration};lastActivity=Date.now();if(lastActivity-flush>2000)get().commit();},
  commit:()=>{if(!current)return;const row={...current,lastObserved:Date.now()};flush=Date.now();set(s=>({plays:[...s.plays.filter(p=>p.id!==row.id),row]}));write('plays',row).catch(()=>set({error:'Impossible d’enregistrer durablement les dernières écoutes.'}));},
  finish:completed=>{if(!current)return;current={...current,end:Date.now(),completed:Boolean(completed)};get().commit();current=null;},
+ clearHistory:()=>{current=null;lastActivity=0;sessionId=null;flush=0;set({plays:[],error:''});},
 }));

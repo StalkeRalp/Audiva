@@ -9,9 +9,10 @@ export default function AuthInteractionGate() {
   const pathname = usePathname();
   const user = useAuthStore(state => state.user);
   const loading = useAuthStore(state => state.loading);
+  const status = useAuthStore(state => state.status);
 
   useEffect(() => {
-    if (loading || user || pathname === "/" || pathname.startsWith("/authentification/") || pathname.startsWith("/auth/") || pathname.startsWith("/spotify/")) return undefined;
+    if (loading || status === "session-error" || user || pathname === "/" || pathname.startsWith("/authentification/") || pathname.startsWith("/auth/") || pathname.startsWith("/spotify/")) return undefined;
 
     const redirectToSignIn = (event) => {
       if (event.defaultPrevented || event.button !== undefined && event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -37,7 +38,7 @@ export default function AuthInteractionGate() {
       document.removeEventListener("click", redirectToSignIn, true);
       document.removeEventListener("submit", redirectToSignIn, true);
     };
-  }, [loading, pathname, router, user]);
+  }, [loading, pathname, router, status, user]);
 
   return null;
 }

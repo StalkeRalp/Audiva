@@ -1,6 +1,7 @@
 const open=()=>new Promise((resolve,reject)=>{const r=indexedDB.open('audiva-music-intelligence',1);r.onupgradeneeded=()=>{r.result.createObjectStore('plays',{keyPath:'id'});r.result.createObjectStore('metadata',{keyPath:'id'});};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
 export async function readAll(store){const db=await open();return new Promise((resolve,reject)=>{const tx=db.transaction(store),r=tx.objectStore(store).getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);tx.oncomplete=()=>db.close();});}
 export async function write(store,value){const db=await open();return new Promise((resolve,reject)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(value);tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>{db.close();reject(tx.error);};});}
+export async function clearListeningHistory(){const db=await open();return new Promise((resolve,reject)=>{const tx=db.transaction('plays','readwrite');tx.objectStore('plays').clear();tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>{db.close();reject(tx.error);};});}
 export const canonical=value=>(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
 export function trackIdentity(track){return track.tags?.musicBrainz?.recordingId || track.isrc || track.tags?.isrc || `${canonical(track.title)}:${canonical(track.artist)}:${canonical(track.album)}:${Math.round(track.duration||0)}`;}
 export function qualified(play){return play.seconds>=Math.min(30,play.duration>0?play.duration/2:30);}

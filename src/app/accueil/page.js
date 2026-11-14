@@ -36,7 +36,7 @@ export default function AccueilPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#060b18] pb-32 text-[#eff4ff] lg:flex">
+    <main className="audiva-reading-page min-h-screen bg-[#060b18] pb-32 text-[#eff4ff] lg:flex">
       <div className="min-w-0 flex-1">
         <HeroAccueil slides={data.slides} onAction={handleHeroAction} />
         <PochetteGallery compact />

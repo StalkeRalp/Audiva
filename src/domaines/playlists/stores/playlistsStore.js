@@ -97,6 +97,7 @@ export const usePlaylistsStore = create(
         saveBackup(get());
       },
       setPlaylists: (playlists) => { set({ playlists }); saveBackup(get()); },
+      clearAll: () => { set({ playlists: [], favoritePlaylists: [] }); saveBackup(get()); },
       restorePlaylists: (saved) => set((state) => ({
         playlists: Array.isArray(saved.playlists) ? saved.playlists : state.playlists,
         favoritePlaylists: Array.isArray(saved.favoritePlaylists) ? saved.favoritePlaylists : state.favoritePlaylists,

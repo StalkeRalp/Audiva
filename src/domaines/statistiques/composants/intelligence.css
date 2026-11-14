@@ -119,10 +119,5 @@
 
 /* Logos de marque : symbole clair et net lorsque le thème Apple est actif. */
 .mi-brand .audiva-brand-mark{display:block;width:64px;height:64px;flex:0 0 64px;position:relative}
-.mi-brand .audiva-brand-image{position:absolute;inset:0;display:block;width:100%!important;height:100%!important;object-fit:contain}
+.mi-brand .audiva-brand-image{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:contain}
 @media(max-width:700px){.mi-brand .audiva-brand-mark{width:52px;height:52px;flex-basis:52px}}
-.audiva-brand-mark{position:relative;display:block;flex:0 0 auto}
-.audiva-brand-image{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain}
-.audiva-brand-image--apple{display:none}
-html[data-theme=apple] .audiva-brand-image--audiva{display:none}
-html[data-theme=apple] .audiva-brand-image--apple{display:block}

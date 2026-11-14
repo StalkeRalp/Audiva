@@ -33,6 +33,37 @@ export async function loadCloudSyncPreferences(userId) {
   return data;
 }
 
+export async function clearCloudPersonalMusicData() {
+  const db = client();
+  const { data: { user }, error: authError } = await db.auth.getUser();
+  if (authError) throw authError;
+  if (!user) return false;
+
+  const deletions = [
+    db.from("audiva_favorites").delete().eq("user_id", user.id),
+    db.from("audiva_playlist_saves").delete().eq("user_id", user.id),
+    db.from("audiva_listening_events").delete().eq("user_id", user.id),
+    db.from("audiva_recommendation_feedback").delete().eq("user_id", user.id),
+    db.from("audiva_social_activities").delete().eq("actor_id", user.id).eq("activity_type", "listened"),
+  ];
+  const results = await Promise.all(deletions);
+  const failed = results.find(result => result.error);
+  if (failed?.error) throw failed.error;
+
+  const { data: covers, error: coversError } = await db.from("audiva_playlists").select("cover_path").eq("owner_id", user.id).not("cover_path", "is", null);
+  if (coversError) throw coversError;
+  const { error: playlistError } = await db.from("audiva_playlists").delete().eq("owner_id", user.id);
+  if (playlistError) throw playlistError;
+  const coverPaths = (covers || []).map(row => row.cover_path).filter(Boolean);
+  if (coverPaths.length) {
+    const { error: coverDeleteError } = await db.storage.from("audiva-playlist-covers").remove(coverPaths);
+    if (coverDeleteError) throw coverDeleteError;
+  }
+  const { error: musicError } = await db.from("audiva_music_items").delete().eq("user_id", user.id);
+  if (musicError) throw musicError;
+  return true;
+}
+
 export async function syncPersonalData(userId) {
   const db = client();
   const prefs = await loadCloudSyncPreferences(userId);

@@ -26,7 +26,7 @@ export function NavigationPrincipale() {
       <Link href="/accueil" title="Audiva" className={`flex items-center rounded-xl py-1 transition hover:bg-white/5 ${collapsed ? "justify-center px-0" : "gap-3 px-2"}`}>
         <span className="audiva-brand-mark h-14 w-14 shrink-0">
           <Image src="/logoAudiva3.png" alt="Audiva" width={500} height={500} priority className="audiva-brand-image audiva-brand-image--audiva" />
-          <Image src="/logoAudivaApple.svg" alt="Audiva" width={160} height={160} priority className="audiva-brand-image audiva-brand-image--apple" />
+          <Image src="/audiva_apple2.png" alt="Audiva" width={160} height={160} priority className="audiva-brand-image audiva-brand-image--apple" />
         </span>
         {!collapsed && <div><p className="text-2xl font-bold tracking-tight text-white">Audi<span className="text-[#6578ff]">va</span></p><p className="mt-0.5 text-[10px] font-medium uppercase tracking-[.18em] text-[#7180aa]">Ta musique</p></div>}
       </Link>

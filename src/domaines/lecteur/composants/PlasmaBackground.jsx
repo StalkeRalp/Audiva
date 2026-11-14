@@ -1,15 +1,40 @@
 "use client";
 
-import Image from "next/image";
 import { PochetteImage } from "@/composants/ui/PochetteImage";
 import { useEffect, useRef } from "react";
 import { DEFAULT_PLASMA_PALETTE, extractPlasmaPalette } from "@/domaines/lecteur/utilitaires/plasmaPalette";
 import styles from "./PlasmaBackground.module.css";
 
 const paletteCache = new Map();
-const APPLE_PLASMA_PALETTE = [
+const APPLE_SIGNATURE_PALETTE = [
   [0.38, 0.66, 0.9], [0.62, 0.56, 0.86], [0.48, 0.78, 0.78], [0.92, 0.62, 0.72],
 ];
+function rotateHue(color, degrees) {
+  if (!degrees) return [...color];
+  const [r, g, b] = color;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), delta = max - min;
+  let hue = 0;
+  if (delta) hue = max === r ? ((g - b) / delta) % 6 : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4;
+  hue = ((hue * 60 + degrees) % 360 + 360) % 360;
+  const light = (max + min) / 2, chroma = delta;
+  const x = chroma * (1 - Math.abs((hue / 60) % 2 - 1));
+  const match = light - chroma / 2;
+  const segment = Math.floor(hue / 60);
+  const rgb = segment === 0 ? [chroma, x, 0] : segment === 1 ? [x, chroma, 0] : segment === 2 ? [0, chroma, x] : segment === 3 ? [0, x, chroma] : segment === 4 ? [x, 0, chroma] : [chroma, 0, x];
+  return rgb.map(value => value + match);
+}
+function glassPaletteFor(palette, style) {
+  const hue = style === "ocean" ? 35 : style === "violet" ? 95 : style === "sunset" ? 165 : 0;
+  const grayscale = color => { const y = color[0] * .2126 + color[1] * .7152 + color[2] * .0722; return [y, y, y]; };
+  return palette.slice(0, 2).map(color => style === "mono" ? grayscale(color) : rotateHue(color, hue));
+}
+function setGlassPalette(palette, style) {
+  const [primary, secondary = primary] = glassPaletteFor(palette, style);
+  const toCss = color => color.map(value => Math.round(Math.min(1, Math.max(0, value)) * 255)).join(" ");
+  const rootStyle = document.documentElement.style;
+  rootStyle.setProperty("--reader-glass-primary", toCss(primary));
+  rootStyle.setProperty("--reader-glass-secondary", toCss(secondary));
+}
 const VERTEX = `
 attribute vec2 a_position;
 void main() { gl_Position = vec4(a_position, 0.0, 1.0); }
@@ -86,17 +111,24 @@ export function PlasmaBackground({ cover, style = "auto" }) {
   const canvasRef = useRef(null);
   const paletteRef = useRef(DEFAULT_PLASMA_PALETTE.map((color) => [...color]));
   const refreshRef = useRef(null);
+  const configRef = useRef({ cover, style });
+  configRef.current = { cover, style };
 
   useEffect(() => {
     let active = true;
     const canvas = canvasRef.current;
     const applyPalette = (palette) => {
       if (!active) return;
-      paletteRef.current = document.documentElement.dataset.theme === "apple" ? APPLE_PLASMA_PALETTE : palette;
+      const keepAppleSignature = style === "apple" || (style === "auto" && document.documentElement.dataset.theme === "apple");
+      const resolvedPalette = keepAppleSignature ? APPLE_SIGNATURE_PALETTE : palette;
+      paletteRef.current = resolvedPalette;
+      setGlassPalette(resolvedPalette, style);
       canvas.dataset.palette = "ready";
       refreshRef.current?.();
     };
     if (paletteCache.has(cover)) { applyPalette(paletteCache.get(cover)); return; }
+    const initialAppleSignature = style === "apple" || (style === "auto" && document.documentElement.dataset.theme === "apple");
+    setGlassPalette(initialAppleSignature ? APPLE_SIGNATURE_PALETTE : DEFAULT_PLASMA_PALETTE, style);
     const image = new window.Image();
     image.crossOrigin = "anonymous";
     image.decoding = "async";
@@ -125,7 +157,7 @@ export function PlasmaBackground({ cover, style = "auto" }) {
     image.onerror = () => { window.clearTimeout(timeout); fallback(); };
     image.src = cover;
     return () => { active = false; window.clearTimeout(timeout); image.onload = null; image.onerror = null; };
-  }, [cover]);
+  }, [cover, style]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -196,9 +228,12 @@ export function PlasmaBackground({ cover, style = "auto" }) {
     };
     const pointerLeave = () => { targetPointer[0] = 0; targetPointer[1] = 0; };
     const contextLost = (event) => { event.preventDefault(); stopped = true; cancelAnimationFrame(frame); delete canvas.dataset.rendered; };
-    const syncTheme = (event) => {
-      const apple = event.detail?.theme === "apple" || document.documentElement.dataset.theme === "apple";
-      paletteRef.current = apple ? APPLE_PLASMA_PALETTE : (paletteCache.get(cover) || DEFAULT_PLASMA_PALETTE);
+    const syncTheme = () => {
+      const { cover: activeCover, style: activeStyle } = configRef.current;
+      const appleSignature = activeStyle === "apple" || (activeStyle === "auto" && document.documentElement.dataset.theme === "apple");
+      const nextPalette = appleSignature ? APPLE_SIGNATURE_PALETTE : (paletteCache.get(activeCover) || DEFAULT_PLASMA_PALETTE);
+      paletteRef.current = nextPalette;
+      setGlassPalette(nextPalette, activeStyle);
       refreshRef.current?.();
     };
     const parent = canvas.closest("main");
@@ -227,6 +262,11 @@ export function PlasmaBackground({ cover, style = "auto" }) {
       gl.deleteBuffer(buffer);
       gl.deleteProgram(program);
     };
+  }, []);
+
+  useEffect(() => () => {
+    document.documentElement.style.removeProperty("--reader-glass-primary");
+    document.documentElement.style.removeProperty("--reader-glass-secondary");
   }, []);
 
   return <div className={`${styles.plasma} now-playing__plasma plasma-style-${style}`} aria-hidden="true">

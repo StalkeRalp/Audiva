@@ -96,10 +96,13 @@ export async function loadSocialCloud(userId) {
   };
 }
 
-export async function searchProfiles(query) {
+export async function searchProfiles(query = "", offset = 0, limit = 50) {
   const term = String(query || "").trim().replace(/^@/, "");
-  if (term.length < 2) return [];
-  const { data, error } = await db().rpc("audiva_search_profiles", { search_query: term });
+  const { data, error } = await db().rpc("audiva_discover_profiles", {
+    search_query: term,
+    page_offset: Math.max(0, Number(offset) || 0),
+    page_size: Math.min(100, Math.max(1, Number(limit) || 50)),
+  });
   if (error) throw error;
   return Promise.all((data || []).map(profileView));
 }

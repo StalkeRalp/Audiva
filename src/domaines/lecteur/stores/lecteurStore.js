@@ -88,6 +88,7 @@ export const useLecteurStore = create(persist((set) => ({
   upNextQueue: [], queueSourceName: "Votre file Audiva", recentTracks: [],
   setCurrentTrack: (track) => { if(!track?.id)return; return set((state) => { const knownIndex = state.queue.findIndex((item) => item.id === track.id); const queue = knownIndex === -1 ? [track, ...state.queue] : state.queue; const currentIndex = knownIndex === -1 ? 0 : knownIndex; return { currentTrack: queue[currentIndex], queue, currentIndex, currentTime: 0, duration: queue[currentIndex].duration || 0, shuffleHistory: [currentIndex], recentTracks: appendRecent(state, queue[currentIndex]) }; }); },
   setQueue: (queue, queueSourceName = "Votre file Audiva") => set((state) => { const currentIndex = Math.max(0, queue.findIndex((track) => track.id === state.currentTrack?.id)); return { queue, queueSourceName, upNextQueue: [], currentIndex, currentTrack: queue[currentIndex] || null, recentTracks: appendRecent(state) }; }),
+  clearCollectionData: () => set({ currentTrack: null, queue: [], currentIndex: 0, isPlaying: false, currentTime: 0, duration: 0, shuffleHistory: [], likedTrackIds: [], likedTracks: [], upNextQueue: [], recentTracks: [] }),
   restoreLocalTracks: (localTracks) => set((state) => {
     const replaceTrack = (track) => localTracks.find((local) => local.id === track?.id || local.localId && local.localId === track?.localId || local.title === track?.title && local.artist === track?.artist && track?.source === "local") || track;
     const queue = state.queue.map(replaceTrack);

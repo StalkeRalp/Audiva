@@ -14,6 +14,10 @@ const slides = [
   { image: "/ami1.jpg", label: "Votre cercle Audiva", title: "Amis", text: "Découvrez, comparez et partagez la musique qui vous ressemble." },
   { image: "/ami2.jpg", label: "Musique partagée", title: "Ensemble, en rythme.", text: "Envoyez une playlist, un morceau ou un message à votre cercle." },
 ];
+const PROFILE_PAGE_SIZE = 50;
+const profileSearchError = error => error?.code === "PGRST202" || String(error?.message || "").includes("audiva_discover_profiles")
+  ? "Exécutez supabase/sql/006_profile_discovery.sql dans le SQL Editor Supabase pour activer la liste des utilisateurs."
+  : error?.message || "La recherche de profils a échoué.";
 
 export default function AmisPage() {
   const router = useRouter();
@@ -22,6 +26,8 @@ export default function AmisPage() {
   const [slide, setSlide] = useState(0);
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState([]);
+  const [hasMoreProfiles, setHasMoreProfiles] = useState(false);
+  const [profileOffset, setProfileOffset] = useState(0);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [sentIds, setSentIds] = useState([]);
@@ -40,16 +46,23 @@ export default function AmisPage() {
     return () => { window.clearInterval(timer); window.clearTimeout(initialTimer); };
   }, []);
   useEffect(() => {
-    if (!user || query.trim().length < 2) { setMatches([]); setSearchError(""); return; }
+    if (!user) { setMatches([]); setHasMoreProfiles(false); setProfileOffset(0); setSearchError(""); return; }
     let active = true;
     const timer = window.setTimeout(async () => {
       setSearching(true); setSearchError("");
-      try { const found = await searchProfiles(query); if (active) setMatches(found.filter(person => !friends.some(friend => friend.id === person.id))); }
-      catch (error) { if (active) setSearchError(error.message || "La recherche de profils a échoué."); }
+      try {
+        const found = await searchProfiles(query, 0, PROFILE_PAGE_SIZE);
+        if (active) {
+          setMatches(found.filter(person => !friends.some(friend => friend.id === person.id)));
+          setHasMoreProfiles(found.length === PROFILE_PAGE_SIZE);
+          setProfileOffset(found.length);
+        }
+      }
+      catch (error) { if (active) setSearchError(profileSearchError(error)); }
       finally { if (active) setSearching(false); }
     }, 300);
     return () => { active = false; window.clearTimeout(timer); };
-  }, [query, user, friends]);
+  }, [query, user?.id, friends]);
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("invitation");
     if (!token || !user?.id) return;
@@ -83,8 +96,20 @@ export default function AmisPage() {
       // L’utilisateur a fermé la fenêtre de partage : aucune erreur à afficher.
     }
   };
+  const loadMoreProfiles = async () => {
+    if (!user || searching || !hasMoreProfiles) return;
+    setSearching(true); setSearchError("");
+    try {
+      const found = await searchProfiles(query, profileOffset, PROFILE_PAGE_SIZE);
+      const existing = new Set(matches.map(person => person.id));
+      setMatches(items => [...items, ...found.filter(person => !existing.has(person.id) && !friends.some(friend => friend.id === person.id))]);
+      setHasMoreProfiles(found.length === PROFILE_PAGE_SIZE);
+      setProfileOffset(offset => offset + found.length);
+    } catch (error) { setSearchError(profileSearchError(error)); }
+    finally { setSearching(false); }
+  };
 
-  return <main className="audiva-workspace audiva-amis min-h-screen bg-[#060b18] pb-32 text-[#eff4ff]">
+  return <main className="audiva-workspace audiva-amis audiva-reading-page min-h-screen bg-[#060b18] pb-32 text-[#eff4ff]">
     <section className="audiva-theme-banner relative isolate min-h-[320px] overflow-hidden border-b border-white/[.07] bg-[#081122] px-5 py-12 sm:min-h-[360px] sm:px-10 lg:px-14">
       <Image key={current.image} src={current.image} alt="" fill priority sizes="100vw" className="-z-20 object-cover object-center opacity-75 transition-opacity duration-700" />
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,#060b18_3%,rgba(6,11,24,.76)_47%,rgba(6,11,24,.22)),linear-gradient(180deg,transparent_45%,#060b18)]" />
@@ -96,7 +121,7 @@ export default function AmisPage() {
       {!user && new URLSearchParams(typeof window === "undefined" ? "" : window.location.search).has("invitation") && <p className="mt-4 border border-[#76eee9]/20 bg-[#0a1221] p-4 text-sm text-[#c8fffb]">Connectez-vous pour accepter cette invitation. <button type="button" onClick={() => router.push(`/authentification/connexion?next=${encodeURIComponent(window.location.pathname + window.location.search)}`)} className="ml-2 font-bold underline">Continuer</button></p>}
       {cloudError && <p role="alert" className="mt-4 border border-rose-300/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{cloudError}</p>}
       {!user && <section className="mt-6 flex flex-wrap items-center justify-between gap-4 border border-[#76eee9]/20 bg-[#0a1221] p-5"><div><h2 className="font-bold text-white">Connectez-vous pour synchroniser votre cercle</h2><p className="mt-1 text-sm text-[#91a0bd]">Les amis, demandes et conversations seront associés à votre compte Audiva.</p></div><button type="button" onClick={() => router.push("/authentification/connexion")} className="bg-[#76eee9] px-4 py-2.5 text-sm font-bold text-[#071523]">Se connecter</button></section>}
-      {user && <section className="mt-8 border border-white/[.08] bg-[#0a1221] p-5"><div><p className="text-[11px] font-bold uppercase tracking-[.15em] text-[#a6f6ef]">Trouver des auditeurs</p><h2 className="mt-2 text-xl font-semibold text-white">Ajouter un ami</h2><p className="mt-1 text-sm text-[#91a0bd]">Recherchez par nom ou nom d’utilisateur. Seuls les profils autorisant les demandes apparaissent.</p></div><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Nom ou @identifiant" className="mt-4 w-full border border-white/10 bg-[#07101e] px-4 py-3 text-sm text-white outline-none focus:border-[#76eee9]/50 sm:max-w-xl" />{searching && <p role="status" className="mt-3 text-xs text-[#91a0bd]">Recherche…</p>}{searchError && <p role="alert" className="mt-3 text-sm text-rose-200">{searchError}</p>}{matches.length > 0 && <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{matches.map(person => <article key={person.id} className="flex items-center gap-3 border border-white/[.08] p-3"><Avatar person={person}/><div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{person.name}</p><p className="truncate text-xs text-[#91a0bd]">{person.username}</p></div><button type="button" disabled={sentIds.includes(person.id)} onClick={async () => { if (await sendFriendRequest(person)) setSentIds(ids => [...ids, person.id]); }} className="border border-[#76eee9]/40 px-3 py-2 text-xs font-bold text-[#b8fffb] disabled:opacity-40">{sentIds.includes(person.id) ? "Envoyée" : "Ajouter"}</button></article>)}</div>}{query.trim().length >= 2 && !searching && !searchError && !matches.length && <p className="mt-3 text-sm text-[#91a0bd]">Aucun profil disponible pour cette recherche.</p>}</section>}
+      {user && <section className="mt-8 border border-white/[.08] bg-[#0a1221] p-5"><div><p className="text-[11px] font-bold uppercase tracking-[.15em] text-[#a6f6ef]">Trouver des auditeurs</p><h2 className="mt-2 text-xl font-semibold text-white">Ajouter un ami</h2><p className="mt-1 text-sm text-[#91a0bd]">Tous les profils qui acceptent les demandes sont affichés. Recherchez un nom pour filtrer la liste.</p></div><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Filtrer par nom ou @identifiant" className="mt-4 w-full border border-white/10 bg-[#07101e] px-4 py-3 text-sm text-white outline-none focus:border-[#76eee9]/50 sm:max-w-xl" />{searching && <p role="status" className="mt-3 text-xs text-[#91a0bd]">Chargement des auditeurs…</p>}{searchError && <p role="alert" className="mt-3 text-sm text-rose-200">{searchError}</p>}{matches.length > 0 && <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{matches.map(person => <article key={person.id} className="flex items-center gap-3 border border-white/[.08] p-3"><Avatar person={person}/><div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{person.name}</p><p className="truncate text-xs text-[#91a0bd]">{person.username}</p></div><button type="button" disabled={sentIds.includes(person.id)} onClick={async () => { if (await sendFriendRequest(person)) setSentIds(ids => [...ids, person.id]); }} className="border border-[#76eee9]/40 px-3 py-2 text-xs font-bold text-[#b8fffb] disabled:opacity-40">{sentIds.includes(person.id) ? "Envoyée" : "Ajouter"}</button></article>)}</div>}{hasMoreProfiles && <button type="button" disabled={searching} onClick={loadMoreProfiles} className="mt-5 border border-[#76eee9]/35 px-4 py-2 text-sm font-semibold text-[#b8fffb] disabled:opacity-50">{searching ? "Chargement…" : "Afficher plus d’utilisateurs"}</button>}{!searching && !searchError && !matches.length && <p className="mt-3 text-sm text-[#91a0bd]">{query.trim() ? "Aucun profil disponible pour cette recherche." : "Aucun profil disponible pour le moment."}</p>}</section>}
       {requests.length ? <section className="mt-10"><h2 className="text-2xl font-semibold text-white">Demandes d’amitié</h2><div className="mt-5 grid gap-4 lg:grid-cols-2">{requests.map((request) => <article key={request.id} className="flex flex-wrap items-center gap-4 border border-[#76eee9]/22 bg-[#0a1221] p-4"><Avatar person={request} /><div className="min-w-0 flex-1"><p className="font-semibold text-white">{request.name}</p><p className="text-xs text-[#91a0bd]">{request.username} · {request.mutual} amis en commun</p><p className="mt-2 text-xs text-[#76eee9]">Écoute souvent {request.topArtist}</p></div><div className="flex gap-2"><button type="button" onClick={() => acceptRequest(request.id)} className="inline-flex items-center gap-2 bg-[#76eee9] px-3 py-2 text-xs font-semibold text-[#ffffff]"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />Accepter</button><button type="button" onClick={() => declineRequest(request.id)} className="grid h-9 w-9 place-items-center border border-white/12"><HugeiconsIcon icon={Cancel01Icon} size={18} /></button></div></article>)}</div></section> : null}
       <section className="mt-10"><div className="flex flex-wrap items-end justify-between gap-4"><div><h2 className="text-2xl font-semibold text-white">Vos amis</h2><p className="mt-2 text-sm text-[#91a0bd]">Ouvrez un profil ou reprenez votre conversation en un geste.</p></div><div className="inline-flex items-center gap-3 border border-orange-300/20 bg-gradient-to-r from-orange-400/10 to-rose-400/5 px-4 py-3"><HugeiconsIcon icon={FireIcon} size={24} className="text-orange-300" /><span><b className="block text-lg text-white">{communityStreak.current ? `${communityStreak.current} jour${communityStreak.current > 1 ? "s" : ""} de suite` : "Lancez votre première série"}</b><small className="text-xs text-[#c4b4b1]">{communityStreak.current ? "où vous avez écrit à votre cercle" : "un message envoyé chaque jour maintient le streak"}</small></span></div></div><div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{friends.map((friend) => { const conversation = conversations.find(item => item.participantId === friend.id); const streak = getConversationStreak(conversation); return <article key={friend.id} className="rounded-2xl border border-white/[.08] bg-[#0a1221] p-4 transition hover:-translate-y-0.5 hover:border-[#76eee9]/35"><div className="flex gap-3"><Avatar person={friend} /><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><h3 className="truncate font-semibold text-white">{friend.name}</h3></div><p className="text-xs text-[#91a0bd]">{friend.username}</p></div></div><div className="mt-5 grid grid-cols-2 gap-2 border-y border-white/[.07] py-4 text-xs"><div><p className="text-[#71809d]">Artiste préféré</p><p className="mt-1 truncate font-bold">{friend.topArtist || "À découvrir"}</p></div><div><p className="text-[#71809d]">Bio</p><p className="mt-1 truncate font-bold">{friend.bio || "Profil Audiva"}</p></div></div>{streak.current > 0 && <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-orange-200"><HugeiconsIcon icon={FireIcon} size={16} /> {streak.current} jour{streak.current > 1 ? "s" : ""} de messages consécutifs</p>}<div className="mt-4 flex gap-2"><button type="button" onClick={() => router.push(`/amis/${friend.id}`)} className="flex-1 border border-white/12 px-3 py-2.5 text-xs font-semibold hover:border-[#76eee9]/45">Profil</button><button type="button" onClick={async () => { const id = await getOrCreateConversation(friend.id); if (id) router.push(`/chat?conversation=${encodeURIComponent(id)}`); }} aria-label={`Écrire à ${friend.name}`} className="grid h-10 w-11 place-items-center bg-gradient-to-br from-[#76eee9] to-[#8bd4ff] text-[#071523] shadow-[0_5px_18px_#76eee925]"><HugeiconsIcon icon={Message01Icon} size={20} /></button></div></article>; })}</div>{user && !friends.length && <div className="mt-5 border border-white/8 bg-[#0a1221] p-8 text-center text-sm text-[#91a0bd]">Votre cercle est encore vide. Recherchez un nom d’utilisateur ci-dessus.</div>}</section>
     </section>

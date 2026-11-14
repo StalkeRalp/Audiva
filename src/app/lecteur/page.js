@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowDown01Icon, Cancel01Icon, FavouriteIcon, InformationCircleIcon, Mic01Icon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, Queue01Icon, RepeatIcon, Share01Icon, ShuffleIcon, VolumeHighIcon, VolumeLowIcon, VolumeMute01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Cancel01Icon, CastIcon, FavouriteIcon, InformationCircleIcon, Mic01Icon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, Queue01Icon, RepeatIcon, Share01Icon, ShuffleIcon, VolumeHighIcon, VolumeLowIcon, VolumeMute01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { isLocalTrack, useLecteurControlsStore, useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
 import { useSocialStore } from "@/domaines/social/stores/socialStore";
 import { PlasmaBackground } from "@/domaines/lecteur/composants/PlasmaBackground";
@@ -66,6 +66,8 @@ export default function LecteurPage() {
       <button type="button" onClick={() => router.back()} className="now-playing__icon now-playing__glass" aria-label="Fermer le lecteur et revenir à la page précédente"><HugeiconsIcon icon={ArrowDown01Icon} size={22} /></button>
       <div className="now-playing__source"><span>LECTURE DEPUIS</span><p>{player.queueSourceName || "Votre musique"}</p></div>
       <button type="button" className="now-playing__icon now-playing__glass" onClick={() => setShareOpen(true)} aria-label="Partager le morceau"><HugeiconsIcon icon={Share01Icon} size={21} strokeWidth={1.7} /></button>
+      <ShareMusicCard track={track}/>
+      <button type="button" className="now-playing__icon now-playing__glass" onClick={() => window.dispatchEvent(new Event("audiva-cast-request"))} aria-label="Caster vers un écran" title="Caster vers un écran"><HugeiconsIcon icon={CastIcon} size={21} strokeWidth={1.7} /></button>
       <button type="button" className="now-playing__icon now-playing__glass" onClick={() => setAppearanceOpen(value => !value)} aria-label="Apparence du lecteur" aria-expanded={appearanceOpen}><HugeiconsIcon icon={Settings01Icon} size={21} /></button>
     </header>
 
@@ -74,7 +76,7 @@ export default function LecteurPage() {
       <p className="appearance-caption">AMBIANCE DU PLASMA</p>
       <div className="appearance-presets" role="group" aria-label="Choisir une ambiance de plasma">
         {[
-          ['auto','Pochette','linear-gradient(135deg,#7c67e8,#65d8cd)'],['ocean','Océan','linear-gradient(135deg,#126e89,#52ded2)'],['violet','Nébuleuse','linear-gradient(135deg,#5530a4,#e276d2)'],['sunset','Soleil','linear-gradient(135deg,#e65b52,#efb64c)'],['mono','Lunaire','linear-gradient(135deg,#384658,#d4def1)'],
+          ['auto','Pochette','linear-gradient(135deg,#7c67e8,#65d8cd)'],['cover','Pochette dynamique','linear-gradient(135deg,#7c67e8,#65d8cd)'],['apple','Apple','linear-gradient(135deg,#559de5 0%,#8c83db 38%,#78d9c9 70%,#e9a9c2 100%)'],['ocean','Océan','linear-gradient(135deg,#126e89,#52ded2)'],['violet','Nébuleuse','linear-gradient(135deg,#5530a4,#e276d2)'],['sunset','Soleil','linear-gradient(135deg,#e65b52,#efb64c)'],['mono','Lunaire','linear-gradient(135deg,#384658,#d4def1)'],
           ['mercury','Mercure','radial-gradient(ellipse at 35% 30%,#fff 0 14%,#cbd2dc 30%,#737f91 58%,#f7f8fa 76%,#8b97a6)'],['orb','Orbe','radial-gradient(circle at 32% 28%,#fff 0 5%,#ace9e4 18%,#6aa6d2 48%,#7c70ce 72%,#e8f1ff)'],['aurora','Aurore','linear-gradient(150deg,#8be7d0,#78a5ea 35%,#c699e7 66%,#f6c5d1)'],['waves','Ondes','repeating-linear-gradient(0deg,#1b8f99 0 5px,#d6f2ef 5px 8px,#8497d7 8px 12px)'],['ribbon','Ruban','linear-gradient(135deg,#b5e8df 0 22%,#74a8d8 42%,#a987d5 62%,#f3c8d0 82%)']
         ].map(([id,label,swatch])=><button type="button" key={id} className={plasmaStyle===id?'is-selected':''} aria-pressed={plasmaStyle===id} onClick={()=>{setPlasmaStyle(id);localStorage.setItem("audiva-plasma-style",id);}}><span className={`appearance-swatch appearance-swatch--${id}`} style={{background:swatch}}><i/></span><span>{label}</span></button>)}
       </div>

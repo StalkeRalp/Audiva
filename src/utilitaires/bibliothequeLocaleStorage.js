@@ -68,3 +68,21 @@ export async function deleteLocalTrack(id) {
     transaction.onerror = () => reject(transaction.error);
   });
 }
+
+export async function clearLocalTracks() {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(STORE_NAME, "readwrite");
+    transaction.objectStore(STORE_NAME).clear();
+    transaction.oncomplete = () => {
+      for (const urls of sessionTracks.values()) {
+        if (urls.streamUrl?.startsWith("blob:")) URL.revokeObjectURL(urls.streamUrl);
+        if (urls.cover?.startsWith("blob:")) URL.revokeObjectURL(urls.cover);
+      }
+      sessionTracks.clear();
+      database.close();
+      resolve();
+    };
+    transaction.onerror = () => { database.close(); reject(transaction.error); };
+  });
+}
