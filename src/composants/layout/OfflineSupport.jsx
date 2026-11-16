@@ -17,6 +17,11 @@ export default function OfflineSupport() {
     update();
     window.addEventListener("online", update);
     window.addEventListener("offline", update);
+    // Ask the browser to protect Audiva's IndexedDB, localStorage and offline
+    // cache from automatic storage eviction after the user closes the app.
+    if (navigator.storage?.persist) {
+      navigator.storage.persist().catch(() => false);
+    }
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
       navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
     }

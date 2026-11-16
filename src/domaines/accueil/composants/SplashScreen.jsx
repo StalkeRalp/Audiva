@@ -1,14 +1,31 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import AuthAmbient from "@/domaines/authentification/composants/AuthAmbient";
+import { useAuthStore } from "@/domaines/authentification/stores/authStore";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon, PaletteIcon } from "@hugeicons/core-free-icons";
 import { toggleAppleTheme } from "@/composants/layout/ThemeProvider";
 
 export default function SplashScreen({ bungeeClassName }) {
   const router = useRouter();
+  const user = useAuthStore(state => state.user);
+  const authLoading = useAuthStore(state => state.loading);
+
+  useEffect(() => {
+    if (!authLoading && user?.id) router.replace("/accueil");
+  }, [authLoading, router, user?.id]);
+
+  if (authLoading || user?.id) {
+    return <main className={`landing-screen ${bungeeClassName || ""}`} aria-busy="true" aria-label="Ouverture de votre espace Audiva">
+      <div className="landing-center">
+        <Image src="/logoAudiva4png" alt="Logo Audiva" width={260} height={260} priority className="landing-logo" />
+        <p className="landing-copy" role="status">{user?.id ? "Bienvenue. Votre espace s’ouvre…" : "Retrouvons votre espace Audiva…"}</p>
+      </div>
+    </main>;
+  }
 
   function goToSignIn() {
     const next = "/spotify/onboarding?next=%2Faccueil";

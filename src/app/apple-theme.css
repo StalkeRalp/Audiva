@@ -1620,3 +1620,72 @@ html[data-theme="apple"] body .audiva-lyrics-search>div button small{color:#6b75
 html[data-theme="apple"] .audiva-player--apple .audiva-player-inline-tool{color:#596575!important}
 html[data-theme="apple"] .audiva-player--apple .audiva-player-inline-tool[aria-pressed="true"],
 html[data-theme="apple"] .audiva-player--apple .audiva-player-inline-tool[aria-expanded="true"]{color:#087f85!important}
+
+/* Light-theme contrast repair for artist and friend profile surfaces. */
+html[data-theme="apple"] body .artist-profile :is(.artist-profile-section,.artist-biography) {
+  border-color: #dfe3e9 !important;
+  background: linear-gradient(145deg,#fff,#f8f9fb) !important;
+  color: #202630 !important;
+  box-shadow: 0 8px 28px rgb(24 32 46 / .06) !important;
+}
+html[data-theme="apple"] body .artist-profile .artist-profile-nav {
+  border-color: #dfe3e9 !important;
+  background: rgb(255 255 255 / .88) !important;
+  box-shadow: 0 8px 24px rgb(24 32 46 / .09) !important;
+  backdrop-filter: blur(18px) saturate(140%);
+}
+html[data-theme="apple"] body .artist-profile .artist-profile-nav a { color: #465263 !important; }
+html[data-theme="apple"] body .artist-profile .artist-profile-nav a:hover,
+html[data-theme="apple"] body .artist-profile .artist-profile-nav a:focus-visible { background: #edf8f7 !important; color: #087f85 !important; outline-color: #087f85; }
+html[data-theme="apple"] body .artist-profile :is(.artist-profile-section,.artist-biography) :is(h2,p,strong,small,a,button,span) {
+  text-shadow: none !important;
+}
+html[data-theme="apple"] body .artist-profile .artist-profile-section > header h2,
+html[data-theme="apple"] body .artist-profile .artist-profile-track-copy strong,
+html[data-theme="apple"] body .artist-profile .artist-profile-album strong,
+html[data-theme="apple"] body .artist-profile .artist-biography > p { color: #202630 !important; }
+html[data-theme="apple"] body .artist-profile :is(.artist-profile-section > header p,.artist-profile-track-copy small,.artist-profile-track-duration,.artist-profile-album small,.artist-profile-empty,.artist-profile-attribution,.artist-biography > header small) { color: #687383 !important; }
+html[data-theme="apple"] body .artist-profile .artist-profile-kicker,
+html[data-theme="apple"] body .artist-profile .artist-profile-section > header > div > span,
+html[data-theme="apple"] body .artist-profile .artist-biography > header > span { color: #087f85 !important; }
+html[data-theme="apple"] body .artist-profile .artist-profile-track { border-color: #e8ebef !important; color: #202630 !important; }
+html[data-theme="apple"] body .artist-profile .artist-profile-track:hover { background: #edf8f7 !important; color: #075c61 !important; }
+html[data-theme="apple"] body .artist-profile .artist-profile-album { border-color: #e0e4ea !important; background: #fff !important; color: #202630 !important; }
+html[data-theme="apple"] body .artist-profile .artist-profile-album:hover { border-color: #9ccbc7 !important; background: #f3f9f8 !important; }
+html[data-theme="apple"] body .artist-profile .artist-profile-album-type { background: #202630e8 !important; color: #fff !important; }
+html[data-theme="apple"] body .artist-profile .artist-profile-section > header > button { background: #087f85 !important; color: #fff !important; }
+html[data-theme="apple"] body .artist-profile .artist-profile-section > header > button svg { color: #fff !important; }
+
+html[data-theme="apple"] body .audiva-friend-profile > section > article,
+html[data-theme="apple"] body .audiva-friend-profile > section > div {
+  border-color: #dfe3e9 !important;
+  background: linear-gradient(145deg,#fff,#f7f8fa) !important;
+  color: #202630 !important;
+  box-shadow: 0 8px 26px rgb(24 32 46 / .06) !important;
+}
+html[data-theme="apple"] body .audiva-friend-profile > section > article :is(p,strong,small,a,svg),
+html[data-theme="apple"] body .audiva-friend-profile > section > div :is(h2,p,button,svg) {
+  text-shadow: none !important;
+}
+html[data-theme="apple"] body .audiva-friend-profile > section > article :is(p,small) { color: #687383 !important; }
+html[data-theme="apple"] body .audiva-friend-profile > section > article p[class*="text-xl"] { color: #202630 !important; }
+html[data-theme="apple"] body .audiva-friend-profile > section > article a,
+html[data-theme="apple"] body .audiva-friend-profile > section > div p[class*="uppercase"] { color: #087f85 !important; }
+html[data-theme="apple"] body .audiva-friend-profile > section > div h2 { color: #202630 !important; }
+html[data-theme="apple"] body .audiva-friend-profile > section > div p:not([class*="uppercase"]) { color: #687383 !important; }
+html[data-theme="apple"] body .audiva-friend-profile > section > div button { border-color: #b9d9d6 !important; background: #edf8f7 !important; color: #075c61 !important; }
+html[data-theme="apple"] body .audiva-friend-profile > section > div button svg { color: #087f85 !important; }
+
+/* The conversation wallpaper must remain visible above the Apple light surface. */
+html[data-theme="apple"] body .audiva-chat .chat-message-log {
+  background-color: #f2f4f7 !important;
+  background-image: none !important;
+}
+html[data-theme="apple"] body .audiva-chat .chat-message-log[data-custom-wallpaper="true"] {
+  background-image: linear-gradient(135deg,#f2f4f742,#f2f4f742),var(--chat-wallpaper-image) !important;
+  background-blend-mode: normal,normal !important;
+  background-size: cover,cover !important;
+}
+html[data-theme="apple"] body .audiva-chat .chat-wallpaper-image--audiva { display: none !important; }
+html[data-theme="apple"] body .audiva-chat .chat-wallpaper-image--apple { display: block !important; opacity: .15 !important; mix-blend-mode: normal !important; }
+html[data-theme="apple"] body .audiva-chat .chat-message-log[data-custom-wallpaper="true"] .chat-wallpaper-image--apple { display: none !important; }
