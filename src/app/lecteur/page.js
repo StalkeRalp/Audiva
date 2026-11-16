@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowDown01Icon, Cancel01Icon, CastIcon, FavouriteIcon, InformationCircleIcon, Mic01Icon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, Queue01Icon, RepeatIcon, Share01Icon, ShuffleIcon, VolumeHighIcon, VolumeLowIcon, VolumeMute01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Cancel01Icon, CastIcon, FavouriteIcon, InformationCircleIcon, Mic01Icon, MusicNote01Icon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, Queue01Icon, RepeatIcon, Share01Icon, ShuffleIcon, VolumeHighIcon, VolumeLowIcon, VolumeMute01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { isLocalTrack, useLecteurControlsStore, useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
 import { useSocialStore } from "@/domaines/social/stores/socialStore";
 import { PlasmaBackground } from "@/domaines/lecteur/composants/PlasmaBackground";
@@ -48,10 +48,13 @@ export default function LecteurPage() {
   const togglePanel = (name) => setPanel(panel === name ? "cover" : name);
   const liked = player.likedTrackIds.includes(track.id);
   const nextTracks = [...player.upNextQueue.map((item, index) => ({ track: item, key: `next-${index}`, priorityIndex: index })), ...player.queue.slice(player.currentIndex + 1).map((item, index) => ({ track: item, key: `queue-${index}` }))];
+  const manualMixTarget = player.upNextQueue[0] || player.queue[player.currentIndex + 1] || (player.repeatMode === "queue" ? player.queue[0] : null);
+  const isAudioFile = item => isLocalTrack(item) && item?.mediaType !== "video" && !item?.mediaType?.startsWith("video/") && item?.fileInfo?.type?.startsWith("video/") !== true && !/\.mp4$/i.test(item?.fileInfo?.name || "");
+  const canManualMix = player.isPlaying && !player.isShuffled && player.repeatMode !== "track" && isAudioFile(track) && isAudioFile(manualMixTarget);
   const share = (friend) => {
     const conversation = conversations.find((item) => item.participantId === friend.id);
     if (!conversation) { setNotice("Aucune conversation disponible avec cet ami."); return; }
-    sendMessage(conversation.id, { share: { kind: "morceau", title: track.title, subtitle: [track.artist, track.album].filter(Boolean).join(" · "), cover: coverFor(track) } });
+    sendMessage(conversation.id, { share: { kind: "track", id: track.id, title: track.title, subtitle: [track.artist, track.album].filter(Boolean).join(" · "), cover: coverFor(track), track: { id: track.id, localId: track.localId, provider: track.provider, providerId: track.providerId, title: track.title, artist: track.artist, album: track.album, duration: track.duration, cover: coverFor(track), mediaType: track.mediaType } } });
     setShareOpen(false);
     setNotice(`Morceau partagé avec ${friend.name}`);
   };
@@ -72,14 +75,23 @@ export default function LecteurPage() {
     </header>
 
     {appearanceOpen && <section className="now-playing__appearance" aria-label="Personnaliser votre lecteur">
-      <header><div><span>ATELIER AUDIVA</span><strong>Personnalise ton espace</strong></div><button type="button" onClick={() => setAppearanceOpen(false)} aria-label="Fermer">×</button></header>
+      <header><div><strong>Réglages du lecteur</strong></div><button type="button" onClick={() => setAppearanceOpen(false)} aria-label="Fermer">×</button></header>
       <p className="appearance-caption">AMBIANCE DU PLASMA</p>
       <div className="appearance-presets" role="group" aria-label="Choisir une ambiance de plasma">
         {[
-          ['auto','Pochette','linear-gradient(135deg,#7c67e8,#65d8cd)'],['cover','Pochette dynamique','linear-gradient(135deg,#7c67e8,#65d8cd)'],['apple','Apple','linear-gradient(135deg,#559de5 0%,#8c83db 38%,#78d9c9 70%,#e9a9c2 100%)'],['ocean','Océan','linear-gradient(135deg,#126e89,#52ded2)'],['violet','Nébuleuse','linear-gradient(135deg,#5530a4,#e276d2)'],['sunset','Soleil','linear-gradient(135deg,#e65b52,#efb64c)'],['mono','Lunaire','linear-gradient(135deg,#384658,#d4def1)'],
-          ['mercury','Mercure','radial-gradient(ellipse at 35% 30%,#fff 0 14%,#cbd2dc 30%,#737f91 58%,#f7f8fa 76%,#8b97a6)'],['orb','Orbe','radial-gradient(circle at 32% 28%,#fff 0 5%,#ace9e4 18%,#6aa6d2 48%,#7c70ce 72%,#e8f1ff)'],['aurora','Aurore','linear-gradient(150deg,#8be7d0,#78a5ea 35%,#c699e7 66%,#f6c5d1)'],['waves','Ondes','repeating-linear-gradient(0deg,#1b8f99 0 5px,#d6f2ef 5px 8px,#8497d7 8px 12px)'],['ribbon','Ruban','linear-gradient(135deg,#b5e8df 0 22%,#74a8d8 42%,#a987d5 62%,#f3c8d0 82%)']
+          ['auto','Auto','linear-gradient(135deg,#7c67e8,#65d8cd)'],['cover','Pochette dynamique','linear-gradient(135deg,#7c67e8,#65d8cd)'],['apple','Apple','linear-gradient(135deg,#559de5 0%,#8c83db 38%,#78d9c9 70%,#e9a9c2 100%)'],['ocean','Océan','linear-gradient(135deg,#126e89,#52ded2)'],['violet','Nébuleuse','linear-gradient(135deg,#5530a4,#e276d2)']
         ].map(([id,label,swatch])=><button type="button" key={id} className={plasmaStyle===id?'is-selected':''} aria-pressed={plasmaStyle===id} onClick={()=>{setPlasmaStyle(id);localStorage.setItem("audiva-plasma-style",id);}}><span className={`appearance-swatch appearance-swatch--${id}`} style={{background:swatch}}><i/></span><span>{label}</span></button>)}
       </div>
+      <div className="appearance-divider"/>
+      <section className="automix-settings" aria-label="Réglages AutoMix">
+        <div className="automix-heading"><div><span>MIXAGE LOCAL</span><strong>Mix automatique</strong><small className={`automix-state ${player.autoMixEnabled?'is-on':''}`}>{player.autoMixEnabled ? (player.autoMixKeepEnds ? 'Activé · fins conservées' : 'Activé') : 'Désactivé'}</small></div><button type="button" role="switch" aria-checked={player.autoMixEnabled} aria-label="Mix automatique" title={player.autoMixEnabled ? 'Désactiver le mix automatique' : 'Activer le mix automatique'} className={`automix-switch ${player.autoMixEnabled?'is-on':''}`} onClick={()=>player.setAutoMixSettings({enabled:!player.autoMixEnabled})}><i/></button></div>
+        <p>{player.autoMixKeepEnds ? 'Les morceaux gardent leur fin complète.' : 'Enchaîne les fichiers locaux avec un fondu avant la fin du morceau.'} Spotify garde son propre lecteur.</p>
+        <button type="button" className="now-playing__mix-button" disabled={!canManualMix} title={canManualMix ? `Lancer le mix vers ${manualMixTarget.title}` : "Ajoutez un prochain fichier audio local et lancez la lecture pour mixer"} onClick={() => window.dispatchEvent(new Event("audiva-manual-mix"))}><HugeiconsIcon icon={MusicNote01Icon} size={18} strokeWidth={1.8}/><span>Mixer le prochain titre</span></button>
+        <label className="automix-mode-label">Mode<select value={player.autoMixMode} disabled={!player.autoMixEnabled} onChange={event=>player.setAutoMixSettings({mode:event.target.value})}><option value="intelligent">Transition intelligente</option><option value="crossfade">Crossfade classique</option></select></label>
+        <label className="automix-range-label"><span>Intensité <b>{Math.round(player.autoMixIntensity*100)}%</b></span><input type="range" min="0.5" max="1.5" step="0.05" value={player.autoMixIntensity} disabled={!player.autoMixEnabled} onChange={event=>player.setAutoMixSettings({intensity:Number(event.target.value)})}/></label>
+        <label className="automix-check"><input type="checkbox" checked={player.autoMixBeatmatching} disabled={!player.autoMixEnabled || player.autoMixMode==='crossfade'} onChange={event=>player.setAutoMixSettings({beatmatching:event.target.checked})}/>Synchroniser les tempos compatibles</label>
+        <label className="automix-check"><input type="checkbox" checked={player.autoMixKeepEnds} disabled={!player.autoMixEnabled} onChange={event=>player.setAutoMixSettings({keepEnds:event.target.checked})}/>Conserver les fins des morceaux</label>
+      </section>
       <div className="appearance-divider"/>
       <button type="button" className={`appearance-glass-card ${glassMode?'is-on':''}`} aria-pressed={glassMode} onClick={()=>{const next=!glassMode;setGlassMode(next);localStorage.setItem("audiva-reader-glass",String(next));}}><span className="appearance-glass-icon">✧</span><span><strong>Mode verre</strong><small>{glassMode?'Reflets activés sur l’interface':'Applique le verre à la navigation'}</small></span><i className="appearance-switch"/></button>
     </section>}

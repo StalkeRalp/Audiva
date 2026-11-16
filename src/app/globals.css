@@ -42,6 +42,7 @@ body {
 .landing-mobile-image { display: none; }
 .landing-video-tint { position: absolute; z-index: -1; inset: 0; pointer-events: none; background: linear-gradient(112deg,#061126d9 0%,#09275c88 48%,#060b18d9 100%); }
 .landing-topline { position: absolute; top: max(28px,env(safe-area-inset-top)); left: max(28px,5vw); display: flex; align-items: center; gap: 9px; color: #9aa9bf; font-size: 11px; font-weight: 650; letter-spacing: .17em; }
+.landing-theme-toggle{position:absolute;top:max(20px,env(safe-area-inset-top));right:max(22px,5vw);z-index:2;display:grid;width:42px;height:42px;place-items:center;border:1px solid #ffffff30;border-radius:50%;background:#101b2d88;color:#dce5f3;backdrop-filter:blur(16px);transition:transform .18s,background .18s,border-color .18s,color .18s}.landing-theme-toggle:hover{transform:translateY(-1px);border-color:#a8b8ff88;background:#ffffff1c;color:#fff}
 .landing-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #76eee9; }
 .landing-center { position: relative; display: flex; width: min(100% - 36px,500px); flex-direction: column; align-items: center; padding: 60px 0; text-align: center; animation: landing-appear .55s ease-out both; }
 .landing-logo { width: clamp(104px,15vw,146px); height: auto; margin-bottom: 14px; object-fit: contain; }
@@ -59,7 +60,7 @@ body {
 .landing-footer { position: absolute; bottom: max(24px,env(safe-area-inset-bottom)); color: #58677d; font-size: 9px; font-weight: 650; letter-spacing: .18em; }
 @keyframes landing-appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes landing-wave { to { transform: scaleY(.35); opacity: .55; } }
-@media (max-width: 640px) { .landing-background-video { display: none; } .landing-mobile-image { position: absolute; z-index: -2; inset: 0; display: block; background: #060b18 url('/2.jpg') center 45% / cover no-repeat; } .landing-topline { top: max(20px,env(safe-area-inset-top)); left: 20px; font-size: 9px; } .landing-center { padding: 58px 0; } .landing-title { font-size: clamp(34px,9vw,46px); } .landing-copy { max-width: 310px; font-size: 15px; } .landing-loading { flex-direction: column; gap: 9px; font-size: 12px; } .landing-equalizer-frame { width: min(310px,calc(100vw - 40px)); } .landing-footer { bottom: max(18px,env(safe-area-inset-bottom)); } }
+@media (max-width: 640px) { .landing-background-video { display: none; } .landing-mobile-image { position: absolute; z-index: -2; inset: 0; display: block; background: #060b18 url('/2.jpg') center 45% / cover no-repeat; } .landing-topline { top: max(20px,env(safe-area-inset-top)); left: 20px; font-size: 9px; } .landing-theme-toggle{top:max(14px,env(safe-area-inset-top));right:16px;width:38px;height:38px}.landing-center { padding: 58px 0; } .landing-title { font-size: clamp(34px,9vw,46px); } .landing-copy { max-width: 310px; font-size: 15px; } .landing-loading { flex-direction: column; gap: 9px; font-size: 12px; } .landing-equalizer-frame { width: min(310px,calc(100vw - 40px)); } .landing-footer { bottom: max(18px,env(safe-area-inset-bottom)); } }
 @media (prefers-reduced-motion: reduce) { .landing-screen *, .landing-screen *::before, .landing-screen *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
 
 html[data-navigation-pending="true"]::before { position: fixed; z-index: 99999; top: 0; left: 0; width: 38%; height: 3px; content: ""; pointer-events: none; background: linear-gradient(90deg,transparent,#76eee9 35%,#b4bfff 75%,transparent); box-shadow: 0 0 12px #76eee988; animation: audiva-nav-progress 1.15s cubic-bezier(.45,.05,.55,.95) infinite; }
@@ -222,6 +223,15 @@ button:not(:disabled), [role="button"] { cursor: pointer; }
 }
 .audiva-app main { padding-bottom: 160px; }
 .audiva-app main.bg-black, .audiva-app main.bg-\[\#060b18\] { background-color: transparent; }
+
+/* Remove browser and framework focus rings from every text-entry control. */
+html body :is(input, textarea, select, [contenteditable="true"]):focus,
+html body :is(input, textarea, select, [contenteditable="true"]):focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
 .audiva-glass, .audiva-topbar, .audiva-sidebar, .audiva-player, .audiva-mobile-nav {
   border: 1px solid var(--audiva-glass-border);
   background: linear-gradient(135deg, rgb(43 51 78 / .8), rgb(16 22 39 / .87));
@@ -302,11 +312,31 @@ button:not(:disabled), [role="button"] { cursor: pointer; }
 .audiva-auth { background: #060b18; }
 .audiva-auth > section:first-child { background: transparent; }
 .audiva-auth form label > span:has(input) { border: 0; border-bottom: 1px solid rgb(255 255 255 / .28); border-radius: 0; background: transparent; color: #c3cbea; box-shadow: none; backdrop-filter: none; }
-.audiva-auth input { color: white; }
+.audiva-auth input { color: #f7fbff; background-color: transparent; color-scheme: dark; caret-color: #72eee7; }
 .audiva-auth form label > span:focus-within { border: 0; border-bottom: 1px solid #72eee7; border-radius: 0; box-shadow: none; }
 .audiva-auth input:focus, .audiva-auth input:focus-visible { outline: none !important; box-shadow: none !important; }
 .audiva-auth input::placeholder { color: #8e9bb8; }
 .audiva-auth button[type="submit"] { background: #72eee7; box-shadow: none; }
+html[data-theme="audiva"] .audiva-auth .auth-input-line:focus-within {
+  border-bottom-color: #72eee7 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+html[data-theme="audiva"] .audiva-auth :is(input, input:focus, input:focus-visible) {
+  color: #f7fbff !important;
+  background: transparent !important;
+  caret-color: #72eee7;
+  color-scheme: dark;
+}
+html[data-theme="audiva"] .audiva-auth input:-webkit-autofill,
+html[data-theme="audiva"] .audiva-auth input:-webkit-autofill:hover,
+html[data-theme="audiva"] .audiva-auth input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f7fbff !important;
+  -webkit-box-shadow: 0 0 0 1000px #060b18 inset !important;
+  caret-color: #72eee7;
+  transition: background-color 99999s ease-out 0s;
+}
+.audiva-auth .auth-password-toggle { color: #a6f6ef; }
 
 /* Lecteur immersif : une pochette, des commandes et une ambiance diffuse. */
 .audiva-app main.now-playing {
@@ -571,6 +601,33 @@ html[data-theme="apple"] .library-clear-dialog button:first-of-type{border-color
 html[data-theme="apple"] .library-clear-dialog button:first-of-type:hover{background:#e8eef5!important}
 .now-playing__plasma.plasma-style-apple .plasma-artwork{filter:blur(78px) saturate(1.55) brightness(.84);transform:scale(1.34);clip-path:ellipse(72% 58% at 50% 48%)}
 .now-playing__plasma.plasma-style-apple .plasma-canvas{filter:saturate(1.16) contrast(1.03)}
+.now-playing__appearance{max-height:calc(100dvh - 88px);overflow:auto;overscroll-behavior:contain}
+.automix-settings{display:grid;gap:12px;padding:14px;border:1px solid #ffffff17;border-radius:16px;background:#ffffff05;color:#e8eef8}
+.automix-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.automix-heading>div{display:grid;gap:4px}.automix-heading span{font-size:9px;font-weight:750;letter-spacing:.16em;color:#8be9e0}.automix-heading strong{font-size:14px}.automix-settings>p{margin:0;color:#aab6cc;font-size:10px;line-height:1.55}
+.automix-heading .automix-state{width:max-content;padding:3px 8px;border:1px solid #ffffff20;border-radius:999px;background:#ffffff0b;color:#b9c5d8;font-size:10px;font-weight:650;letter-spacing:0}
+.automix-heading .automix-state.is-on{border-color:#54c7bc66;background:#54c7bc1c;color:#86e4dc}
+.automix-switch{position:relative;width:42px;height:24px;flex:0 0 42px;border:0;border-radius:999px;background:#ffffff30;transition:background .2s}.automix-switch i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}.automix-switch.is-on{background:#54c7bc}.automix-switch.is-on i{transform:translateX(18px)}
+.automix-mode-label,.automix-range-label{display:grid;gap:7px;color:#cbd4e4;font-size:10px}.automix-mode-label select{width:100%;padding:9px 10px;border:1px solid #ffffff20;border-radius:10px;background:#101827;color:#f1f5fb;font:inherit}.automix-mode-label select:disabled,.automix-settings input:disabled{opacity:.45}
+.automix-range-label>span{display:flex;justify-content:space-between;align-items:center}.automix-range-label b{color:#a6f6ef;font-variant-numeric:tabular-nums}.automix-range-label input{width:100%;accent-color:#76eee9}.automix-check{display:flex;align-items:center;gap:9px;color:#cbd4e4;font-size:10px;line-height:1.4}.automix-check input{width:15px;height:15px;flex:0 0 15px;accent-color:#53c9bf}
+html[data-theme="apple"] .automix-settings{border-color:#1f293720;background:#ffffff45;color:#18243a}html[data-theme="apple"] .automix-settings>p,html[data-theme="apple"] .automix-check,html[data-theme="apple"] .automix-mode-label{color:#536176}html[data-theme="apple"] .automix-heading span{color:#287d84}html[data-theme="apple"] .automix-heading .automix-state{border-color:#d7dce4;background:#f1f4f8;color:#536176}html[data-theme="apple"] .automix-heading .automix-state.is-on{border-color:#7ccbc4;background:#e3f5f3;color:#087f85}html[data-theme="apple"] .automix-range-label b{color:#227d83}html[data-theme="apple"] .automix-mode-label select{background:#f5f7fa;color:#202b3c;border-color:#cbd5e1}
+/* Identité du titre : contraste stable malgré les couleurs changeantes du plasma. */
+.now-playing__identity p{color:#f4f6fb;text-shadow:0 1px 8px rgba(0,0,0,.3);font-weight:550}
+.now-playing__identity div>span{color:rgba(241,245,249,.88);text-shadow:0 1px 8px rgba(0,0,0,.38)}
+html[data-theme="apple"] .now-playing :is(.now-playing__identity h1,.now-playing__identity p,.now-playing__identity span){color:#000!important;text-shadow:none!important}
+html[data-theme="apple"] .now-playing__identity p{font-weight:650}
+html[data-theme="apple"] .now-playing__identity div>span{font-weight:500}
+.now-playing__mix-button{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:43px;margin:2px 0 12px;border:1px solid rgba(166,246,239,.35);border-radius:14px;background:linear-gradient(115deg,rgba(68,208,195,.2),rgba(122,116,228,.16));color:#dffffb;font-size:13px;font-weight:700;letter-spacing:.01em;transition:transform .18s,background .18s,border-color .18s,opacity .18s}
+.now-playing__mix-button:not(:disabled):hover{transform:translateY(-1px);border-color:rgba(166,246,239,.65);background:linear-gradient(115deg,rgba(68,208,195,.3),rgba(122,116,228,.24))}
+.now-playing__mix-button:disabled{opacity:.4;cursor:not-allowed}
+html[data-theme="apple"] .now-playing__mix-button{border-color:#66aaa94d;background:linear-gradient(115deg,#d9f4f0,#e9e5fa);color:#162433}
+html[data-theme="apple"] .now-playing__mix-button:not(:disabled):hover{background:linear-gradient(115deg,#c7ece6,#ddd7f4)}
+.now-playing__appearance>header{margin-bottom:10px!important}
+.appearance-presets{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.appearance-presets>button{gap:5px;padding:5px 3px;font-size:10px}
+.appearance-swatch{width:36px;height:36px}
+.appearance-divider{margin:9px 0}
+.automix-settings{gap:8px;padding:10px}
+.automix-settings>p{font-size:10px}
 
 /* Le mode verre reprend les couleurs du plasma en gardant le contraste des commandes. */
 body.reader-glass-mode :is(.audiva-topbar,.audiva-sidebar,.audiva-mobile-nav,.audiva-mobile-menu,.audiva-player,.audiva-glass,.audiva-queue,.now-playing__panel,.now-playing__appearance,.now-playing__tools){
@@ -603,3 +660,102 @@ html[data-theme="apple"] body.reader-glass-mode .audiva-music-card{background:li
 html[data-theme="apple"] body.reader-glass-mode :is(.audiva-topbar,.audiva-sidebar,.audiva-mobile-nav,.audiva-mobile-menu) .audiva-nav-active,
 html[data-theme="apple"] body.reader-glass-mode .audiva-mobile-link--active{background:linear-gradient(125deg,rgba(var(--reader-glass-primary,82 117 190),.34),rgba(var(--reader-glass-secondary,101 78 153),.28)),rgba(255,255,255,.20)!important;border:1px solid rgba(var(--reader-glass-primary,82 117 190),.38);color:#18243a!important}
 html[data-theme="apple"] body.reader-glass-mode .audiva-topbar form label{background:rgba(var(--reader-glass-primary,82 117 190),.13)!important;border-color:rgba(var(--reader-glass-primary,82 117 190),.28)!important}
+
+/* Le dialogue de partage des statistiques est rendu à l’intérieur de la bannière. */
+html[data-theme="apple"] body .music-intelligence .mi-header dialog.mi-share-dialog {
+  border-color: #d8dee8 !important;
+  background: linear-gradient(155deg,#fff 0%,#f7f8fa 72%,#eef1f5 100%) !important;
+  color: #202630 !important;
+}
+html[data-theme="apple"] body .music-intelligence .mi-header dialog.mi-share-dialog :is(h2,h3,p,span,small,label,strong) { color: #303a49 !important; }
+html[data-theme="apple"] body .music-intelligence .mi-header dialog.mi-share-dialog>header>div>span:first-child,
+html[data-theme="apple"] body .music-intelligence .mi-header dialog.mi-share-dialog [role="status"] { color: #087f85 !important; }
+html[data-theme="apple"] body .music-intelligence .mi-header dialog.mi-share-dialog>header p,
+html[data-theme="apple"] body .music-intelligence .mi-header dialog.mi-share-dialog .mi-share-copy { color: #667182 !important; }
+html[data-theme="apple"] body .music-intelligence .mi-header dialog.mi-share-dialog .mi-share-custom-color input[type="color"] {
+  flex: 0 0 40px !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 34px !important;
+  padding: 3px !important;
+  border: 1px solid #d2d9e2 !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color-scheme: light !important;
+}
+html[data-theme="apple"] body .music-intelligence .mi-header dialog.mi-share-dialog .mi-share-custom-color {
+  display: inline-flex !important;
+  width: max-content !important;
+  justify-content: flex-start !important;
+  gap: 9px !important;
+  padding: 5px 8px !important;
+  border: 1px solid #dce1e8 !important;
+  border-radius: 12px !important;
+  background: #f0f2f5 !important;
+  color: #465264 !important;
+}
+html[data-theme="apple"] body .music-intelligence .mi-header dialog.mi-share-dialog .mi-share-source { color: #087f85 !important; }
+
+/* Enforce a quiet focus treatment for all text entry controls app-wide. */
+html body input:focus,
+html body input:focus-visible,
+html body textarea:focus,
+html body textarea:focus-visible,
+html body select:focus,
+html body select:focus-visible,
+html body [contenteditable="true"]:focus,
+html body [contenteditable="true"]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+.audiva-player-restore { touch-action: none; cursor: grab; }
+.audiva-player-restore:active { cursor: grabbing; }
+
+.audiva-spotify-devices-button{display:inline-grid;width:34px;height:34px;flex:0 0 34px;place-items:center;border:1px solid #ffffff12;border-radius:50%;background:transparent;color:#8c8d99;transition:color .2s,border-color .2s,background .2s,transform .2s}
+.audiva-spotify-devices-button:hover{border-color:#76eee94d;background:#76eee90c;color:#a6f6ef}
+.audiva-spotify-devices-button:active{transform:scale(.94)}
+.audiva-spotify-devices-button--mobile{width:32px;height:32px;flex-basis:32px}
+.audiva-player--apple .audiva-spotify-devices-button{border-color:#dce1e8;color:#647183}
+.audiva-player--apple .audiva-spotify-devices-button:hover{border-color:#9bcfcb;background:#edf8f7;color:#087f85}
+.spotify-devices-overlay{position:fixed;z-index:150;inset:0;background:transparent}
+.spotify-devices-dialog{position:fixed;width:min(360px,calc(100vw - 24px));max-height:min(460px,72dvh);overflow:auto;border:1px solid #ffffff1c;background:linear-gradient(150deg,#111c30,#09111f);color:#eef4ff;box-shadow:0 18px 52px #0008;animation:spotify-device-pop-in .16s ease-out}
+@keyframes spotify-device-pop-in{from{opacity:0;transform:translateY(5px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.spotify-devices-header{position:relative;padding:13px 16px 10px;border-bottom:1px solid #ffffff12}
+.spotify-devices-brand{display:flex;align-items:center;gap:8px;color:#a6f6ef;font-size:10px;font-weight:800;letter-spacing:.15em}
+.spotify-devices-close{position:absolute;top:10px;right:12px;display:grid;width:30px;height:30px;place-items:center;color:#c9d3e8}
+.spotify-devices-header h2{margin-top:8px;font-size:18px;font-weight:750;letter-spacing:-.035em}
+.spotify-devices-header>p{margin-top:3px;padding-right:10px;color:#9baac2;font-size:10px;line-height:1.45}
+.spotify-devices-content{max-height:min(270px,42dvh);overflow:auto;padding:7px 9px}
+.spotify-devices-list{display:grid;gap:5px;margin:0;padding:0;list-style:none}
+.spotify-devices-list li>button{display:flex;width:100%;min-height:52px;align-items:center;gap:10px;padding:7px 8px;text-align:left;color:#edf3ff;transition:background .16s}
+.spotify-devices-list li>button:hover:not(:disabled),.spotify-devices-list li>button[aria-current="true"]{background:#ffffff0a}
+.spotify-devices-list li>button:disabled{cursor:not-allowed;opacity:.48}
+.spotify-device-icon{display:grid;width:34px;height:34px;flex:0 0 34px;place-items:center;background:#76eee912;color:#a6f6ef}
+.spotify-device-copy{display:grid;min-width:0;flex:1;gap:4px}
+.spotify-device-copy b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:700}
+.spotify-device-copy small{color:#91a0bd;font-size:10px;text-transform:capitalize}
+.spotify-device-status{flex:0 0 auto;color:#9aa8be;font-size:10px;font-weight:700}
+.spotify-device-status.is-active{color:#76eee9}
+.spotify-devices-empty{padding:16px 10px;color:#a8b5cb;font-size:11px;line-height:1.6;text-align:center}
+.spotify-devices-error{padding:10px;color:#ffd2d9;font-size:11px;line-height:1.5}
+.spotify-devices-error button{display:block;margin-top:8px;color:#a6f6ef;font-weight:750;text-decoration:underline;text-underline-offset:3px}
+.spotify-devices-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-top:1px solid #ffffff12}
+.spotify-devices-footer p{max-width:205px;color:#8291a9;font-size:9px;line-height:1.45}
+.spotify-devices-footer button{flex:0 0 auto;padding:7px 9px;border:1px solid #76eee933;color:#a6f6ef;font-size:9px;font-weight:750}
+.spotify-devices-footer button:disabled{opacity:.5}
+html[data-theme="apple"] .spotify-devices-overlay{background:transparent}
+html[data-theme="apple"] .spotify-devices-dialog{border-color:#d7dde6;background:#fbfcfd;color:#202630;box-shadow:0 30px 100px #17223533}
+html[data-theme="apple"] .spotify-devices-header,html[data-theme="apple"] .spotify-devices-footer{border-color:#e2e6ec}
+html[data-theme="apple"] .spotify-devices-brand{color:#087f85}
+html[data-theme="apple"] .spotify-devices-close{color:#526174}
+html[data-theme="apple"] .spotify-devices-header>p,html[data-theme="apple"] .spotify-device-copy small,html[data-theme="apple"] .spotify-device-status,html[data-theme="apple"] .spotify-devices-empty,html[data-theme="apple"] .spotify-devices-footer p{color:#647183}
+html[data-theme="apple"] .spotify-devices-list li>button{color:#202630}
+html[data-theme="apple"] .spotify-devices-list li>button:hover:not(:disabled),html[data-theme="apple"] .spotify-devices-list li>button[aria-current="true"]{background:#f0f3f6}
+html[data-theme="apple"] .spotify-device-icon{background:#e9f5f4;color:#087f85}
+html[data-theme="apple"] .spotify-device-status.is-active,html[data-theme="apple"] .spotify-devices-footer button,html[data-theme="apple"] .spotify-devices-error button{color:#087f85}
+html[data-theme="apple"] .spotify-devices-footer button{border-color:#a8d3cf}
+html[data-theme="apple"] .spotify-devices-error{color:#9e263b}
+@media(max-width:639px){.spotify-devices-dialog{max-height:76dvh}.spotify-devices-content{max-height:48dvh}.spotify-devices-footer p{max-width:190px}}

@@ -76,6 +76,101 @@ html[data-theme="apple"] :is(.hero-accueil,.db-hero,.mi-header,.artist-profile-h
   color: #f8fafc !important;
 }
 
+/* Give the landing splash the same cool, luminous finish as the Apple plasma. */
+html[data-theme="apple"] .landing-screen { background: #111522 !important; }
+html[data-theme="apple"] .landing-background-video {
+  filter: brightness(.68) saturate(1.04) contrast(1.04) hue-rotate(8deg);
+}
+html[data-theme="apple"] .landing-mobile-image {
+  filter: brightness(.70) saturate(1.08) contrast(1.03) hue-rotate(8deg);
+}
+html[data-theme="apple"] .landing-video-tint {
+  background: linear-gradient(112deg,rgba(19,23,39,.78) 0%,rgba(54,58,91,.40) 48%,rgba(11,23,34,.76) 100%),radial-gradient(ellipse at 50% 42%,rgba(161,177,231,.18),transparent 58%);
+}
+html[data-theme="apple"] .landing-live-dot { background: #a6e7df; box-shadow: 0 0 12px #a6e7dfaa; }
+html[data-theme="apple"] .landing-eyebrow { color: #c8c0f5 !important; }
+html[data-theme="apple"] .landing-title span { color: #c9c5f3 !important; }
+html[data-theme="apple"] .landing-equalizer-frame {
+  border-color: rgba(208,220,250,.3);
+  background: linear-gradient(135deg,rgba(255,255,255,.14),rgba(202,213,241,.07));
+  box-shadow: inset 0 1px rgba(255,255,255,.2),0 12px 34px rgba(7,12,24,.2);
+  backdrop-filter: blur(18px) saturate(145%);
+}
+html[data-theme="apple"] .landing-equalizer i { background: linear-gradient(180deg,#c7c5f3,#a6e7df); }
+html[data-theme="apple"] .landing-enter {
+  border-color: rgba(226,231,249,.35);
+  background: rgba(255,255,255,.12);
+  color: #fff !important;
+  backdrop-filter: blur(16px) saturate(140%);
+}
+html[data-theme="apple"] .landing-enter:hover { border-color: #c5c1f0aa; background: rgba(221,219,246,.2); }
+html[data-theme="apple"] .landing-enter svg { color: #c8c0f5 !important; }
+html[data-theme="apple"] .landing-theme-toggle { border-color: rgba(230,234,248,.48); background: rgba(255,255,255,.16); color: #e2def9; }
+html[data-theme="apple"] .landing-theme-toggle:hover { background: rgba(225,222,247,.26); color: #fff; }
+
+/* Authentication pages use a light Apple surface on the form side and keep the image copy bright. */
+.auth-brand-mark--apple { display: none; }
+html[data-theme="apple"] .audiva-auth { background: #f4f5f7 !important; color: #18202b !important; }
+html[data-theme="apple"] .audiva-auth .auth-brand-mark--audiva { display: none !important; }
+html[data-theme="apple"] .audiva-auth .auth-brand-mark--apple { display: block !important; }
+html[data-theme="apple"] .audiva-auth > section:first-child {
+  border-right: 1px solid rgba(255,255,255,.86);
+  background: linear-gradient(145deg,#fbfbfc 0%,#f2f3f6 58%,#e9edf3 100%) !important;
+  color: #18202b !important;
+}
+html[data-theme="apple"] .audiva-auth > section:first-child :is(h1,h2) { color: #171c25 !important; }
+html[data-theme="apple"] .audiva-auth > section:first-child p { color: #5d6674 !important; }
+html[data-theme="apple"] .audiva-auth > section:first-child p[class*="uppercase"] { color: #65769a !important; }
+html[data-theme="apple"] .audiva-auth > section:first-child label,
+html[data-theme="apple"] .audiva-auth > section:first-child label>span { color: #303947 !important; }
+html[data-theme="apple"] .audiva-auth .auth-ambient { color: #6079ad; opacity: .72; }
+html[data-theme="apple"] .audiva-auth .auth-float { filter: drop-shadow(0 3px 9px rgba(70,94,145,.12)); }
+html[data-theme="apple"] .audiva-auth input {
+  border-color: transparent transparent #c8ced8 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #171c25 !important;
+  box-shadow: none !important;
+}
+html[data-theme="apple"] .audiva-auth input::placeholder { color: #87909e !important; }
+html[data-theme="apple"] .audiva-auth form label>span:has(input) {
+  border-color: transparent transparent #c8ced8 !important;
+  background: transparent !important;
+  color: #667da9 !important;
+}
+html[data-theme="apple"] .audiva-auth form label>span:has(input):focus-within,
+html[data-theme="apple"] .audiva-auth input:focus { border-bottom-color: #16888d !important; outline: 0 !important; }
+html[data-theme="apple"] .audiva-auth :is(button[type="submit"],form>button) {
+  border-radius: 13px !important;
+  background: linear-gradient(135deg,#11858a,#1a9b9c) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px rgba(17,133,138,.18) !important;
+}
+html[data-theme="apple"] .audiva-auth a { color: #087f85 !important; }
+html[data-theme="apple"] .audiva-auth button:has(svg):not([type="submit"]) {
+  border-color: #d8dde5 !important;
+  background: rgba(255,255,255,.78) !important;
+  color: #273142 !important;
+}
+html[data-theme="apple"] .audiva-auth button:has(img[src*="spotify"]) {
+  border-color: #1ed760 !important;
+  background: #1ed760 !important;
+  color: #071523 !important;
+}
+html[data-theme="apple"] .audiva-auth :is([role="alert"],[role="status"]) {
+  border-color: #e7c4c8 !important;
+  background: #fff5f5 !important;
+  color: #7e3038 !important;
+}
+html[data-theme="apple"] .audiva-auth .auth-hero-image>div.absolute.inset-0 {
+  background: linear-gradient(180deg,rgba(10,15,24,.08) 0%,rgba(10,15,24,.10) 38%,rgba(10,15,24,.78) 100%) !important;
+}
+html[data-theme="apple"] .audiva-auth .auth-hero-copy :is(span,p) {
+  color: #f8fafc !important;
+  text-shadow: 0 1px 12px rgba(0,0,0,.2);
+}
+html[data-theme="apple"] .audiva-auth .auth-hero-copy span { color: #b7f1eb !important; }
+
 html[data-theme="apple"] :is(.audiva-topbar,.audiva-sidebar,.audiva-mobile-nav) {
   border-color: #dfe2e8 !important;
   background: rgb(255 255 255 / .92) !important;
@@ -258,13 +353,13 @@ html[data-theme="apple"] body :is(input,textarea,select,[contenteditable="true"]
   color-scheme: light;
 }
 html[data-theme="apple"] body :is(input,textarea,[contenteditable="true"])::placeholder { color: #727d8b !important; }
-html[data-theme="apple"] body :is(.hero-accueil,.db-hero,.mi-header,.artist-profile-hero,.landing-screen,.collection-banner,.audiva-bibliotheque>section:first-child,.audiva-amis>section:first-child,.audiva-favoris>div>section:first-child,.audiva-workspace>section:first-child,main:has(>section>img)>section:first-child) :is(h1,h2,h3,p,a,button,span,small,strong,em,label) {
+html[data-theme="apple"] body :is(.hero-accueil,.db-hero,.mi-header,.artist-profile-hero,.landing-screen,.collection-banner,.audiva-bibliotheque>section:first-child,.audiva-amis>section:first-child,.audiva-favoris>div>section:first-child,.audiva-workspace>section:first-child,main:not(.audiva-auth):has(>section>img)>section:first-child) :is(h1,h2,h3,p,a,button,span,small,strong,em,label) {
   color: #f8fafc !important;
 }
-html[data-theme="apple"] body :is(.hero-accueil,.db-hero,.mi-header,.artist-profile-hero,.landing-screen,.collection-banner,.audiva-bibliotheque>section:first-child,.audiva-amis>section:first-child,.audiva-favoris>div>section:first-child,.audiva-workspace>section:first-child,main:has(>section>img)>section:first-child) :is(button,a) {
+html[data-theme="apple"] body :is(.hero-accueil,.db-hero,.mi-header,.artist-profile-hero,.landing-screen,.collection-banner,.audiva-bibliotheque>section:first-child,.audiva-amis>section:first-child,.audiva-favoris>div>section:first-child,.audiva-workspace>section:first-child,main:not(.audiva-auth):has(>section>img)>section:first-child) :is(button,a) {
   border-color: #ffffff45;
 }
-html[data-theme="apple"] body :is(.audiva-bibliotheque>section:first-child,.audiva-amis>section:first-child,.audiva-favoris>div>section:first-child,.audiva-workspace>section:first-child,main:has(>section>img)>section:first-child) {
+html[data-theme="apple"] body :is(.audiva-bibliotheque>section:first-child,.audiva-amis>section:first-child,.audiva-favoris>div>section:first-child,.audiva-workspace>section:first-child,main:not(.audiva-auth):has(>section>img)>section:first-child) {
   background-color: #081122 !important;
 }
 
@@ -412,12 +507,12 @@ html[data-theme="apple"] .db-backdrop-tint {
   background: linear-gradient(90deg, rgb(13 18 28 / .16), rgb(13 18 28 / .25) 55%, rgb(13 18 28 / .43)), linear-gradient(0deg, rgb(13 18 28 / .36), transparent 70%) !important;
 }
 html[data-theme="apple"] .audiva-workspace>section:first-child>img,
-html[data-theme="apple"] main:has(>section>img)>section:first-child>img {
+html[data-theme="apple"] main:not(.audiva-auth):has(>section>img)>section:first-child>img {
   filter: none !important;
   opacity: .94 !important;
 }
 html[data-theme="apple"] .audiva-workspace>section:first-child>div.absolute,
-html[data-theme="apple"] main:has(>section>img)>section:first-child>div.absolute {
+html[data-theme="apple"] main:not(.audiva-auth):has(>section>img)>section:first-child>div.absolute {
   filter: saturate(.18) !important;
 }
 
@@ -564,6 +659,22 @@ html[data-theme="apple"] :is(.audiva-amis,.audiva-notifications) > section:first
 html[data-theme="apple"] .audiva-search-banner > div.absolute {
   background: linear-gradient(90deg,rgb(5 10 20 / .82),rgb(5 10 20 / .58) 54%,rgb(5 10 20 / .3)),linear-gradient(0deg,rgb(5 10 20 / .72),transparent 78%) !important;
 }
+html[data-theme="apple"] .audiva-search-explorer-label {
+  color: #fff !important;
+  background: rgb(7 15 28 / .88) !important;
+  border-color: rgb(220 235 255 / .48) !important;
+  text-shadow: 0 1px 8px rgb(0 0 0 / .5);
+}
+html[data-theme="apple"] .audiva-search-suggestions {
+  color: #111827 !important;
+  background: rgb(250 251 253 / .97) !important;
+  border-color: rgb(15 23 42 / .14) !important;
+  box-shadow: 0 18px 45px rgb(0 0 0 / .24) !important;
+  backdrop-filter: blur(22px);
+}
+html[data-theme="apple"] .audiva-search-suggestions button:hover { background: rgb(15 23 42 / .07) !important; }
+html[data-theme="apple"] .audiva-search-suggestions button :is(span,small) { color: #182230 !important; }
+html[data-theme="apple"] .audiva-search-suggestions button span span + span { color: #667085 !important; }
 html[data-theme="apple"] .hero-accueil__content > span {
   color: #f7fbff !important;
   background: rgb(5 14 28 / .78) !important;
@@ -1040,6 +1151,33 @@ html[data-theme="apple"] .music-intelligence .mi-calendar-detail {
   color: #344152 !important;
 }
 
+/* The listening recap share sheet follows the light Apple surface as well. */
+html[data-theme="apple"] .music-intelligence .mi-share-dialog {
+  border: 1px solid #dce1e8 !important;
+  background: linear-gradient(155deg, #ffffff 0%, #f7f8fa 72%, #eef1f5 100%) !important;
+  color: #202630 !important;
+  box-shadow: 0 30px 100px rgb(25 35 50 / .24) !important;
+}
+html[data-theme="apple"] .music-intelligence .mi-share-dialog::backdrop { background: rgb(22 29 39 / .42) !important; backdrop-filter: blur(18px); }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog>header :is(span,h2,p) { color: #202630 !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog>header span { color: #087f85 !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog>header p,
+html[data-theme="apple"] .music-intelligence .mi-share-dialog section :is(p,.mi-share-copy) { color: #667182 !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog section h3 { color: #252b34 !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog>header>button { border-color: #dce1e8 !important; background: #eef1f5 !important; color: #344152 !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog .mi-share-preview { border-color: #dce1e8 !important; background: #e9edf2 !important; box-shadow: 0 14px 34px rgb(25 35 50 / .12) !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog .mi-share-periods,
+html[data-theme="apple"] .music-intelligence .mi-share-dialog .mi-share-types button { border-color: #dce1e8 !important; background: #f0f2f5 !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog .mi-share-periods button,
+html[data-theme="apple"] .music-intelligence .mi-share-dialog .mi-share-types button { color: #3f4a59 !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog .mi-share-periods button[aria-pressed="true"],
+html[data-theme="apple"] .music-intelligence .mi-share-dialog .mi-share-types button[aria-pressed="true"] { border-color: #8acbc6 !important; background: #dff3f1 !important; color: #075e63 !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog .mi-share-custom-color { color: #465264 !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog .mi-share-custom-color input { border-color: #d2d9e2 !important; background: #fff !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog .mi-share-actions button { border-color: #d1d9e2 !important; background: #edf0f4 !important; color: #263244 !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog .mi-share-actions button:first-child { border-color: #172330 !important; background: #172330 !important; color: #fff !important; }
+html[data-theme="apple"] .music-intelligence .mi-share-dialog [role="status"] { color: #087f85 !important; }
+
 /* Light-theme treatment for album, playlist, artist and catalogue headers. */
 html[data-theme="apple"] body .audiva-collection .collection-banner {
   border-color: #e0e4ea !important;
@@ -1102,17 +1240,17 @@ html[data-theme="apple"] body .artist-profile .artist-profile-secondary {
   border-color: #d7dce4 !important;
   background: rgb(255 255 255 / .78) !important;
 }
-html[data-theme="apple"] body main:has(> section > img) > section:first-child {
+html[data-theme="apple"] body main:not(.audiva-auth):has(> section > img) > section:first-child {
   background-color: #edf0f4 !important;
 }
-html[data-theme="apple"] body main:has(> section > img) > section:first-child > div:first-of-type {
+html[data-theme="apple"] body main:not(.audiva-auth):has(> section > img) > section:first-child > div:first-of-type {
   background: linear-gradient(100deg,rgb(250 251 253 / .94),rgb(245 247 250 / .78) 60%,rgb(239 243 247 / .68)) !important;
 }
-html[data-theme="apple"] body main:has(> section > img) > section:first-child :is(h1,h2,h3,p,span,small,strong) {
+html[data-theme="apple"] body main:not(.audiva-auth):has(> section > img) > section:first-child :is(h1,h2,h3,p,span,small,strong) {
   color: #202630 !important;
   text-shadow: none !important;
 }
-html[data-theme="apple"] body main:has(> section > img) > section:first-child :is(button,a) {
+html[data-theme="apple"] body main:not(.audiva-auth):has(> section > img) > section:first-child :is(button,a) {
   border-color: #087f85 !important;
   background-color: #087f85 !important;
   color: #fff !important;
@@ -1263,3 +1401,222 @@ html[data-theme="apple"] .now-playing .now-playing__header .audiva-share-trigger
   color: #28313e !important;
 }
 html[data-theme="apple"] .now-playing .now-playing__header .audiva-share-trigger:hover { background: #edf8f7 !important; color: #087f85 !important; }
+
+/* Auth pages also contain a direct hero image; keep them out of generic image-banner rules. */
+html[data-theme="apple"] body .audiva-auth > section:first-child {
+  background: linear-gradient(145deg,#fcfcfd 0%,#f4f5f7 58%,#edf0f4 100%) !important;
+  color: #202630 !important;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child > .auth-ambient {
+  background: transparent !important;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child .relative.z-10 :is(h1,h2,p,label,span,a) {
+  color: #202630 !important;
+  text-shadow: none !important;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child .relative.z-10 p[class*="uppercase"] {
+  color: #65769a !important;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child .relative.z-10 :is(a,[class*="text-[#a6f6ef]"],[class*="text-[#9a37ff]"]) {
+  color: #087f85 !important;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child form label>span:has(input) {
+  border-color: transparent transparent #c8ced8 !important;
+  background: transparent !important;
+  color: #647da9 !important;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child input {
+  border-color: transparent transparent #c8ced8 !important;
+  background: transparent !important;
+  color: #171c25 !important;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child input::placeholder { color: #87909e !important; }
+html[data-theme="apple"] body .audiva-auth > section:first-child :is(button[type="submit"],form>button) {
+  border-color: #11858a !important;
+  background: #11858a !important;
+  color: #fff !important;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child button:has(svg):not([type="submit"]) {
+  border-color: #d8dde5 !important;
+  background: #fff !important;
+  color: #273142 !important;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child button:has(img[src*="spotify"]) {
+  border-color: #1ed760 !important;
+  background: #1ed760 !important;
+  color: #071523 !important;
+}
+html[data-theme="apple"] body .audiva-auth .auth-hero-copy :is(span,p) {
+  color: #f8fafc !important;
+  text-shadow: 0 1px 12px rgba(0,0,0,.24) !important;
+}
+html[data-theme="apple"] body .audiva-auth .auth-hero-copy span { color: #b7f1eb !important; }
+html[data-theme="apple"] body .audiva-auth .auth-float {
+  z-index: 1 !important;
+  display: block !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  opacity: .24 !important;
+  color: #42649c !important;
+  filter: drop-shadow(0 2px 5px rgba(57,83,132,.12)) !important;
+  box-shadow: none !important;
+}
+html[data-theme="apple"] body .audiva-auth .auth-float--two,
+html[data-theme="apple"] body .audiva-auth .auth-float--four { color: #238d98 !important; }
+html[data-theme="apple"] body .audiva-auth .auth-float--five,
+html[data-theme="apple"] body .audiva-auth .auth-float--eight { color: #8272be !important; }
+/* Auth pages use their own palette; keep their controls and music motifs clear. */
+html[data-theme="apple"] body .audiva-auth > section:first-child > .auth-ambient {
+  z-index: 1 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+}
+html[data-theme="apple"] body .audiva-auth .auth-float {
+  display: block !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  opacity: .24 !important;
+  color: #42649c !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 2px 5px rgba(57,83,132,.12)) !important;
+}
+html[data-theme="apple"] body .audiva-auth .auth-float svg { color: inherit !important; stroke: currentColor !important; opacity: 1 !important; }
+html[data-theme="apple"] body .audiva-auth .auth-float--two,
+html[data-theme="apple"] body .audiva-auth .auth-float--four { color: #087f85 !important; }
+html[data-theme="apple"] body .audiva-auth .auth-float--five,
+html[data-theme="apple"] body .audiva-auth .auth-float--eight { color: #6552a1 !important; }
+html[data-theme="apple"] body .audiva-auth > section:first-child .relative.z-10 a {
+  color: #006d73 !important;
+  font-weight: 650 !important;
+  text-decoration-color: currentColor !important;
+  text-underline-offset: 3px;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child .relative.z-10 a:hover { color: #034f55 !important; }
+html[data-theme="apple"] body .audiva-auth > section:first-child .relative.z-10 button:not([type="submit"]):not(:has(img[src*="spotify"])) {
+  border-color: #b9c4d2 !important;
+  background: #fff !important;
+  color: #202a39 !important;
+  box-shadow: 0 2px 7px rgba(35,48,68,.08) !important;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child .relative.z-10 button:not([type="submit"]):not(:has(img[src*="spotify"])) svg { color: #273d60 !important; stroke: currentColor !important; }
+html[data-theme="apple"] body .audiva-auth > section:first-child .relative.z-10 button[type="submit"] {
+  border: 1px solid #087f85 !important;
+  background: #087f85 !important;
+  color: #fff !important;
+  box-shadow: 0 5px 14px rgba(8,127,133,.22) !important;
+}
+html[data-theme="apple"] body .audiva-auth > section:first-child .relative.z-10 button[type="submit"]:disabled { opacity: .7 !important; }
+
+/* Playlist/catalogue headers keep the dominant cover color in Apple mode. */
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom {
+  border-color: color-mix(in srgb, rgb(var(--playlist-vibrant-rgb)) 44%, white) !important;
+  background-color: color-mix(in srgb, rgb(var(--playlist-vibrant-rgb)) 58%, white) !important;
+  background-image: linear-gradient(105deg,
+    color-mix(in srgb, rgb(var(--playlist-vibrant-rgb)) 68%, white) 0%,
+    color-mix(in srgb, rgb(var(--playlist-vibrant-rgb)) 58%, white) 56%,
+    color-mix(in srgb, rgb(var(--playlist-vibrant-rgb)) 47%, white) 100%) !important;
+}
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom > :is(.collection-banner-image,.collection-banner-color-fallback) {
+  filter: blur(24px) saturate(1.08) !important;
+  opacity: .16 !important;
+}
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom > .collection-banner-shade {
+  background: linear-gradient(100deg, rgb(255 255 255 / .08), rgb(255 255 255 / .26) 62%, rgb(255 255 255 / .34)) !important;
+}
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom .collection-heading :is(h1,p,small,b),
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom .collection-heading > span {
+  color: #202630 !important;
+  text-shadow: none !important;
+}
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom .collection-heading > span { color: #345d7a !important; }
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom .collection-heading p { color: #46566a !important; }
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom .collection-heading small { color: #536176 !important; }
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom .collection-banner-settings button {
+  border: 1px solid rgb(255 255 255 / .94) !important;
+  background: rgb(255 255 255 / .88) !important;
+  color: #263449 !important;
+  box-shadow: 0 4px 16px rgb(28 38 54 / .13) !important;
+  backdrop-filter: blur(12px);
+}
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom .collection-banner-settings button:hover {
+  border-color: #087f85 !important;
+  background: #fff !important;
+  color: #087f85 !important;
+}
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom .collection-banner-settings button:disabled { opacity: .62 !important; }
+html[data-theme="apple"] body .audiva-collection .collection-banner--custom .collection-banner-settings svg { color: currentColor !important; }
+html[data-theme="apple"] body .audiva-collection details > div {
+  z-index: 35 !important;
+  border: 1px solid #d8dee8 !important;
+  background: rgb(255 255 255 / .98) !important;
+  color: #263449 !important;
+  box-shadow: 0 14px 38px rgb(23 35 53 / .2) !important;
+  backdrop-filter: blur(16px);
+}
+html[data-theme="apple"] body .audiva-collection details[open] { z-index: 36 !important; }
+html[data-theme="apple"] body .audiva-collection details > div button {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: transparent !important;
+  color: #263449 !important;
+  text-align: left !important;
+}
+html[data-theme="apple"] body .audiva-collection details > div button:hover,
+html[data-theme="apple"] body .audiva-collection details > div button:focus-visible {
+  background: #e8f5f4 !important;
+  color: #087f85 !important;
+}
+html[data-theme="apple"] body .audiva-collection details > div button svg { flex: 0 0 auto; color: currentColor !important; }
+
+html[data-theme="apple"] body .audiva-collection .collection-toast{border-color:#c9d4e2!important;background:rgb(255 255 255 / .96)!important;color:#202630!important;box-shadow:0 14px 38px rgb(27 40 60 / .18)!important;backdrop-filter:blur(20px)}
+html[data-theme="apple"] body .audiva-collection .collection-toast-message{color:#202630!important}
+html[data-theme="apple"] body .audiva-collection .collection-toast-icon{background:#e0f5f2!important;color:#087f85!important}
+html[data-theme="apple"] body .audiva-collection .collection-toast>button{border:0!important;background:#edf0f4!important;color:#46566a!important}
+html[data-theme="apple"] body .audiva-collection .collection-toast>button:hover{background:#dcefeb!important;color:#087f85!important}
+
+/* Lyrics overlay and synchronized text stay light and readable in Apple theme. */
+html[data-theme="apple"] body .audiva-lyrics-overlay{background:#f4f5f7!important;color:#202630!important}
+html[data-theme="apple"] body .audiva-lyrics-overlay-backdrop{display:none!important}
+html[data-theme="apple"] body .audiva-lyrics-overlay-main{background:linear-gradient(180deg,#f8f9fb,#f2f4f7)!important}
+html[data-theme="apple"] body .audiva-lyrics-overlay-side{border-color:#dfe3e9!important;background:#fff!important;color:#202630!important}
+html[data-theme="apple"] body .audiva-lyrics-overlay :is(.text-white,.text-\[\#eff4ff\],.text-\[\#c3d0e8\],.text-\[\#aebbd7\]){color:#202630!important}
+html[data-theme="apple"] body .audiva-lyrics-overlay :is(.text-\[\#a6f6ef\],.text-\[\#76eee9\]){color:#087f85!important}
+html[data-theme="apple"] body .audiva-lyrics-overlay .border-white\/10,
+html[data-theme="apple"] body .audiva-lyrics-overlay .border-white\/\[\.08\]{border-color:#dfe3e9!important}
+html[data-theme="apple"] body .audiva-lyrics-overlay .bg-\[\#07101e\]{background:#fff!important}
+html[data-theme="apple"] body .audiva-lyrics-panel{color:#202630!important}
+html[data-theme="apple"] body .audiva-lyrics-panel>header{border-bottom:1px solid #e1e5eb;color:#202630!important}
+html[data-theme="apple"] body .audiva-lyrics-panel>header>span{color:#384454!important}
+html[data-theme="apple"] body .audiva-lyrics-panel small{color:#6b7583!important}
+html[data-theme="apple"] body .audiva-lyrics-track strong{color:#202630!important}
+html[data-theme="apple"] body .audiva-lyrics-track span{color:#657181!important}
+html[data-theme="apple"] body .audiva-lyrics-scroll{scrollbar-color:#aeb8c5 transparent}
+html[data-theme="apple"] body .audiva-lyrics-scroll>button{color:#737e8c!important}
+html[data-theme="apple"] body .audiva-lyrics-scroll>button:hover{color:#354354!important}
+html[data-theme="apple"] body .audiva-lyrics-scroll>button.is-current{color:#5d6876!important;text-shadow:none!important;font-weight:700!important}
+html[data-theme="apple"] body .audiva-lyrics-plain{color:#343f4e!important}
+html[data-theme="apple"] body .audiva-lyrics-empty,
+html[data-theme="apple"] body .audiva-lyrics-error{color:#667383!important}
+html[data-theme="apple"] body .audiva-lyrics-panel>footer{border-color:#e0e4ea!important}
+html[data-theme="apple"] body .audiva-lyrics-panel>footer :is(button,label),
+html[data-theme="apple"] body .audiva-lyrics-search>button{border-color:#d7dde5!important;background:#fff!important;color:#364354!important}
+html[data-theme="apple"] body .audiva-lyrics-panel>footer :is(button,label):hover,
+html[data-theme="apple"] body .audiva-lyrics-search>button:hover{border-color:#a8d3cf!important;background:#edf7f6!important;color:#087f85!important}
+html[data-theme="apple"] body .audiva-lyrics-translate{border-color:#d7dde5!important;background:#fff!important;color:#087f85!important}
+html[data-theme="apple"] body .audiva-lyrics-translate:hover:not(:disabled){background:#edf7f6!important}
+html[data-theme="apple"] body .audiva-lyrics-search input{border:0!important;border-bottom:1px solid #aeb8c5!important;border-radius:0!important;background:transparent!important;color:#202630!important;box-shadow:none!important}
+html[data-theme="apple"] body .audiva-lyrics-search input::placeholder{color:#8792a0!important}
+html[data-theme="apple"] body .audiva-lyrics-search>div{border:1px solid #e0e4ea;background:#fff}
+html[data-theme="apple"] body .audiva-lyrics-search>div button{border-color:#e7eaf0!important;color:#354151!important}
+html[data-theme="apple"] body .audiva-lyrics-search>div button:hover{background:#f2f5f7!important}
+html[data-theme="apple"] body .audiva-lyrics-search>div button small{color:#6b7583!important}
+html[data-theme="apple"] .audiva-player--apple .audiva-player-inline-tool{color:#596575!important}
+html[data-theme="apple"] .audiva-player--apple .audiva-player-inline-tool[aria-pressed="true"],
+html[data-theme="apple"] .audiva-player--apple .audiva-player-inline-tool[aria-expanded="true"]{color:#087f85!important}

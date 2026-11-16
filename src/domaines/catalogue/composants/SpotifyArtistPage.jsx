@@ -7,7 +7,7 @@ import { Album01Icon, ArrowLeft01Icon, PlayIcon } from "@hugeicons/core-free-ico
 import { PochetteImage } from "@/composants/ui/PochetteImage";
 import ArtistBiography from "./ArtistBiography";
 import { canonical } from "@/domaines/statistiques/services/history";
-import { spotifyItem, spotifyRequest } from "@/domaines/statistiques/services/spotify";
+import { spotifyItem, spotifyRequest, spotifyRequestAll } from "@/domaines/statistiques/services/spotify";
 import { useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
 
 const duration = (seconds = 0) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
@@ -29,8 +29,7 @@ export default function SpotifyArtistPage({ artistId, artistName = "", libraryTr
       }
       const results = await Promise.allSettled([
         spotifyRequest(`artists/${encodeURIComponent(resolvedId)}`, { signal: controller.signal }),
-        spotifyRequest(`artists/${encodeURIComponent(resolvedId)}/top-tracks?market=from_token`, { signal: controller.signal }),
-        spotifyRequest(`artists/${encodeURIComponent(resolvedId)}/albums?include_groups=album,single,compilation&limit=50&market=from_token`, { signal: controller.signal }),
+        spotifyRequestAll(`artists/${encodeURIComponent(resolvedId)}/albums?include_groups=album,single,compilation&limit=50&market=from_token`, { signal: controller.signal }),
       ]);
       if (controller.signal.aborted) return;
       const artistResult = results[0];
@@ -38,9 +37,17 @@ export default function SpotifyArtistPage({ artistId, artistName = "", libraryTr
         setState({ loading: false, artist: null, tracks: [], albums: [], error: artistResult.reason?.message || "Profil artiste indisponible." });
         return;
       }
-      const tracks = results[1].status === "fulfilled" ? (results[1].value.tracks || []).map(track => spotifyItem(track)) : [];
-      const albums = results[2].status === "fulfilled" ? [...new Map((results[2].value.items || []).filter(Boolean).map(album => [album.id, { ...spotifyItem(album, "albums"), trackCount: album.total_tracks, releaseDate: album.release_date, albumType: album.album_type }])).values()] : [];
-      setState({ loading: false, artist: artistResult.value, tracks, albums, error: results.slice(1).some(result => result.status === "rejected") ? "Certaines listes Spotify sont indisponibles." : "" });
+      let tracks = [];
+      let trackError = false;
+      try {
+        const search = await spotifyRequest(`search?${new URLSearchParams({ q: `artist:${artistResult.value.name}`, type: "track", limit: "10" })}`, { signal: controller.signal });
+        tracks = (search.tracks?.items || []).filter(track => track.artists?.some(entry => canonical(entry.name) === canonical(artistResult.value.name))).map(track => spotifyItem(track));
+      } catch {
+        if (controller.signal.aborted) return;
+        trackError = true;
+      }
+      const albums = results[1].status === "fulfilled" ? [...new Map((results[1].value.items || []).filter(Boolean).map(album => [album.id, { ...spotifyItem(album, "albums"), trackCount: album.total_tracks, releaseDate: album.release_date, albumType: album.album_type }])).values()] : [];
+      setState({ loading: false, artist: artistResult.value, tracks, albums, error: trackError || results[1].status === "rejected" ? "Certaines listes Spotify sont indisponibles." : "" });
     };
     load().catch(error => { if (!controller.signal.aborted) setState({ loading: false, artist: null, tracks: [], albums: [], error: error.message || "Profil artiste indisponible." }); });
     return () => controller.abort();
@@ -76,22 +83,22 @@ export default function SpotifyArtistPage({ artistId, artistName = "", libraryTr
   }
 
   const artist = state.artist;
-  const popularTracks = state.tracks;
+  const artistTracks = state.tracks;
   return <main className="artist-profile">
     <Link className="artist-profile-back" href="/decouverte"><HugeiconsIcon icon={ArrowLeft01Icon} size={17} /> Retour à Découverte</Link>
     <header className="artist-profile-hero">
       <div className="artist-profile-portrait-wrap"><PochetteImage unoptimized src={artist.images?.[0]?.url || libraryTracks[0]?.cover || "/placeholders/audio-cover.svg"} alt={`Portrait de ${artist.name}`} width={260} height={260} className="artist-profile-portrait" /></div>
-      <div className="artist-profile-hero-copy"><span className="artist-profile-kicker">ARTISTE · FICHE AUDIVA</span><h1>{artist.name}</h1><p className="artist-profile-subtitle">Biographie, morceaux populaires et discographie réunis dans votre espace d’écoute.</p>
+      <div className="artist-profile-hero-copy"><span className="artist-profile-kicker">ARTISTE · FICHE AUDIVA</span><h1>{artist.name}</h1><p className="artist-profile-subtitle">Biographie, titres disponibles et discographie réunis dans votre espace d’écoute.</p>
         {artist.genres?.length > 0 && <div className="artist-profile-genres" aria-label="Genres de l’artiste">{artist.genres.slice(0, 6).map(genre => <span key={genre}>{genre}</span>)}</div>}
-        <div className="artist-profile-metrics"><div><strong>{artist.followers?.total > 0 ? new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 }).format(artist.followers.total) : "—"}</strong><span>Abonnés</span></div><div><strong>{popularTracks.length}</strong><span>Titres populaires</span></div><div><strong>{state.albums.length}</strong><span>Albums & singles</span></div></div>
-        <div className="artist-profile-hero-actions"><button className="artist-profile-primary" type="button" disabled={!popularTracks.length} onClick={() => play(popularTracks[0], popularTracks, artist.name)}><HugeiconsIcon icon={PlayIcon} size={17} fill="currentColor" />Écouter dans Audiva</button><a className="artist-profile-secondary" href="#artist-discography"><HugeiconsIcon icon={Album01Icon} size={17} />Voir la discographie</a></div>
+        <div className="artist-profile-metrics"><div><strong>{artist.followers?.total > 0 ? new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 }).format(artist.followers.total) : "—"}</strong><span>Abonnés</span></div><div><strong>{artistTracks.length}</strong><span>Titres trouvés</span></div><div><strong>{state.albums.length}</strong><span>Albums & singles</span></div></div>
+        <div className="artist-profile-hero-actions"><button className="artist-profile-primary" type="button" disabled={!artistTracks.length} onClick={() => play(artistTracks[0], artistTracks, artist.name)}><HugeiconsIcon icon={PlayIcon} size={17} fill="currentColor" />Écouter dans Audiva</button><a className="artist-profile-secondary" href="#artist-discography"><HugeiconsIcon icon={Album01Icon} size={17} />Voir la discographie</a></div>
       </div>
     </header>
 
     {state.error && <p className="artist-profile-notice" role="status">{state.error} Les autres sections restent disponibles.</p>}
-    <nav className="artist-profile-nav" aria-label="Sections de la fiche artiste"><a href="#artist-biography">Biographie</a><a href="#artist-tracks">Morceaux populaires</a><a href="#artist-discography">Discographie</a>{libraryTracks.length > 0 && <a href="#artist-library">Votre bibliothèque</a>}</nav>
+    <nav className="artist-profile-nav" aria-label="Sections de la fiche artiste"><a href="#artist-biography">Biographie</a><a href="#artist-tracks">Titres trouvés</a><a href="#artist-discography">Discographie</a>{libraryTracks.length > 0 && <a href="#artist-library">Votre bibliothèque</a>}</nav>
     <section id="artist-biography"><ArtistBiography artist={artist.name} /></section>
-    <ArtistTracks tracks={popularTracks} artistName={artist.name} play={track => play(track, popularTracks, artist.name)} heading="Morceaux populaires" eyebrow="À ÉCOUTER DANS AUDIVA" empty="Aucun titre populaire n’est disponible pour ce profil." id="artist-tracks" />
+    <ArtistTracks tracks={artistTracks} artistName={artist.name} play={track => play(track, artistTracks, artist.name)} heading="Titres trouvés" eyebrow="CATALOGUE SPOTIFY" empty="Aucun morceau Spotify disponible pour cet artiste." id="artist-tracks" />
     <section className="artist-profile-section" id="artist-discography"><header><div><span>ALBUMS, SINGLES ET COMPILATIONS</span><h2>Discographie</h2><p>Ouvrez une collection pour parcourir ses titres dans Audiva.</p></div><HugeiconsIcon icon={Album01Icon} size={22} /></header>{state.albums.length ? <div className="artist-profile-albums">{state.albums.map(album => <Link className="artist-profile-album" href={`/albums/${encodeURIComponent(`spotify:${album.providerId}`)}`} key={album.id}><PochetteImage unoptimized src={album.cover || "/placeholders/audio-cover.svg"} alt={`Pochette de ${album.title}`} width={200} height={200} /><span className="artist-profile-album-type">{album.albumType === "single" ? "Single" : album.albumType === "compilation" ? "Compilation" : "Album"}</span><strong>{album.title}</strong><small>{album.releaseDate?.slice(0, 4) || "Année inconnue"} · {album.trackCount || "—"} titres</small></Link>)}</div> : <p className="artist-profile-empty">Aucun album disponible pour le moment.</p>}</section>
     {libraryTracks.length > 0 && <ArtistTracks tracks={libraryTracks} artistName={artist.name} play={track => play(track, libraryTracks, artist.name)} heading={`Vos titres de ${artist.name}`} eyebrow="FICHIERS IMPORTÉS SUR CET APPAREIL" empty="Aucun titre importé." id="artist-library" />}
     <footer className="artist-profile-attribution">Les informations de catalogue et la discographie proviennent de Spotify. La lecture s’effectue dans le lecteur Audiva.</footer>

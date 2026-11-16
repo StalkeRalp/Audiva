@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon, CheckmarkCircle02Icon, HeadphonesIcon, MusicNote01Icon, Shield01Icon } from "@hugeicons/core-free-icons";
 import AuthAmbient from "@/domaines/authentification/composants/AuthAmbient";
+import { AuthBrand } from "@/domaines/authentification/composants/AuthBrand";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/services/supabase/client";
 import { authorizeSpotify, hasSpotifyDataConsent, hasSpotifySession, saveSpotifyDataConsent, spotifyRequest, storeSpotifyProviderSession, spotifyOAuthScopes } from "@/domaines/statistiques/services/spotify";
 
@@ -114,7 +115,7 @@ export default function SpotifyOnboardingPage() {
     <section className="relative flex h-dvh items-center justify-center overflow-hidden bg-[#060b18] px-5 py-5 sm:px-10 lg:px-14 xl:px-20">
       <AuthAmbient />
       <div className="relative z-10 w-full max-w-[470px]">
-        <Image src="/logoAudiva4png" alt="Audiva" width={1254} height={1254} priority className="auth-brand-mark mx-auto mb-4 h-auto w-36 sm:mx-0 sm:w-40" />
+        <AuthBrand className="mx-auto mb-4 h-auto w-36 sm:mx-0 sm:w-40" />
         <p className="text-[10px] font-semibold uppercase tracking-[.28em] text-[#8ba2bb]">VOTRE MUSIQUE, DANS AUDIVA</p>
         {stage === "checking" ? <><h1 className="mt-5 text-3xl font-bold">Préparation de votre espace…</h1><p className="mt-3 text-sm text-[#aebbd0]">Nous vérifions votre connexion Spotify.</p></> : stage === "connect" ? <>
           <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">Retrouvez votre Spotify dans Audiva.</h1>

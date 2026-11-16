@@ -11,6 +11,17 @@ import { usePlaylistsStore } from "@/domaines/playlists/stores/playlistsStore";
 import { useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
 import { useIntelligenceStore } from "@/domaines/statistiques/stores/intelligenceStore";
 import { storeSpotifyProviderSession } from "@/domaines/statistiques/services/spotify";
+import { isEmailVerified } from "@/domaines/authentification/services/emailVerification";
+
+function sessionUser(session) {
+  return isEmailVerified(session?.user) ? session.user : null;
+}
+
+function discardUnverifiedSession(client, session) {
+  if (session?.user && !isEmailVerified(session.user)) {
+    queueMicrotask(() => client.auth.signOut({ scope: "local" }).catch(() => {}));
+  }
+}
 
 export default function AuthProvider({ children }) {
   const setSession = useAuthStore(state => state.setSession);
@@ -37,7 +48,9 @@ export default function AuthProvider({ children }) {
           setSession(currentUser, false, currentUser ? "ready" : "session-error");
           return;
         }
-        setSession(data.session?.user || null, false, "ready");
+        const verifiedUser = sessionUser(data.session);
+        discardUnverifiedSession(client, data.session);
+        setSession(verifiedUser, false, "ready");
       } catch {
         if (!active) return;
         const currentUser = useAuthStore.getState().user;
@@ -51,7 +64,11 @@ export default function AuthProvider({ children }) {
         if (error) {
           const currentUser = useAuthStore.getState().user;
           setSession(currentUser, false, currentUser ? "ready" : "session-error");
-        } else setSession(data.session?.user || null, false, "ready");
+        } else {
+          const verifiedUser = sessionUser(data.session);
+          discardUnverifiedSession(client, data.session);
+          setSession(verifiedUser, false, "ready");
+        }
       }
     }).catch(() => { if (active) setSession(useAuthStore.getState().user, false, "session-error"); });
     const stopRefreshOffline = () => client.auth.stopAutoRefresh();
@@ -65,15 +82,17 @@ export default function AuthProvider({ children }) {
     const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
       receivedAuthEvent = true;
       storeSpotifyProviderSession(session);
-      setSession(session?.user || null, false, "ready");
+      const verifiedUser = sessionUser(session);
+      discardUnverifiedSession(client, session);
+      setSession(verifiedUser, false, "ready");
     });
     return () => { active = false; subscription.unsubscribe(); window.removeEventListener("offline", stopRefreshOffline); window.removeEventListener("online", resumeRefreshOnline); window.removeEventListener("focus", onTabVisible); document.removeEventListener("visibilitychange", onTabVisible); };
   }, [setSession]);
   useEffect(() => {
     if (!user?.id || !isSupabaseConfigured) {
       const social = useSocialStore.getState();
-      if (social.activeUserId !== null || social.friends.length || social.requests.length || social.conversations.length || social.notifications.length || social.activities.length || social.cloudLoading) {
-        useSocialStore.setState({ friends: [], requests: [], conversations: [], notifications: [], activities: [], activeUserId: null, cloudLoading: false });
+      if (social.activeUserId !== null || social.friends.length || social.requests.length || social.sentRequests.length || social.conversations.length || social.notifications.length || social.activities.length || social.cloudLoading) {
+        useSocialStore.setState({ friends: [], requests: [], sentRequests: [], conversations: [], notifications: [], activities: [], activeUserId: null, cloudLoading: false });
       }
       return;
     }

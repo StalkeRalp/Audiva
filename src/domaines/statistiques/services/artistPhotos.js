@@ -33,10 +33,3 @@ export async function saveArtistPhoto(record) {
     tx.onerror = () => { db.close(); reject(tx.error); };
   });
 }
-
-
-/** Pinterest does not expose search-result images to this client without an approved integration.
- * Keep discovery as a user-driven search; never scrape Pinterest or substitute another source. */
-export async function findArtistPortrait(name) {
-  return { id: artistPhotoKey(name), name, imageUrl: '', sourceUrl: `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(`${name} portrait récent`)}`, publishedAt: null, attribution: '', retrievedAt: Date.now(), status: 'pinterest-search' };
-}

@@ -1,5 +1,6 @@
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/services/supabase/client";
 import { spotifyOAuthScopes } from "@/domaines/statistiques/services/spotify";
+import { isEmailVerified } from "@/domaines/authentification/services/emailVerification";
 
 export function getAuthSuccessPath(search = "") {
   const candidate = new URLSearchParams(search).get("next");
@@ -21,6 +22,10 @@ function client() {
 export async function loginWithEmail(email, password) {
   const { data, error } = await client().auth.signInWithPassword({ email: email.trim(), password });
   if (error) throw error;
+  if (!isEmailVerified(data.user)) {
+    await client().auth.signOut({ scope: "local" });
+    throw new Error("Confirmez votre adresse e-mail avec le code OTP avant de vous connecter.");
+  }
   return data;
 }
 
@@ -30,7 +35,26 @@ export async function registerWithEmail({ email, password, displayName, redirect
     options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`, data: { display_name: displayName.trim() } },
   });
   if (error) throw error;
+  if (data.session && !isEmailVerified(data.user)) {
+    await client().auth.signOut({ scope: "local" });
+    return { ...data, session: null };
+  }
   return data;
+}
+
+export async function verifySignupOtp(email, token) {
+  const { data, error } = await client().auth.verifyOtp({ email: email.trim(), token: token.trim(), type: "signup" });
+  if (error) throw error;
+  if (!data.session || !isEmailVerified(data.user)) {
+    await client().auth.signOut({ scope: "local" });
+    throw new Error("Le code n’a pas confirmé votre adresse. Vérifiez le code reçu puis réessayez.");
+  }
+  return data;
+}
+
+export async function resendSignupOtp(email) {
+  const { error } = await client().auth.resend({ email: email.trim(), type: "signup" });
+  if (error) throw error;
 }
 
 export async function signInWithGoogle(redirectPath = "/spotify/onboarding") {

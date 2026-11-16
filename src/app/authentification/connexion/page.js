@@ -6,21 +6,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState, useSyncExternalStore } from "react";
 import { getAuthSuccessPath, loginWithEmail, signInWithGoogle, signInWithSpotify } from "@/domaines/authentification/services/authService";
 import AuthAmbient from "@/domaines/authentification/composants/AuthAmbient";
+import { AuthBrand } from "@/domaines/authentification/composants/AuthBrand";
+import AuthPasswordField from "@/domaines/authentification/composants/AuthPasswordField";
 
 function EmailIcon() {
   return (
     <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7">
       <rect x="3" y="5" width="18" height="14" rx="3" />
       <path d="m4 7 8 6 8-6" />
-    </svg>
-  );
-}
-
-function EyeIcon() {
-  return (
-    <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7">
-      <path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z" />
-      <circle cx="12" cy="12" r="2.5" />
     </svg>
   );
 }
@@ -89,14 +82,7 @@ function ConnexionForm() {
       <section className="relative flex h-dvh items-center justify-center overflow-hidden bg-[#060b18] px-5 py-3 sm:px-10 lg:px-14 xl:px-20">
         <AuthAmbient />
         <div className="relative z-10 w-full max-w-[420px]">
-          <Image
-            src="/logoAudiva4png"
-            alt="Audiva"
-            width={1254}
-            height={1254}
-            priority
-            className="auth-brand-mark mx-auto mb-2 h-auto w-36 sm:mb-3 sm:w-40"
-          />
+          <AuthBrand className="mx-auto mb-2 h-auto w-36 sm:mb-3 sm:w-40" />
           <p className="-mt-2 mb-5 text-center text-[10px] font-semibold uppercase tracking-[.28em] text-[#8ba2bb] sm:mb-6 sm:text-left">AUDIVA · LE SON DE VOTRE HISTOIRE</p>
 
           <h1 className="text-center font-sans text-3xl font-bold tracking-tight sm:text-left sm:text-4xl">On reprend là où la musique vous a mené ?</h1>
@@ -113,13 +99,7 @@ function ConnexionForm() {
               </span>
             </label>
 
-            <label className="block text-base font-semibold">
-              <span className="mb-2 block text-sm">Mot de passe</span>
-              <span className="flex items-center gap-3 border-b border-white/25 px-0 py-3 text-[#a6f6ef] transition focus-within:border-[#72eee7]">
-                <input required type="password" name="password" autoComplete="current-password" placeholder="Votre mot de passe" className="w-full bg-transparent text-sm outline-none placeholder:text-white/35" />
-                <EyeIcon />
-              </span>
-            </label>
+            <AuthPasswordField label="Mot de passe" name="password" autoComplete="current-password" placeholder="Votre mot de passe" className="text-base" lineClassName="py-3" />
 
             <button type="submit" disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#76eee9] px-6 py-3 font-bold text-[#071523] transition hover:bg-[#a6f6ef] disabled:opacity-60">
               {busy ? "Connexion…" : "Se connecter"}

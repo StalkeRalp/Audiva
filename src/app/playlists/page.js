@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Cancel01Icon, Delete02Icon, MusicNote01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, ArrowRight01Icon, Cancel01Icon, Delete02Icon, LibraryIcon, MusicNote01Icon } from "@hugeicons/core-free-icons";
 import { usePlaylistsStore } from "@/domaines/playlists/stores/playlistsStore";
+import { readFollowedSpotifyPlaylists } from "@/domaines/statistiques/services/spotifyLibraryCache";
 
 export default function PlaylistsPage() {
   const playlists = usePlaylistsStore((state) => state.playlists);
@@ -12,6 +14,11 @@ export default function PlaylistsPage() {
   const removePlaylist = usePlaylistsStore((state) => state.removePlaylist);
   const [creationOpen, setCreationOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const [spotifyPlaylists, setSpotifyPlaylists] = useState([]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSpotifyPlaylists(readFollowedSpotifyPlaylists()), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const create = (event) => {
     event.preventDefault();
@@ -39,6 +46,8 @@ export default function PlaylistsPage() {
             </button>
           </div>
         </section>
+
+        {spotifyPlaylists.length > 0 && <section className="mt-8"><div className="flex items-end justify-between gap-4"><div><h2 className="text-2xl font-black text-white">Suivies sur Spotify</h2><p className="mt-1 text-sm text-[#91a0bd]">Informations et morceaux mémorisés sur cet appareil.</p></div><span className="text-xs text-[#91a0bd]">{spotifyPlaylists.length} playlist{spotifyPlaylists.length > 1 ? "s" : ""}</span></div><div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">{spotifyPlaylists.map(playlist => <Link key={playlist.providerId} href={`/playlists/${encodeURIComponent(`spotify:${playlist.providerId}`)}`} className="group border border-white/10 bg-[#0a1221] p-3 transition hover:-translate-y-1 hover:border-[#72eee7]/40 hover:bg-[#101b31]"><div className="relative aspect-square overflow-hidden bg-[#111d34]">{playlist.cover ? <Image unoptimized src={playlist.cover} alt="" fill sizes="(max-width: 640px) 45vw, 240px" className="object-cover" /> : <HugeiconsIcon icon={LibraryIcon} size={38} className="absolute inset-0 m-auto text-[#72eee7]" />}<span className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/80 to-transparent px-3 pb-3 pt-8 text-[11px] font-bold text-white"><span>Spotify · suivi</span><HugeiconsIcon icon={ArrowRight01Icon} size={16}/></span></div><p className="mt-3 truncate font-extrabold text-white">{playlist.title}</p><p className="mt-1 truncate text-xs text-[#91a0bd]">{playlist.owner || playlist.artist || "Spotify"}</p><p className="mt-1 text-[11px] text-[#72eee7]">{playlist.tracks?.length ? `${playlist.tracks.length} titres mémorisés` : "Audio disponible en ligne"}</p></Link>)}</div></section>}
 
         <section className="mt-8">
           <div className="flex items-end justify-between gap-4">

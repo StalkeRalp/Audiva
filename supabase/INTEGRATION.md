@@ -23,6 +23,34 @@ http://localhost:3000/auth/callback
 
 Activez les méthodes e-mail et Google souhaitées dans Authentication → Providers. Le bouton Google nécessite aussi que le fournisseur OAuth Google soit configuré dans Supabase.
 
+### Codes e-mail OTP avec EmailJS
+
+Audiva garde Supabase comme autorité d’authentification : Supabase génère et valide l’OTP, et son **Send Email Hook** transmet l’e-mail via EmailJS. Le navigateur ne fabrique ni ne valide les codes.
+
+La fonction `functions/audiva-auth-email` utilise le service `service_4dfszxi` et le modèle `template_3wo5vr8`. Dans le modèle EmailJS, configurez le destinataire avec `{{to_email}}` et ajoutez les variables `{{otp}}`, `{{action_label}}` et `{{confirmation_url}}`. Le bouton/lien de confirmation peut utiliser `{{confirmation_url}}`; le code est `{{otp}}`.
+
+1. Déployez la fonction sans vérification JWT de la passerelle (la fonction vérifie elle-même la signature du webhook) :
+
+   ```sh
+   supabase functions deploy audiva-auth-email --no-verify-jwt --project-ref fvxbdtskpnskhcwaulfw
+   ```
+
+2. Dans les secrets de la fonction, définissez `EMAILJS_PUBLIC_KEY` avec la clé publique EmailJS, `EMAILJS_PRIVATE_KEY` avec sa clé privée (requise en mode strict) et `SEND_EMAIL_HOOK_SECRET` avec le secret créé dans Authentication → Hooks. Les identifiants du service et du modèle sont déjà renseignés dans la fonction.
+
+   ```sh
+   supabase secrets set EMAILJS_PUBLIC_KEY="<clé-publique-EmailJS>" EMAILJS_PRIVATE_KEY="<clé-privée-EmailJS>" SEND_EMAIL_HOOK_SECRET="<secret-du-hook>" --project-ref fvxbdtskpnskhcwaulfw
+   ```
+
+3. Dans Authentication → Hooks, activez **Send Email** comme hook HTTP et utilisez :
+
+   ```text
+   https://fvxbdtskpnskhcwaulfw.supabase.co/functions/v1/audiva-auth-email
+   ```
+
+4. Laissez le fournisseur e-mail activé dans Authentication → Providers. Après l’inscription, Audiva propose de saisir le code reçu; le bouton de renvoi demande un nouvel OTP à Supabase.
+
+Ne mettez jamais les clés EmailJS dans le navigateur ni dans `.env` public. La clé privée reste dans les secrets de la fonction. Le hook signé et son secret empêchent un appel non autorisé de provoquer des envois. EmailJS limite son endpoint REST à un envoi par seconde; la fonction en tient compte pour les changements d’adresse sécurisés.
+
 ## Storage
 
 Le script 004 configure les politiques mais Supabase ne crée pas les buckets par SQL. Dans Storage, créez ces buckets **privés** :

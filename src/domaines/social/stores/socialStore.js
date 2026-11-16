@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useAuthStore } from "@/domaines/authentification/stores/authStore";
 import { isSupabaseConfigured } from "@/services/supabase/client";
-import { clearCloudConversation, createDirectConversation, createFriendInvitation, createFriendRequest, deleteNotification, loadSocialCloud, markNotificationRead as markCloudNotificationRead, markRead, persistMessage, respondFriendRequest, setAllNotificationsRead } from "../services/supabaseSocial";
+import { clearCloudConversation, createDirectConversation, createFriendInvitation, createFriendRequest, deleteNotification, loadSocialCloud, markNotificationRead as markCloudNotificationRead, markRead, persistMessage, respondFriendRequest, setAllNotificationsRead, softDeleteMessage, updateMessageText } from "../services/supabaseSocial";
 
 const isLegacyDemo = state => (state?.friends || []).some(person => ["sophie", "marc", "julie"].includes(person.id)) || (state?.conversations || []).some(item => ["sophie", "marc", "julie"].includes(item.participantId));
 
@@ -33,7 +33,12 @@ export const useSocialStore = create(persist((set, get) => ({
   getInviteStatus: token => { const invitation = get().invites.find(item => item.token === token); if (!invitation) return "inconnue"; return invitation.expiresAt > Date.now() ? "active" : "expirée"; },
   sendFriendRequest: async person => {
     if (!useAuthStore.getState().user) { set({ cloudError: "Connectez-vous pour ajouter un ami." }); return false; }
-    try { await createFriendRequest(person.id); await get().hydrateCloud(); return true; }
+    try {
+      const requestId = await createFriendRequest(person.id);
+      set(state => ({ sentRequests: [...state.sentRequests.filter(item => item.id !== person.id), { ...person, requestId, status: "pending" }], cloudError: "" }));
+      await get().hydrateCloud();
+      return true;
+    }
     catch (error) { set({ cloudError: error.message || "Impossible d’envoyer la demande." }); return false; }
   },
   acceptRequest: async id => {
@@ -50,11 +55,31 @@ export const useSocialStore = create(persist((set, get) => ({
   },
   sendMessage: async (conversationId, message) => {
     const userId = useAuthStore.getState().user?.id;
-    if (!userId) return set({ cloudError: "Connectez-vous pour envoyer un message." });
+    if (!userId) { set({ cloudError: "Connectez-vous pour envoyer un message." }); return false; }
+    if (!conversationId) { set({ cloudError: "Ouvrez une conversation avant d’envoyer un message." }); return false; }
     try {
       const entry = await persistMessage(conversationId, message, userId);
       set(state => ({ conversations: state.conversations.map(conversation => conversation.id === conversationId ? { ...conversation, updatedAt: entry.time, unread: 0, messages: conversation.messages.some(existing => existing.id === entry.id) ? conversation.messages : [...conversation.messages, entry] } : conversation), cloudError: "" }));
-    } catch (error) { set({ cloudError: error.message || "Le message n’a pas pu être envoyé." }); }
+      return true;
+    } catch (error) { set({ cloudError: error.message || "Le message n’a pas pu être envoyé." }); return false; }
+  },
+  editMessage: async (messageId, text) => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) { set({ cloudError: "Connectez-vous pour modifier ce message." }); return false; }
+    try {
+      const updated = await updateMessageText(messageId, text, userId);
+      set(state => ({ conversations: state.conversations.map(conversation => ({ ...conversation, messages: conversation.messages.map(message => message.id === messageId ? updated : message) })), cloudError: "" }));
+      return true;
+    } catch (error) { set({ cloudError: error.message || "Impossible de modifier ce message." }); return false; }
+  },
+  deleteMessage: async messageId => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) { set({ cloudError: "Connectez-vous pour supprimer ce message." }); return false; }
+    try {
+      const deleted = await softDeleteMessage(messageId, userId);
+      set(state => ({ conversations: state.conversations.map(conversation => ({ ...conversation, messages: conversation.messages.map(message => message.id === messageId ? deleted : message) })), cloudError: "" }));
+      return true;
+    } catch (error) { set({ cloudError: error.message || "Impossible de supprimer ce message." }); return false; }
   },
   clearConversation: async conversationId => {
     const userId = useAuthStore.getState().user?.id;

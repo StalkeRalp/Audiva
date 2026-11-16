@@ -54,7 +54,60 @@
 .audiva-chat form>div.absolute button{border-radius:8px}.audiva-chat form>div.absolute button:hover{background:#76eee916;color:#a6f6ef}
 @media(max-width:1000px) and (min-width:640px){.audiva-chat{padding-inline:0}.audiva-chat>section:nth-child(2){grid-template-columns:minmax(245px,31vw) minmax(0,1fr)}.audiva-chat .chat-conversation-search{padding:17px 14px}.audiva-chat .chat-conversation-item{gap:10px;padding:10px}.audiva-chat>section:nth-child(2)>section>div[role=log]{padding:22px}.audiva-chat .chat-bubble{max-width:86%}}
 @media(max-width:639px){.audiva-chat{height:calc(100dvh - 72px);padding:0 0 calc(88px + env(safe-area-inset-bottom))}.audiva-chat>section:first-child{padding:10px 14px}.audiva-chat>section:first-child div[class*="h-14"]{width:46px;height:46px;border-radius:14px}.audiva-chat>section:first-child div[class*="h-14"] svg{width:25px;height:25px}.audiva-chat>section:first-child h1{font-size:25px}.audiva-chat>section:first-child p{font-size:10px}.audiva-chat>section:nth-child(2){display:flex;min-height:0;flex-direction:column;border-radius:0}.audiva-chat>section:nth-child(2)>aside{display:flex;max-height:128px;min-height:0;flex:0 0 auto;flex-direction:column;border-right:0;border-bottom:1px solid #ffffff10}.audiva-chat .chat-conversation-search{display:grid;grid-template-columns:1fr minmax(140px,45%);align-items:center;gap:2px 12px;padding:9px 12px}.audiva-chat .chat-conversation-search>p:first-child{font-size:13px}.audiva-chat .chat-conversation-search>p:nth-child(2){display:block;margin:0;font-size:10px}.audiva-chat .chat-search{grid-column:2;grid-row:1/3;min-width:0;margin:0;padding:8px 10px;font-size:11px}.audiva-chat .chat-conversation-items{display:flex;min-height:0;gap:6px;overflow-x:auto;overflow-y:hidden;padding:5px 9px 8px}.audiva-chat .chat-conversation-item{width:auto;min-width:200px;min-height:55px;flex:0 0 200px;gap:9px;margin:0;padding:6px 9px;border-radius:11px}.audiva-chat .chat-conversation-item:hover{transform:none}.audiva-chat .chat-conversation-item .relative.h-11{width:38px;height:38px}.audiva-chat .chat-conversation-item b{font-size:11px}.audiva-chat .chat-conversation-item small{font-size:9px}.audiva-chat .chat-conversation-item span span:last-child{font-size:10px}.audiva-chat>section:nth-child(2)>section{width:100%;min-height:0;height:auto;flex:1}.audiva-chat>section:nth-child(2)>section>header{min-height:59px;gap:9px;padding:7px 12px}.audiva-chat>section:nth-child(2)>section>header .relative.h-11{width:40px;height:40px}.audiva-chat>section:nth-child(2)>section>header p:first-child{font-size:13px}.audiva-chat>section:nth-child(2)>section>header p:nth-child(2){font-size:10px}.audiva-chat .chat-clear{max-width:118px;padding:7px 8px;font-size:9px}.audiva-chat>section:nth-child(2)>section>div[role=log]{padding:15px 12px}.audiva-chat .chat-bubble{max-width:90%;border-radius:16px}.audiva-chat .chat-bubble>p:first-child{padding:10px 12px;font-size:14px}.audiva-chat .chat-bubble>p:last-child{padding:0 11px 8px;font-size:9px}.audiva-chat .chat-bubble button>div>span.relative{width:52px;height:52px}.audiva-chat form{padding:7px 10px 10px}.audiva-chat form>div:first-child{gap:6px;margin-bottom:7px}.audiva-chat form>div:first-child button{min-height:34px;gap:6px;padding:6px 9px;font-size:10px}.audiva-chat form>div:first-child button svg{width:15px;height:15px}.audiva-chat form>div:last-child{min-height:48px;gap:6px;padding:5px;border-radius:14px}.audiva-chat form>div:last-child>button:first-child{width:36px;height:36px;border-radius:10px}.audiva-chat form input{min-height:36px;padding:7px 3px;font-size:14px}.audiva-chat form button[type=submit]{width:38px;height:38px;border-radius:11px}.audiva-chat form>div.absolute{bottom:58px;left:9px;width:min(350px,calc(100vw - 18px))}}
+@media(max-width:639px){.audiva-chat>section:nth-child(2)>section>header{flex-wrap:wrap}.audiva-chat .chat-wallpaper-button{padding:6px 8px;font-size:9px}.audiva-chat .chat-shared-wrap{min-width:min(250px,76vw)}.audiva-chat .chat-shared-track-list{max-height:240px;overflow-y:auto}}
 @media(prefers-reduced-motion:reduce){.audiva-chat *{scroll-behavior:auto!important;transition:none!important}}
+
+/* Keep the message composer visually steady on focus in both themes. */
+.audiva-chat .chat-message-composer,
+.audiva-chat .chat-message-composer:focus-within {
+  border-color: #ffffff15 !important;
+  outline: none !important;
+  box-shadow: 0 8px 25px #0003 !important;
+}
+.audiva-chat .chat-message-composer input:focus,
+.audiva-chat .chat-message-composer input:focus-visible {
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.audiva-chat .chat-shared-media{display:flex;width:100%;min-width:240px;align-items:center;gap:12px;padding:10px;text-align:left;border:1px solid #ffffff12;border-radius:13px;background:#07101e18;color:inherit;transition:background .18s,border-color .18s}
+.audiva-chat .chat-shared-media:hover{border-color:#ffffff35;background:#ffffff0c}
+.audiva-chat .chat-shared-media>span:first-child{border-radius:8px}
+.audiva-chat .chat-shared-play{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:10px;font-weight:750;color:inherit}
+.audiva-chat .chat-message-actions{display:flex;justify-content:flex-end;gap:12px;padding:0 10px 5px;opacity:.72}
+.audiva-chat .chat-message-actions button{padding:3px 0;background:transparent;color:inherit;font-size:10px;font-weight:650;text-decoration:underline;text-underline-offset:2px}
+.audiva-chat .chat-message-actions button:hover{opacity:1}
+.audiva-chat .chat-message-actions button:disabled{opacity:.45}
+.audiva-chat .chat-message-edit{min-width:min(320px,70vw);padding:10px}
+.audiva-chat .chat-message-edit textarea{display:block;width:100%;min-height:72px;resize:vertical;padding:8px;border:1px solid #ffffff2b;border-radius:8px;background:#06101b;color:#fff;font:inherit;font-size:13px;outline:none}
+.audiva-chat .chat-message-edit>div{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.audiva-chat .chat-message-edit button{padding:6px 9px;border:1px solid #ffffff20;border-radius:7px;background:#ffffff0a;color:inherit;font-size:10px;font-weight:700}
+.audiva-chat .chat-message-edit button[type=submit]{border-color:#76eee955;background:#76eee9;color:#071523}
+.audiva-chat .chat-message-deleted{padding:10px 14px;color:inherit;font-size:12px;font-style:italic;opacity:.72}
+.audiva-chat .chat-message-action-error{padding:2px 10px;color:#fb7185;font-size:10px}
+.audiva-chat .chat-message-selectable{cursor:pointer}
+.audiva-chat .chat-shared-wrap{min-width:min(300px,76vw);padding:5px}
+.audiva-chat .chat-shared-track-list{display:grid;gap:3px;margin-top:6px;padding-top:7px;border-top:1px solid #ffffff20}
+.audiva-chat .chat-shared-track-list>button{display:flex;width:100%;align-items:center;gap:9px;padding:7px 8px;border:0;border-radius:7px;background:#07101e20;color:inherit;text-align:left;font-size:10px}
+.audiva-chat .chat-shared-track-list>button:hover{background:#ffffff18}
+.audiva-chat .chat-shared-track-list>button>span:first-child{font-size:9px;opacity:.58}
+.audiva-chat .chat-shared-track-list>button small{margin-top:2px;font-size:9px;opacity:.68}
+.audiva-chat .chat-shared-track-list>p{padding:9px;font-size:10px;opacity:.7}
+.audiva-chat .chat-wallpaper-button{flex:0 0 auto;padding:8px 10px;border:1px solid #76eee933;border-radius:9px;background:#76eee90b;color:#c1e5e7;font-size:10px;font-weight:700}
+.audiva-chat .chat-wallpaper-button:hover{background:#76eee91b;color:#fff}
+.audiva-chat .chat-message-log{position:relative;isolation:isolate;background-image:linear-gradient(135deg,#08101ec4,#08101ec4),var(--chat-wallpaper-image);background-position:center,center;background-repeat:no-repeat,no-repeat;background-size:cover,auto 190px;scrollbar-gutter:stable}
+.audiva-chat .chat-message-log[data-custom-wallpaper="true"]{background-size:cover,cover}
+.audiva-chat .chat-message-log>*{position:relative;z-index:1}
+.audiva-chat .chat-wallpaper-error{position:relative;z-index:2;width:max-content;max-width:100%;padding:8px 11px;border:1px solid #fb718533;border-radius:8px;background:#2a1014;color:#fecdd3;font-size:11px}
+html[data-theme="apple"] .audiva-chat .chat-shared-media{border-color:#dce1e8;background:#f4f5f7;color:#202630}
+html[data-theme="apple"] .audiva-chat .chat-shared-track-list{border-color:#dce1e8}
+html[data-theme="apple"] .audiva-chat .chat-shared-track-list>button{background:#f0f2f5;color:#202630}
+html[data-theme="apple"] .audiva-chat .chat-wallpaper-button{border-color:#dce1e8;background:#f4f5f7;color:#263342}
+html[data-theme="apple"] .audiva-chat .chat-message-log{background-image:linear-gradient(135deg,#f4f6f8c4,#f7f8fac4),var(--chat-wallpaper-image)}
+html[data-theme="apple"] .audiva-chat .chat-wallpaper-error{border-color:#f4b8c2;background:#fff2f4;color:#9e263b}
+html[data-theme="apple"] .audiva-chat .chat-message-edit textarea{border-color:#d6dbe3;background:#fff;color:#202630}
+html[data-theme="apple"] .audiva-chat .chat-message-edit button{border-color:#d6dbe3;background:#f5f6f8;color:#202630}
+html[data-theme="apple"] .audiva-chat .chat-message-edit button[type=submit]{border-color:#087f85;background:#087f85;color:#fff}
 
 /* Compact chat hero; keep its content centered and close to the conversation panel. */
 .audiva-chat{display:flex;flex-direction:column}

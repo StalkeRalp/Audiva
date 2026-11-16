@@ -5,7 +5,7 @@ const fallbackReturnTo = "/spotify/onboarding";
 const safeReturnTo = (value) => typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : fallbackReturnTo;
 export const spotifyOAuthScopes = [
   "user-top-read", "user-read-private", "user-read-email", "user-read-recently-played", "playlist-read-private",
-  "user-library-read", "user-follow-read", "streaming", "user-modify-playback-state",
+  "user-library-read", "user-library-modify", "user-follow-read", "user-follow-modify", "playlist-read-collaborative", "playlist-modify-public", "streaming", "user-modify-playback-state",
   "user-read-playback-state", "user-read-currently-playing",
 ].join(" ");
 
@@ -145,8 +145,26 @@ export async function getSpotifyAccessToken() {
 let blockedUntil = 0;
 export async function spotifyRequest(path, { signal, method = "GET", body } = {}) {
   if (Date.now() < blockedUntil) throw new Error("Trop de demandes en peu de temps. Réessayez dans quelques instants.");
+  const requestPath = String(path || "").replace(/^\/+/, "");
+  if (!requestPath || /^https?:\/\//i.test(requestPath) || requestPath.includes("..")) {
+    throw new Error("Requête Spotify invalide : chemin d’API incorrect.");
+  }
+  const endpoint = requestPath.split("?", 1)[0];
+  if (endpoint === "search") {
+    const params = new URLSearchParams(requestPath.split("?")[1] || "");
+    if (!params.get("q")?.trim() || !params.get("type")) throw new Error("Requête Spotify invalide : la recherche doit préciser un texte et un type.");
+    const limit = Number(params.get("limit"));
+    if (Number.isFinite(limit) && limit > 10) params.set("limit", "10");
+    path = `search?${params}`;
+  }
+  if (endpoint === "me/player" && method === "PUT" && body?.device_ids !== undefined) {
+    const ids = body.device_ids;
+    if (!Array.isArray(ids) || ids.length !== 1 || typeof ids[0] !== "string" || !ids[0].trim()) {
+      throw new Error("Spotify exige un seul identifiant d’appareil valide pour transférer la lecture.");
+    }
+  }
   const token = await getSpotifyAccessToken();
-  const response = await fetch(`https://api.spotify.com/v1/${path}`, {
+  const response = await fetch(`https://api.spotify.com/v1/${path || requestPath}`, {
     method,
     headers: { Authorization: `Bearer ${token}`, ...(body ? { "Content-Type": "application/json" } : {}) },
     ...(body ? { body: JSON.stringify(body) } : {}),
@@ -158,13 +176,53 @@ export async function spotifyRequest(path, { signal, method = "GET", body } = {}
   }
   if (response.status === 429) {
     blockedUntil = Date.now() + (Number(response.headers.get("Retry-After")) || 60) * 1000;
-    throw new Error("Trop de demandes en peu de temps. Réessayez plus tard.");
+    let detail = "";
+    try { detail = (await response.clone().json())?.error?.reason || ""; } catch { /* Le corps de l’erreur peut être vide. */ }
+    throw new Error(detail === "QUOTA_EXCEEDED"
+      ? "Le quota Spotify de cette application est atteint. Réessayez plus tard."
+      : "Spotify limite temporairement les demandes. Réessayez plus tard.");
   }
   if (!response.ok) {
+    if (response.status === 403 && path === "me/player/devices") throw new Error("Spotify refuse l’accès à la liste des appareils. Réassociez votre compte et vérifiez l’autorisation de lecture de l’état Spotify.");
     if (response.status === 403 && /me\/player/.test(path)) throw new Error("Un abonnement Premium et l’autorisation de lecture sont nécessaires pour utiliser le lecteur intégré.");
-    throw new Error(`Le catalogue musical est indisponible pour ce compte (${response.status}).`);
+    let payload = null;
+    try { payload = await response.clone().json(); } catch { /* Conserve le statut HTTP si Spotify n’envoie pas de détail. */ }
+    const detail = payload?.error?.message || payload?.error?.reason || payload?.message || "";
+    const error = new Error(`Le catalogue musical est indisponible pour ce compte (${response.status})${detail ? ` : ${detail}` : ""}.`);
+    error.status = response.status;
+    error.code = payload?.error?.status || payload?.error?.code || null;
+    throw error;
   }
-  return response.status === 204 ? {} : response.json();
+  if (response.status === 204) return {};
+  const responseText = await response.text();
+  return responseText ? JSON.parse(responseText) : {};
+}
+
+/** Charge les pages `items/next` Spotify sans accepter d’URL de pagination externe. */
+export async function spotifyRequestAll(path, { signal, maxPages = 20 } = {}) {
+  const first = await spotifyRequest(path, { signal });
+  const items = [...(first.items || [])];
+  let next = first.next;
+  let pages = 1;
+  while (next && pages < maxPages) {
+    const url = new URL(next);
+    if (url.origin !== "https://api.spotify.com" || !url.pathname.startsWith("/v1/")) {
+      throw new Error("Pagination Spotify invalide.");
+    }
+    const page = await spotifyRequest(`${url.pathname.slice(4)}${url.search}`, { signal });
+    items.push(...(page.items || []));
+    next = page.next;
+    pages += 1;
+  }
+  return { ...first, items, next, truncated: Boolean(next) };
+}
+
+export function saveSpotifyPlaylistToLibrary(playlistId) {
+  const value = String(playlistId || "").trim();
+  const id = value.match(/^spotify:playlist:([A-Za-z0-9]+)$/)?.[1] || value;
+  if (!/^[A-Za-z0-9]+$/.test(id)) return Promise.reject(new Error("Cette playlist Spotify n’a pas d’identifiant valide."));
+  const params = new URLSearchParams({ uris: `spotify:playlist:${id}` });
+  return spotifyRequest(`me/library?${params}`, { method: "PUT" });
 }
 
 export function spotifyItem(item, type = "tracks") {
@@ -182,7 +240,10 @@ export function spotifyItem(item, type = "tracks") {
     cover: image,
     image,
     externalUrl: item.external_urls?.spotify || `https://open.spotify.com/${type.slice(0, -1)}/${item.id}`,
-    uri: item.uri || `spotify:track:${item.id}`,
+    uri: item.uri || `spotify:${({ tracks: "track", artists: "artist", albums: "album", playlists: "playlist" }[type] || type.replace(/s$/, ""))}:${item.id}`,
+    description: item.description || "",
+    owner: item.owner?.display_name || "",
+    trackCount: Number(item.items?.total ?? item.tracks?.total) || 0,
     genres: item.genres || [],
     streamUrl: null,
   };

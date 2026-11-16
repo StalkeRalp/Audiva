@@ -8,7 +8,9 @@ export const isSupabaseConfigured = Boolean(url && anonKey);
 let browserClient;
 export function getSupabaseBrowserClient() {
   if (!isSupabaseConfigured) throw new Error("Supabase n’est pas configuré. Ajoutez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY dans .env.");
-  browserClient ||= createBrowserClient(url, anonKey);
+  browserClient ||= createBrowserClient(url, anonKey, {
+    auth: { experimental: { appendPkceFlowIdToRedirects: true } },
+  });
   return browserClient;
 }
 

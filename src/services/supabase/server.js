@@ -7,6 +7,7 @@ export async function createSupabaseServerClient() {
   if (!url || !key) return null;
   const cookieStore = await cookies();
   return createServerClient(url, key, {
+    auth: { experimental: { appendPkceFlowIdToRedirects: true } },
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll(values) {

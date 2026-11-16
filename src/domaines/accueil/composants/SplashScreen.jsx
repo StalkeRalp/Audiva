@@ -4,7 +4,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import AuthAmbient from "@/domaines/authentification/composants/AuthAmbient";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon, PaletteIcon } from "@hugeicons/core-free-icons";
+import { toggleAppleTheme } from "@/composants/layout/ThemeProvider";
 
 export default function SplashScreen({ bungeeClassName }) {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function SplashScreen({ bungeeClassName }) {
       <div className="landing-video-tint" aria-hidden="true" />
       <AuthAmbient />
       <div className="landing-topline"><span className="landing-live-dot" /> VOTRE ESPACE MUSICAL</div>
+      <button type="button" className="landing-theme-toggle" onClick={toggleAppleTheme} aria-label="Basculer entre le thème Audiva et le thème Apple" title="Thème Apple / Audiva"><HugeiconsIcon icon={PaletteIcon} size={20} strokeWidth={1.8}/></button>
       <section className="landing-center">
         <Image src="/logoAudiva4png" alt="Logo Audiva" width={500} height={500} priority className="landing-logo" />
         <p className="landing-eyebrow">AUDIVA</p>

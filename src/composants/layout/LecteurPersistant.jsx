@@ -11,22 +11,43 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Album01Icon, ArrowDown01Icon, ArrowUp01Icon, BluetoothIcon, BluetoothNotConnectedIcon, Cancel01Icon, CastIcon, FavouriteIcon, Mic01Icon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, Queue01Icon, RepeatIcon, ShuffleIcon, Share01Icon, UserIcon, VolumeHighIcon, VolumeLowIcon, VolumeMute01Icon, MoreHorizontalIcon, Clock01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Album01Icon, ArrowDown01Icon, ArrowUp01Icon, BluetoothIcon, BluetoothNotConnectedIcon, Cancel01Icon, CastIcon, DeviceAccessIcon, FavouriteIcon, Mic01Icon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, Queue01Icon, RepeatIcon, ShuffleIcon, Share01Icon, UserIcon, VolumeHighIcon, VolumeLowIcon, VolumeMute01Icon, MoreHorizontalIcon, Clock01Icon } from "@hugeicons/core-free-icons";
 import { isLocalTrack, useLecteurControlsStore, useLecteurStore } from "@/domaines/lecteur/stores/lecteurStore";
-import { clearSpotifyPlayback, getSpotifyPlayback, registerSpotifyPlayback, updateSpotifyPlaybackDevice } from "@/domaines/lecteur/services/spotifyPlayback";
-import { connectSpotify, getSpotifyAccessToken, hasSpotifySession, searchSpotify, spotifyHasStreamingScope, spotifyRequest } from "@/domaines/statistiques/services/spotify";
+import { clearSpotifyPlayback, flushQueuedSpotifySeek, getSpotifyPlayback, getSpotifyRemoteDeviceId, noteSpotifyPlaybackState, registerSpotifyPlayback, setSpotifyRemoteDevice, setSpotifyRemoteVolume, updateSpotifyPlaybackDevice } from "@/domaines/lecteur/services/spotifyPlayback";
+import { connectSpotify, getSpotifyAccessToken, hasSpotifySession, searchSpotify, spotifyHasStreamingScope, spotifyItem, spotifyRequest } from "@/domaines/statistiques/services/spotify";
 import { useUiStore } from "@/stores/uiStore";
 import { acceptTrackDrag, takeTrackDrop } from "@/utilitaires/trackDrag";
 import { ElasticSlider } from "@/composants/ui/ElasticSlider";
+import { analyzeLocalTrack, buildTransitionPlan } from "@/domaines/lecteur/services/autoMixEngine";
+import { normalizeText } from "@/services/catalogue/normalisation";
+import SpotifyDevicePicker from "@/domaines/lecteur/composants/SpotifyDevicePicker";
 
 const bluetoothOutputPattern = /bluetooth|headphone|headset|airpod|wireless|écouteur|sony|jbl|bose|beats|soundcore|anker|marshall|wf-|wh-|buds/i;
+
+function createBoundedTransitionPlan(currentFacts, nextFacts, settings, mediaDuration, fixedTailSeconds = 0) {
+  const plan = buildTransitionPlan(currentFacts, nextFacts, settings);
+  const duration = Number(mediaDuration) || Number(currentFacts?.duration) || plan.duration;
+  const safeDuration = Math.max(0, Math.min(fixedTailSeconds || plan.duration, duration));
+  const latestStart = Math.max(0, duration - safeDuration);
+  return { ...plan, duration: safeDuration, startAt: fixedTailSeconds ? latestStart : Math.min(plan.startAt, latestStart) };
+}
 
 export function LecteurPersistant() {
   const pathname = usePathname();
   const router = useRouter();
   const audioRef = useRef(null);
+  const transitionAudioRef = useRef(null);
+  const transitionPlanRef = useRef(null);
+  const transitionFrameRef = useRef(0);
+  const autoMixTimerRef = useRef(0);
+  const transitionStartedRef = useRef(false);
+  const transitionHandoffRef = useRef(null);
+  const manualMixRuntimeRef = useRef(null);
   const spotifyPlayerRef = useRef(null);
+  const spotifyPlayCommandRef = useRef(null);
   const spotifyEndedTrackRef = useRef(null);
+  const spotifyEndProbeRef = useRef({ trackId: null, checkedAt: 0 });
+  const remoteVolumeTimerRef = useRef(0);
   const locallyEndedTrackRef = useRef(null);
   const castContextRef = useRef(null);
   const castListenersRef = useRef(null);
@@ -40,8 +61,70 @@ export function LecteurPersistant() {
   const [spotifyDeviceId, setSpotifyDeviceId] = useState(null);
   const [spotifyReady, setSpotifyReady] = useState(false);
   const [spotifyNeedsConnection, setSpotifyNeedsConnection] = useState(false);
+  const [spotifyDevicesOpen, setSpotifyDevicesOpen] = useState(false);
+  const [spotifyDevicesAnchor, setSpotifyDevicesAnchor] = useState(null);
+  const [remoteSpotifyDeviceId, setRemoteSpotifyDeviceId] = useState(null);
+  const [queueTab, setQueueTab] = useState("queue");
+  const [queueNotice, setQueueNotice] = useState("");
   const listened = useRef({ position: 0, wall: 0, id: null });
   const spotifyClock = useRef({ position: 0, wall: 0, duration: 0, trackId: null, playing: false, lastUiUpdate: 0 });
+  const cancelAutoMix = useCallback(({ stopSecondary = true } = {}) => {
+    if (autoMixTimerRef.current) window.clearTimeout(autoMixTimerRef.current);
+    autoMixTimerRef.current = 0;
+    if (transitionFrameRef.current) cancelAnimationFrame(transitionFrameRef.current);
+    transitionFrameRef.current = 0;
+    transitionStartedRef.current = false;
+    transitionPlanRef.current = null;
+    const secondary = transitionAudioRef.current;
+    if (stopSecondary && secondary) { secondary.pause(); secondary.removeAttribute("src"); secondary.load(); transitionAudioRef.current = null; }
+    const primary = audioRef.current;
+    if (primary && isLocalTrack(useLecteurStore.getState().currentTrack)) primary.volume = useLecteurStore.getState().isMuted ? 0 : useLecteurStore.getState().volume;
+  }, []);
+  const startAutoMix = useCallback(async (plan, nextTrack, secondary) => {
+    if (transitionStartedRef.current || !secondary || !plan || !nextTrack?.streamUrl) return;
+    if (autoMixTimerRef.current) window.clearTimeout(autoMixTimerRef.current);
+    autoMixTimerRef.current = 0;
+    const primary = audioRef.current;
+    const store = useLecteurStore.getState();
+    if (!primary || primary.paused || store.currentTrack?.provider !== "local" && !isLocalTrack(store.currentTrack)) return;
+    transitionStartedRef.current = true;
+    try {
+      secondary.playbackRate = plan.nextPlaybackRate || 1;
+      secondary.currentTime = Math.min(plan.nextStartAt || 0, Number.isFinite(secondary.duration) ? secondary.duration : Infinity);
+      const muted = store.isMuted;
+      const base = muted ? 0 : store.volume;
+      secondary.volume = Math.min(1, base * 0.001);
+      await secondary.play();
+      let startedAt = null;
+      const durationMs = plan.duration * 1000;
+      const tick = now => {
+        if (startedAt === null) startedAt = now;
+        const current = useLecteurStore.getState();
+        if (current.currentTrack?.id !== store.currentTrack?.id || !current.isPlaying || !primary.isConnected || primary.paused) { cancelAutoMix(); return; }
+        const progress = Math.min(1, (now - startedAt) / durationMs);
+        const baseVolume = current.isMuted ? 0 : current.volume;
+        primary.volume = baseVolume * Math.cos(progress * Math.PI / 2);
+        secondary.volume = Math.min(1, baseVolume * plan.energyGain * Math.sin(progress * Math.PI / 2));
+        if (progress >= 1) {
+          if (transitionFrameRef.current) cancelAnimationFrame(transitionFrameRef.current);
+          transitionFrameRef.current = 0;
+          transitionStartedRef.current = false;
+          primary.pause();
+          transitionHandoffRef.current = { id: nextTrack.id, time: secondary.currentTime, element: secondary };
+          transitionAudioRef.current = null;
+          transitionPlanRef.current = null;
+          useLecteurStore.getState().advanceAutoMix(nextTrack.id);
+          useLecteurStore.getState().setCurrentTime(secondary.currentTime);
+          return;
+        }
+        transitionFrameRef.current = requestAnimationFrame(tick);
+      };
+      transitionFrameRef.current = requestAnimationFrame(tick);
+    } catch {
+      cancelAutoMix();
+      setQueueNotice("La transition automatique n’a pas pu démarrer ; le morceau continue normalement.");
+    }
+  }, [cancelAutoMix, setQueueNotice]);
   const handleAudioTimeUpdate = event => {
     const audio = event.currentTarget, now = event.timeStamp, track = useLecteurStore.getState().currentTrack;
     if (Number.isFinite(audio.duration) && audio.currentTime < audio.duration - 0.75) locallyEndedTrackRef.current = null;
@@ -49,6 +132,8 @@ export function LecteurPersistant() {
     if (previous.id === track?.id && previous.wall && !audio.paused && !audio.seeking && audio.readyState >= 2 && delta > 0 && delta <= 2 && elapsed > 0 && elapsed < 3 && Math.abs(delta - elapsed * audio.playbackRate) < .5) { useEcouteStore.getState().record(track, Math.min(delta / audio.playbackRate, elapsed)); useIntelligenceStore.getState().sample(track,Math.min(delta / audio.playbackRate,elapsed),audio.currentTime,audio.duration); }
     listened.current = { position: audio.currentTime, wall: now, id: track?.id };
     setCurrentTime(audio.currentTime);
+    const mix = transitionPlanRef.current;
+    if (mix && !transitionStartedRef.current && audio.currentTime >= mix.startAt) startAutoMix(mix.plan, mix.next, transitionAudioRef.current);
   };
   const handleLocalMediaEnded = event => {
     const audio = event.currentTarget;
@@ -57,29 +142,203 @@ export function LecteurPersistant() {
     // A queued `ended` from the previous source must not advance the new track.
     if (!audio.ended || audio.readyState < 2 || !isLocalTrack(activeTrack) || audio.getAttribute("src") !== activeTrack.streamUrl || audio.currentSrc !== activeTrack.streamUrl) return;
     if (Number.isFinite(audio.duration) && audio.currentTime < audio.duration - 0.75) return;
+    const pendingMix = transitionPlanRef.current;
+    const incoming = transitionAudioRef.current;
+    if (transitionStartedRef.current && pendingMix?.next?.id && incoming && !incoming.paused) {
+      if (transitionFrameRef.current) cancelAnimationFrame(transitionFrameRef.current);
+      transitionFrameRef.current = 0;
+      incoming.volume = useLecteurStore.getState().isMuted ? 0 : useLecteurStore.getState().volume;
+      transitionStartedRef.current = false;
+      transitionAudioRef.current = null;
+      transitionPlanRef.current = null;
+      transitionHandoffRef.current = { id: pendingMix.next.id, time: incoming.currentTime, element: incoming };
+      useLecteurStore.getState().advanceAutoMix(pendingMix.next.id);
+      useLecteurStore.getState().setCurrentTime(incoming.currentTime);
+      return;
+    }
     if (locallyEndedTrackRef.current === activeTrack.id) return;
     locallyEndedTrackRef.current = activeTrack.id;
     useIntelligenceStore.getState().finish(true);
     state.handleTrackEnd();
   };
-  const [queueTab, setQueueTab] = useState("queue");
-  const [queueNotice, setQueueNotice] = useState("");
-  useEffect(()=>{if(!queueNotice||spotifyNeedsConnection)return;const timer=setTimeout(()=>setQueueNotice(''),3500);return()=>clearTimeout(timer);},[queueNotice,spotifyNeedsConnection]);
-  const { currentTrack, queue, currentIndex, upNextQueue, queueSourceName, recentTracks, isPlaying, volume, isMuted, isShuffled, repeatMode, lyricsOpen, queueOpen, likedTrackIds, play, pause, setCurrentTime, setDuration, setVolume, toggleMute, toggleShuffle, cycleRepeatMode, toggleLyrics, toggleQueue, toggleLike, nextTrack, previousTrack, handleTrackEnd, setCurrentTrack, removeFromQueue, removeUpNext, moveQueueItem, moveUpNext, playNext } = useLecteurControlsStore();
+  const { currentTrack, queue, currentIndex, upNextQueue, queueSourceName, recentTracks, isPlaying, volume, isMuted, isShuffled, repeatMode, lyricsOpen, queueOpen, likedTrackIds, autoMixEnabled, autoMixMode, autoMixIntensity, autoMixBeatmatching, autoMixKeepEnds, play, pause, setCurrentTime, setDuration, setVolume, toggleMute, toggleShuffle, cycleRepeatMode, toggleLyrics, toggleQueue, toggleLike, nextTrack, previousTrack, handleTrackEnd, setCurrentTrack, removeFromQueue, removeUpNext, moveQueueItem, moveUpNext, playNext } = useLecteurControlsStore();
+  const finishSpotifyTrack = useCallback((trackId, uri) => {
+    const store = useLecteurStore.getState();
+    if (store.currentTrack?.provider !== "spotify" || store.currentTrack.providerId !== trackId || spotifyEndedTrackRef.current === trackId) return;
+    spotifyEndedTrackRef.current = trackId;
+    useIntelligenceStore.getState().finish(true);
+    if (store.repeatMode === "track") {
+      const deviceId = getSpotifyPlayback().deviceId;
+      if (deviceId && uri) spotifyRequest(`me/player/play?device_id=${encodeURIComponent(deviceId)}`, { method: "PUT", body: { uris: [uri] } }).catch(error => setQueueNotice(error.message));
+    } else {
+      store.handleTrackEnd();
+    }
+  }, [setQueueNotice]);
+  useEffect(()=>{if(!queueNotice||spotifyNeedsConnection)return;if(currentTrack?.provider==="spotify"&&!isPlaying)return;const timer=setTimeout(()=>setQueueNotice(''),3500);return()=>clearTimeout(timer);},[queueNotice,spotifyNeedsConnection,currentTrack?.provider,isPlaying]);
+  const nextAutoMixTrack = useLecteurStore(state => state.peekAutoMixTrack());
   useEffect(() => {
-    const timer = window.setInterval(() => {
+    cancelAutoMix();
+    if (transitionHandoffRef.current?.id !== currentTrack?.id) transitionHandoffRef.current = null;
+    if (!autoMixEnabled || autoMixKeepEnds || !isPlaying || !isLocalTrack(currentTrack) || !nextAutoMixTrack || !isLocalTrack(nextAutoMixTrack)) return;
+    const isVideo = item => item?.mediaType === "video" || item?.fileInfo?.type?.startsWith("video/") || /\.mp4$/i.test(item?.fileInfo?.name || "");
+    if (isVideo(currentTrack) || isVideo(nextAutoMixTrack) || !currentTrack.streamUrl || !nextAutoMixTrack.streamUrl) return;
+    const secondary = new Audio();
+    secondary.preload = "auto";
+    secondary.src = nextAutoMixTrack.streamUrl;
+    secondary.__audivaTrackId = nextAutoMixTrack.id;
+    secondary.load();
+    transitionAudioRef.current = secondary;
+    let active = true;
+    Promise.all([analyzeLocalTrack(currentTrack), analyzeLocalTrack(nextAutoMixTrack)]).then(([currentFacts, nextFacts]) => {
+      if (!active || transitionAudioRef.current !== secondary) return;
+      const plan = createBoundedTransitionPlan(currentFacts, nextFacts, {
+        mode: autoMixMode,
+        intensity: autoMixIntensity,
+        beatmatching: autoMixBeatmatching,
+      }, Number(audioRef.current?.duration) || Number(currentTrack.duration) || currentFacts.duration, 10);
+      transitionPlanRef.current = { plan, next: nextAutoMixTrack };
+      const waitForMixPoint = () => {
+        if (!active || transitionStartedRef.current || transitionAudioRef.current !== secondary) return;
+        const state = useLecteurStore.getState();
+        const media = audioRef.current;
+        if (state.currentTrack?.id !== currentTrack.id || !state.isPlaying || !media || media.paused) return;
+        const remaining = plan.startAt - media.currentTime;
+        if (remaining <= 0.08) {
+          startAutoMix(plan, nextAutoMixTrack, secondary);
+          return;
+        }
+        autoMixTimerRef.current = window.setTimeout(() => {
+          autoMixTimerRef.current = 0;
+          waitForMixPoint();
+        }, Math.min(250, Math.max(35, remaining * 1000)));
+      };
+      waitForMixPoint();
+    }).catch(() => { transitionPlanRef.current = null; });
+    return () => {
+      active = false;
+      if (autoMixTimerRef.current) window.clearTimeout(autoMixTimerRef.current);
+      autoMixTimerRef.current = 0;
+      if (transitionAudioRef.current === secondary) {
+        secondary.pause();
+        secondary.removeAttribute("src");
+        secondary.load();
+        transitionAudioRef.current = null;
+      }
+      transitionPlanRef.current = null;
+    };
+  }, [autoMixEnabled, autoMixKeepEnds, autoMixMode, autoMixIntensity, autoMixBeatmatching, currentTrack, nextAutoMixTrack, isPlaying, cancelAutoMix, startAutoMix]);
+  useEffect(() => {
+    if (!isPlaying) cancelAutoMix();
+  }, [isPlaying, cancelAutoMix]);
+  useEffect(() => { manualMixRuntimeRef.current = { startAutoMix, setQueueNotice }; }, [startAutoMix, setQueueNotice]);
+  useEffect(() => {
+    const handleManualMix = async () => {
+      const runtime = manualMixRuntimeRef.current;
+      const state = useLecteurStore.getState();
+      const current = state.currentTrack;
+      const next = state.peekAutoMixTrack();
+      const video = item => item?.mediaType === "video" || item?.fileInfo?.type?.startsWith("video/") || /\.mp4$/i.test(item?.fileInfo?.name || "");
+      if (!runtime || !state.isPlaying || !isLocalTrack(current) || !isLocalTrack(next) || video(current) || video(next) || !current.streamUrl || !next.streamUrl || transitionStartedRef.current) {
+        runtime?.setQueueNotice("Le mix manuel nécessite deux fichiers audio locaux, une lecture en cours et un prochain titre disponible.");
+        return;
+      }
+      let secondary = transitionAudioRef.current;
+      if (!secondary || secondary.__audivaTrackId !== next.id) {
+        secondary?.pause();
+        secondary?.removeAttribute("src");
+        secondary = new Audio();
+        secondary.preload = "auto";
+        secondary.src = next.streamUrl;
+        secondary.__audivaTrackId = next.id;
+        secondary.load();
+        transitionAudioRef.current = secondary;
+      }
+      const requestTrackId = current.id;
+      try {
+        const [currentFacts, nextFacts] = await Promise.all([analyzeLocalTrack(current), analyzeLocalTrack(next)]);
+        const latest = useLecteurStore.getState();
+        if (latest.currentTrack?.id !== requestTrackId || latest.peekAutoMixTrack()?.id !== next.id || !latest.isPlaying) return;
+        if (secondary.readyState < 1) await new Promise(resolve => {
+          const timeout = window.setTimeout(resolve, 4000);
+          const ready = () => { window.clearTimeout(timeout); resolve(); };
+          secondary.addEventListener("loadedmetadata", ready, { once: true });
+          secondary.addEventListener("error", ready, { once: true });
+        });
+        const mediaDuration = Number(audioRef.current?.duration) || Number(current.duration) || currentFacts.duration;
+        const currentTime = audioRef.current?.currentTime || 0;
+        const plan = createBoundedTransitionPlan(currentFacts, nextFacts, {
+          mode: latest.autoMixMode,
+          intensity: latest.autoMixIntensity,
+          beatmatching: latest.autoMixBeatmatching,
+        }, mediaDuration);
+        plan.duration = Math.min(plan.duration, Math.max(0, mediaDuration - currentTime) || plan.duration);
+        plan.startAt = currentTime;
+        transitionPlanRef.current = { plan, next };
+        await runtime.startAutoMix(plan, next, secondary);
+      } catch {
+        if (transitionAudioRef.current === secondary) cancelAutoMix();
+        runtime.setQueueNotice("Impossible de préparer ce mix ; la lecture actuelle continue.");
+      }
+    };
+    window.addEventListener("audiva-manual-mix", handleManualMix);
+    return () => window.removeEventListener("audiva-manual-mix", handleManualMix);
+  }, [cancelAutoMix]);
+  useEffect(() => {
+    const timer = window.setInterval(async () => {
+      if (getSpotifyRemoteDeviceId()) return;
       const clock = spotifyClock.current;
       const store = useLecteurStore.getState();
       if (!clock.playing || !clock.trackId || store.currentTrack?.provider !== "spotify" || store.currentTrack.providerId !== clock.trackId) return;
       const now = Date.now();
-      if (now - clock.lastUiUpdate < 220) return;
       const position = Math.min(clock.duration || Infinity, clock.position + Math.max(0, now - clock.wall) / 1000);
-      clock.lastUiUpdate = now;
-      setCurrentTime(position);
-      if (clock.duration) setDuration(clock.duration);
+      if (now - clock.lastUiUpdate >= 220) {
+        clock.lastUiUpdate = now;
+        setCurrentTime(position);
+        if (clock.duration) setDuration(clock.duration);
+      }
+      if (now - (clock.lastStateProbeAt || 0) >= 1500) {
+        clock.lastStateProbeAt = now;
+        const player = spotifyPlayerRef.current;
+        if (player) player.getCurrentState().then(actualState => {
+          const latest = useLecteurStore.getState();
+          const actualTrack = actualState?.track_window?.current_track;
+          if (!actualState || latest.currentTrack?.provider !== "spotify" || latest.currentTrack.providerId !== clock.trackId) return;
+          if (actualTrack?.id !== clock.trackId) {
+            spotifyClock.current = { ...clock, playing: false, wall: Date.now() };
+            useLecteurStore.getState().pause();
+            setQueueNotice("Spotify a interrompu ou changé le titre en cours. Appuyez sur Lecture pour relancer le morceau sélectionné.");
+            return;
+          }
+          const command = spotifyPlayCommandRef.current;
+          const pendingPlay = command?.pending && command.trackId === clock.trackId;
+          const startupGrace = command?.trackId === clock.trackId && command.confirmedAt && Date.now() - command.confirmedAt < 1800 && actualState.paused && actualState.position < 750;
+          const actualPosition = Math.max(0, actualState.position || 0) / 1000;
+          const actualDuration = Math.max(0, actualState.duration || 0) / 1000 || clock.duration;
+          const isStaleZero = actualPosition < 0.25 && position > 2 && latest.currentTime > 1;
+          const syncedPosition = isStaleZero ? position : actualPosition;
+          const atEnd = actualState.paused && actualDuration > 0 && syncedPosition >= actualDuration - 0.9;
+          spotifyClock.current = { ...clock, position: syncedPosition, wall: Date.now(), duration: actualDuration, playing: !actualState.paused || atEnd || pendingPlay || startupGrace };
+          setCurrentTime(syncedPosition);
+          if (actualDuration) setDuration(actualDuration);
+          if (atEnd) finishSpotifyTrack(clock.trackId, actualTrack.uri);
+          else if (actualState.paused && latest.isPlaying && !pendingPlay && !startupGrace) useLecteurStore.setState({ isPlaying: false, currentTime: syncedPosition, duration: actualDuration || latest.duration });
+        }).catch(() => {});
+      }
+      // The SDK can occasionally omit its final paused state. Confirm the end
+      // with the player itself, then run the same guarded queue handoff.
+      if (!clock.duration || position < clock.duration - 0.35 || now - spotifyEndProbeRef.current.checkedAt < 500) return;
+      spotifyEndProbeRef.current = { trackId: clock.trackId, checkedAt: now };
+      const player = spotifyPlayerRef.current;
+      if (!player || spotifyEndedTrackRef.current === clock.trackId) return;
+      try {
+        const state = await player.getCurrentState();
+        const track = state?.track_window?.current_track;
+        if (track?.id !== clock.trackId) return;
+        if (state.paused && state.duration > 0 && state.position >= state.duration - 900) finishSpotifyTrack(track.id, track.uri);
+      } catch { /* SDK event remains the primary end signal. */ }
     }, 100);
     return () => window.clearInterval(timer);
-  }, [setCurrentTime, setDuration]);
+  }, [finishSpotifyTrack, setCurrentTime, setDuration]);
   const initializeSpotifySdk = useCallback(() => {
     if (!window.Spotify?.Player || spotifyPlayerRef.current) return;
     const player = new window.Spotify.Player({
@@ -103,17 +362,34 @@ export function LecteurPersistant() {
       updateSpotifyPlaybackDevice(null);
       setSpotifyDeviceId(null);
       setSpotifyReady(false);
+      if (getSpotifyRemoteDeviceId()) return;
+      if (useLecteurStore.getState().currentTrack?.provider === "spotify") useLecteurStore.getState().pause();
       setQueueNotice("Le lecteur s’est déconnecté. Réessayez dans quelques instants.");
     });
     player.addListener("player_state_changed", (state) => {
-      if (!state) return;
+      if (!state || getSpotifyRemoteDeviceId()) return;
+      noteSpotifyPlaybackState(state);
       const spotifyTrack = state.track_window?.current_track;
       const store = useLecteurStore.getState();
       if (!spotifyTrack || store.currentTrack?.provider !== "spotify" || store.currentTrack.providerId !== spotifyTrack.id) return;
-      const position = Math.max(0, state.position || 0) / 1000;
-      const duration = Math.max(0, state.duration || 0) / 1000;
+      flushQueuedSpotifySeek(spotifyTrack.id);
+      const previousClock = spotifyClock.current;
+      const sameClockTrack = previousClock.trackId === spotifyTrack.id;
+      const pendingCommand = spotifyPlayCommandRef.current;
+      const commandPending = pendingCommand?.pending && pendingCommand.trackId === spotifyTrack.id;
+      const reportedPosition = Math.max(0, state.position || 0) / 1000;
+      const reportedDuration = Math.max(0, state.duration || 0) / 1000;
+      const startupGrace = pendingCommand?.trackId === spotifyTrack.id && pendingCommand.confirmedAt && Date.now() - pendingCommand.confirmedAt < 1800 && state.paused && reportedPosition < 0.75;
+      const clockElapsed = sameClockTrack && previousClock.playing ? Math.max(0, (Date.now() - previousClock.wall) / 1000) : 0;
+      const predictedPosition = previousClock.position + Math.min(clockElapsed, 2);
+      // The SDK can emit a transient zero-position / zero-duration state while
+      // transferring devices. Keep the last valid clock instead of flashing 00:00.
+      const keepClock = sameClockTrack && (!commandPending || startupGrace) && reportedPosition < 0.25 && predictedPosition > 2 && store.currentTime > 1;
+      const position = keepClock ? predictedPosition : reportedPosition;
+      const duration = reportedDuration || (sameClockTrack ? previousClock.duration : 0) || Number(store.currentTrack.duration) || 0;
+      const isActuallyPlaying = (commandPending || startupGrace) && state.paused ? store.isPlaying : !state.paused;
       const now = Date.now();
-      spotifyClock.current = { position, wall: now, duration, trackId: spotifyTrack.id, playing: !state.paused, lastUiUpdate: now };
+      spotifyClock.current = { position, wall: now, duration, trackId: spotifyTrack.id, playing: isActuallyPlaying, lastUiUpdate: now, lastStateProbeAt: previousClock.lastStateProbeAt || 0 };
       const previous = listened.current;
       if (previous.id !== store.currentTrack.id) {
         useIntelligenceStore.getState().start(store.currentTrack, position);
@@ -129,42 +405,48 @@ export function LecteurPersistant() {
       useLecteurStore.setState({
         currentTime: position,
         duration,
-        isPlaying: !state.paused,
+        isPlaying: isActuallyPlaying,
       });
-      if (!state.duration) return;
-      if (state.position < state.duration - 1500) spotifyEndedTrackRef.current = null;
-      const atEnd = state.paused && state.position >= state.duration - 700;
-      if (!atEnd || spotifyEndedTrackRef.current === spotifyTrack.id) return;
-      spotifyEndedTrackRef.current = spotifyTrack.id;
-      useIntelligenceStore.getState().finish(true);
-      if (useLecteurStore.getState().repeatMode === "track") {
-        const deviceId = getSpotifyPlayback().deviceId;
-        if (deviceId) spotifyRequest(`me/player/play?device_id=${encodeURIComponent(deviceId)}`, { method: "PUT", body: { uris: [spotifyTrack.uri] } }).catch((error) => setQueueNotice(error.message));
-      } else {
-        useLecteurStore.getState().handleTrackEnd();
+      if (!duration) return;
+      if (position < duration - 1.5) {
+        spotifyEndedTrackRef.current = null;
+        spotifyEndProbeRef.current = { trackId: spotifyTrack.id, checkedAt: 0 };
       }
+      const atEnd = state.paused && !commandPending && position >= duration - 0.7;
+      if (atEnd) finishSpotifyTrack(spotifyTrack.id, spotifyTrack.uri);
     });
     player.addListener("authentication_error", () => {
+      if (getSpotifyRemoteDeviceId()) return;
       setSpotifyNeedsConnection(true);
       setSpotifyReady(false);
       useLecteurStore.getState().pause();
       setQueueNotice("Votre autorisation de lecture a expiré. Reconnectez votre compte pour reprendre.");
     });
     player.addListener("account_error", () => {
+      if (getSpotifyRemoteDeviceId()) return;
       setSpotifyReady(false);
       useLecteurStore.getState().pause();
       setQueueNotice("Le lecteur intégré exige un compte Premium.");
     });
     player.addListener("initialization_error", ({ message }) => {
+      if (getSpotifyRemoteDeviceId()) return;
       setSpotifyReady(false);
       setQueueNotice(message || "Le lecteur ne peut pas démarrer dans ce navigateur.");
     });
-    player.addListener("playback_error", ({ message }) => setQueueNotice(message || "Impossible de lire ce titre pour le moment."));
-    player.addListener("autoplay_failed", () => setQueueNotice("Touchez Lecture pour démarrer le morceau dans Audiva."));
+    player.addListener("playback_error", ({ message }) => {
+      if (getSpotifyRemoteDeviceId()) return;
+      useLecteurStore.getState().pause();
+      setQueueNotice(message || "Impossible de lire ce titre pour le moment.");
+    });
+    player.addListener("autoplay_failed", () => {
+      if (getSpotifyRemoteDeviceId()) return;
+      useLecteurStore.getState().pause();
+      setQueueNotice("Touchez Lecture pour démarrer le morceau dans Audiva.");
+    });
     player.connect().then((connected) => {
-      if (!connected) setQueueNotice("Impossible de démarrer le lecteur intégré.");
-    }).catch(() => setQueueNotice("Impossible de démarrer le lecteur intégré."));
-  }, [setQueueNotice]);
+      if (!connected && !getSpotifyRemoteDeviceId()) setQueueNotice("Impossible de démarrer le lecteur intégré.");
+    }).catch(() => { if (!getSpotifyRemoteDeviceId()) setQueueNotice("Impossible de démarrer le lecteur intégré."); });
+  }, [finishSpotifyTrack, setQueueNotice]);
   useEffect(() => {
     const initializeTimer = window.setTimeout(() => {
       setSpotifySdkEnabled(Boolean(hasSpotifySession() && spotifyHasStreamingScope()));
@@ -176,6 +458,88 @@ export function LecteurPersistant() {
     }
     return () => window.clearTimeout(initializeTimer);
   }, []);
+  useEffect(() => {
+    let active = true;
+    const timer = window.setTimeout(async () => {
+      const savedDeviceId = getSpotifyRemoteDeviceId();
+      if (!savedDeviceId || !hasSpotifySession()) return;
+      try {
+        const result = await spotifyRequest("me/player/devices");
+        if (!active) return;
+        if (result.devices?.some(device => device.id === savedDeviceId)) setRemoteSpotifyDeviceId(savedDeviceId);
+        else setSpotifyRemoteDevice(null);
+      } catch { /* The normal Spotify session can still be used if reconnect validation is offline. */ }
+    }, 0);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, []);
+  useEffect(() => {
+    if (!remoteSpotifyDeviceId) return;
+    let active = true;
+    let inFlight = false;
+    const syncRemotePlayback = async () => {
+      if (inFlight || !hasSpotifySession()) return;
+      inFlight = true;
+      try {
+        const playback = await spotifyRequest("me/player");
+        if (!active) return;
+        if (playback.device?.id && playback.device.id !== remoteSpotifyDeviceId) {
+          setQueueNotice(`Spotify indique que la lecture est passée sur ${playback.device.name || "un autre appareil"}. Sélectionnez-le dans Appareils Spotify pour reprendre la synchronisation.`);
+          return;
+        }
+        const item = playback.item;
+        if (!item || item.type !== "track" || !item.id) {
+          if (playback.device?.id === remoteSpotifyDeviceId) {
+            useLecteurStore.setState({ isPlaying: Boolean(playback.is_playing), resumePlayback: false });
+            if (!playback.is_playing) setQueueNotice(`Connecté à ${playback.device.name || "l’appareil Spotify"}. Lancez un titre sur cet appareil pour l’afficher dans Audiva.`);
+          }
+          return;
+        }
+        const remoteTrack = spotifyItem(item, "tracks");
+        const position = Math.max(0, Number(playback.progress_ms) || 0) / 1000;
+        const duration = Math.max(0, Number(item.duration_ms) || 0) / 1000;
+        const store = useLecteurStore.getState();
+        const matchesCurrent = store.currentTrack?.provider === "spotify" && store.currentTrack.providerId === remoteTrack.providerId;
+        const queueIndex = store.queue.findIndex(track => track.provider === "spotify" && track.providerId === remoteTrack.providerId);
+        const queue = queueIndex >= 0
+          ? store.queue.map((track, index) => index === queueIndex ? remoteTrack : track)
+          : [remoteTrack, ...store.queue.filter(track => track.id !== remoteTrack.id)].slice(0, 80);
+        const currentIndex = queueIndex >= 0 ? queueIndex : 0;
+        const now = Date.now();
+        spotifyClock.current = { position, wall: now, duration, trackId: remoteTrack.providerId, playing: Boolean(playback.is_playing), lastUiUpdate: now, lastStateProbeAt: now };
+        useLecteurStore.setState({
+          currentTrack: remoteTrack,
+          queue,
+          currentIndex,
+          queueSourceName: `Spotify Connect · ${playback.device?.name || "Appareil"}`,
+          currentTime: position,
+          duration,
+          isPlaying: Boolean(playback.is_playing),
+          isShuffled: typeof playback.shuffle_state === "boolean" ? playback.shuffle_state : store.isShuffled,
+          repeatMode: playback.repeat_state === "track" ? "track" : playback.repeat_state === "context" ? "queue" : playback.repeat_state === "off" ? "off" : store.repeatMode,
+          resumePlayback: false,
+          recentTracks: matchesCurrent ? store.recentTracks : [remoteTrack, ...store.recentTracks.filter(track => track.id !== remoteTrack.id)].slice(0, 30),
+        });
+        setQueueNotice("");
+      } catch (error) {
+        if (active) setQueueNotice(error?.message || "Impossible de synchroniser la session Spotify distante.");
+      } finally { inFlight = false; }
+    };
+    const initial = window.setTimeout(syncRemotePlayback, 250);
+    const interval = window.setInterval(syncRemotePlayback, 1800);
+    return () => { active = false; window.clearTimeout(initial); window.clearInterval(interval); };
+  }, [remoteSpotifyDeviceId]);
+  useEffect(() => {
+    const onRemoteError = event => setQueueNotice(event.detail || "La commande Spotify a échoué.");
+    const onRemoteDisconnect = () => { setRemoteSpotifyDeviceId(null); setQueueNotice("Lecture locale activée ; la session Spotify distante est mise en pause."); };
+    window.addEventListener("audiva-spotify-remote-error", onRemoteError);
+    window.addEventListener("audiva-spotify-remote-disconnected", onRemoteDisconnect);
+    return () => { window.removeEventListener("audiva-spotify-remote-error", onRemoteError); window.removeEventListener("audiva-spotify-remote-disconnected", onRemoteDisconnect); };
+  }, []);
+  useEffect(() => {
+    const saved = useLecteurStore.getState();
+    if (!spotifyReady || !saved.resumePlayback || saved.currentTrack?.provider !== "spotify") return;
+    useLecteurStore.setState({ resumePlayback: false, isPlaying: true });
+  }, [spotifyReady, currentTrack?.id]);
   useEffect(() => () => {
     const player = spotifyPlayerRef.current;
     spotifyPlayerRef.current = null;
@@ -192,18 +556,101 @@ export function LecteurPersistant() {
   useEffect(()=>{useIntelligenceStore.getState().hydrate();const flush=()=>useIntelligenceStore.getState().commit();window.addEventListener('pagehide',flush);document.addEventListener('visibilitychange',flush);return()=>{flush();window.removeEventListener('pagehide',flush);document.removeEventListener('visibilitychange',flush);};},[]);
   useEffect(()=>{useIntelligenceStore.getState().finish(false);},[currentTrack?.id]);
   const { playerVisible, setPlayerVisible, playerStyle, setPlayerStyle } = useUiStore();
+  const [restorePosition, setRestorePosition] = useState(null);
+  const restoreDragRef = useRef(null);
+  const restoreSuppressClickRef = useRef(false);
+  useEffect(() => {
+    let frame = 0;
+    try {
+      const saved = JSON.parse(window.localStorage.getItem("audiva-player-restore-position") || "null");
+      if (Number.isFinite(saved?.left) && Number.isFinite(saved?.top)) frame = requestAnimationFrame(() => {
+        const element = document.querySelector(".audiva-player-restore");
+        const maxLeft = Math.max(8, window.innerWidth - (element?.offsetWidth || 260) - 8);
+        const maxTop = Math.max(8, window.innerHeight - (element?.offsetHeight || 52) - 8);
+        const position = { left: Math.min(maxLeft, Math.max(8, saved.left)), top: Math.min(maxTop, Math.max(8, saved.top)) };
+        setRestorePosition(position);
+        try { window.localStorage.setItem("audiva-player-restore-position", JSON.stringify(position)); } catch {}
+      });
+    } catch {}
+    return () => { if (frame) cancelAnimationFrame(frame); };
+  }, []);
+  useEffect(() => {
+    if (!restorePosition) return;
+    const keepVisible = () => {
+      const element = document.querySelector(".audiva-player-restore");
+      if (!element) return;
+      const position = {
+        left: Math.max(8, Math.min(window.innerWidth - element.offsetWidth - 8, restorePosition.left)),
+        top: Math.max(8, Math.min(window.innerHeight - element.offsetHeight - 8, restorePosition.top)),
+      };
+      if (position.left !== restorePosition.left || position.top !== restorePosition.top) {
+        setRestorePosition(position);
+        try { window.localStorage.setItem("audiva-player-restore-position", JSON.stringify(position)); } catch {}
+      }
+    };
+    window.addEventListener("resize", keepVisible);
+    return () => window.removeEventListener("resize", keepVisible);
+  }, [restorePosition]);
   useEffect(() => {
     const savedStyle = window.localStorage.getItem("audiva-player-style");
     if (savedStyle === "apple" || savedStyle === "audiva") setPlayerStyle(savedStyle);
   }, [setPlayerStyle]);
   const togglePlayerStyle = () => setPlayerStyle(playerStyle === "apple" ? "audiva" : "apple");
+  const openSpotifyDevices = useCallback((event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setSpotifyDevicesAnchor({ left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height });
+    setSpotifyDevicesOpen(true);
+  }, []);
+  const closeSpotifyDevices = useCallback(() => { setSpotifyDevicesOpen(false); setSpotifyDevicesAnchor(null); }, []);
+  const selectSpotifyRemoteDevice = useCallback((deviceId, deviceName) => {
+    setSpotifyRemoteDevice(deviceId);
+    setRemoteSpotifyDeviceId(deviceId || null);
+    useLecteurStore.setState({ resumePlayback: false });
+    setQueueNotice(deviceId ? `Synchronisation de la session Spotify sur ${deviceName || "l’appareil choisi"}…` : "Session Spotify déconnectée.");
+  }, []);
+  const beginRestoreDrag = event => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    restoreDragRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, moved: false, left: rect.left, top: rect.top };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+  const moveRestoreDrag = event => {
+    const drag = restoreDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (Math.abs(event.clientX - drag.startX) + Math.abs(event.clientY - drag.startY) > 5) drag.moved = true;
+    if (!drag.moved) return;
+    const element = event.currentTarget;
+    const left = Math.max(8, Math.min(window.innerWidth - element.offsetWidth - 8, event.clientX - drag.offsetX));
+    const top = Math.max(8, Math.min(window.innerHeight - element.offsetHeight - 8, event.clientY - drag.offsetY));
+    drag.left = left; drag.top = top;
+    setRestorePosition({ left, top });
+  };
+  const endRestoreDrag = event => {
+    const drag = restoreDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    restoreDragRef.current = null;
+    if (!drag.moved) return;
+    const position = { left: drag.left, top: drag.top };
+    setRestorePosition(position);
+    restoreSuppressClickRef.current = true;
+    try { window.localStorage.setItem("audiva-player-restore-position", JSON.stringify(position)); } catch {}
+    window.setTimeout(() => { restoreSuppressClickRef.current = false; }, 300);
+  };
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio && isLocalTrack(useLecteurStore.getState().currentTrack)) audio.volume = isMuted ? 0 : volume;
+    if (audio && isLocalTrack(useLecteurStore.getState().currentTrack) && !transitionStartedRef.current) audio.volume = isMuted ? 0 : volume;
+    if (transitionAudioRef.current && !transitionStartedRef.current) transitionAudioRef.current.volume = isMuted ? 0 : volume;
+    if (transitionStartedRef.current && transitionAudioRef.current) {
+      // The transition frame applies both gains; mute immediately without changing its curve.
+      if (isMuted) { if (audio) audio.volume = 0; transitionAudioRef.current.volume = 0; }
+    }
     const spotifyPlayer = spotifyPlayerRef.current;
-    if (spotifyPlayer) spotifyPlayer.setVolume(isMuted ? 0 : volume).catch(() => {});
-  }, [isMuted, volume, spotifyReady]);
+    if (getSpotifyRemoteDeviceId() && currentTrack?.provider === "spotify") {
+      if (remoteVolumeTimerRef.current) window.clearTimeout(remoteVolumeTimerRef.current);
+      remoteVolumeTimerRef.current = window.setTimeout(() => setSpotifyRemoteVolume(isMuted ? 0 : volume), 250);
+    } else if (spotifyPlayer) spotifyPlayer.setVolume(isMuted ? 0 : volume).catch(() => {});
+  }, [isMuted, volume, spotifyReady, currentTrack?.provider, remoteSpotifyDeviceId]);
 
   const chooseAudioOutput = async () => {
     const audio = audioRef.current;
@@ -302,7 +749,9 @@ export function LecteurPersistant() {
 
   useEffect(() => {
     if (!currentTrack || isLocalTrack(currentTrack)) return;
+    if (getSpotifyRemoteDeviceId() && currentTrack.provider === "spotify") return;
     let active = true;
+    const controller = new AbortController();
     const spotifyPlayer = spotifyPlayerRef.current;
     if (!isPlaying) {
       spotifyPlayer?.pause().catch(() => {});
@@ -326,15 +775,20 @@ export function LecteurPersistant() {
       setQueueNotice("");
       return () => { active = false; };
     }
+    let playCommand = null;
     const launch = async () => {
+      playCommand = { trackId: null, pending: true };
+      spotifyPlayCommandRef.current = playCommand;
       try {
         let target = currentTrack;
-        if (target.provider !== "spotify" || target.type !== "tracks" || !target.providerId) {
+        if (target.provider !== "spotify" || !target.providerId) {
           const query = [`track:${target.title}`, target.artist && `artist:${target.artist}`].filter(Boolean).join(" ");
           const matches = await searchSpotify(query, { type: "tracks" });
           if (!active) return;
-          if (!matches.length) throw new Error("Ce titre n’a pas été retrouvé dans le catalogue musical.");
-          target = matches[0];
+          const wantedTitle = normalizeText(target.title || "");
+          const wantedArtist = normalizeText(target.artist || "");
+          target = matches.find(item => normalizeText(item.title || "") === wantedTitle && (!wantedArtist || normalizeText(item.artist || "").includes(wantedArtist)));
+          if (!target) throw new Error(`Spotify n’a pas trouvé une correspondance exacte pour « ${currentTrack.title} ». Aucun autre titre ne sera lancé à sa place.`);
           const store = useLecteurStore.getState();
           const oldIndex = store.queue.findIndex((item) => item.id === currentTrack.id);
           const queue = oldIndex >= 0
@@ -353,19 +807,67 @@ export function LecteurPersistant() {
         }
         await spotifyPlayer.activateElement?.();
         if (!active) return;
-        await spotifyRequest(`me/player/play?device_id=${encodeURIComponent(spotifyDeviceId)}`, {
+        const expectedTrackId = String(target.providerId).replace(/^spotify:(?:track|tracks):/i, "");
+        if (!expectedTrackId || expectedTrackId.includes(":")) throw new Error("Spotify n’a pas fourni l’identifiant exact du titre sélectionné.");
+        playCommand.trackId = expectedTrackId;
+        spotifyEndedTrackRef.current = null;
+        spotifyEndProbeRef.current = { trackId: expectedTrackId, checkedAt: 0 };
+        const trackUri = `spotify:track:${expectedTrackId}`;
+        const startPositionMs = Math.max(0, Math.floor((Number(useLecteurStore.getState().currentTime) || 0) * 1000));
+        // Make Audiva the active Connect device before issuing the track command.
+        // Without the transfer Spotify can accept the request while another device
+        // remains active, which leaves the SDK and Audiva showing different songs.
+        await spotifyRequest("me/player", {
           method: "PUT",
-          body: { uris: [target.uri || `spotify:track:${target.providerId}`] },
+          body: { device_ids: [spotifyDeviceId], play: false },
+          signal: controller.signal,
         });
+        if (!active) return;
+        const playExactTrack = () => spotifyRequest(`me/player/play?device_id=${encodeURIComponent(spotifyDeviceId)}`, {
+          method: "PUT",
+          body: { uris: [trackUri], position_ms: startPositionMs },
+          signal: controller.signal,
+        });
+        await playExactTrack();
+        let actualTrackId = "";
+        let confirmedState = null;
+        for (let attempt = 0; attempt < 6 && active; attempt += 1) {
+          await new Promise(resolve => window.setTimeout(resolve, 350));
+          const actualState = await spotifyPlayer.getCurrentState();
+          actualTrackId = actualState?.track_window?.current_track?.id || "";
+          if (actualTrackId === expectedTrackId && actualState && !actualState.paused) { confirmedState = actualState; break; }
+        }
+        if (active && (!confirmedState || actualTrackId !== expectedTrackId)) {
+          await playExactTrack();
+          await new Promise(resolve => window.setTimeout(resolve, 500));
+          confirmedState = await spotifyPlayer.getCurrentState();
+          actualTrackId = confirmedState?.track_window?.current_track?.id || "";
+        }
+        if (active && (actualTrackId !== expectedTrackId || !confirmedState || confirmedState.paused)) {
+          await spotifyRequest(`me/player/pause?device_id=${encodeURIComponent(spotifyDeviceId)}`, { method: "PUT", signal: controller.signal }).catch(() => {});
+          throw new Error(actualTrackId
+            ? `Spotify n’a pas démarré « ${target.title} » correctement. Appuyez sur Lecture pour réessayer.`
+            : `Spotify n’a pas confirmé la lecture exacte de « ${target.title} ». La lecture a été arrêtée pour éviter un titre inattendu.`);
+        }
+        if (confirmedState) {
+          playCommand.pending = false;
+          playCommand.confirmedAt = Date.now();
+          const position = Math.max(0, confirmedState.position || 0) / 1000;
+          const duration = Math.max(0, confirmedState.duration || 0) / 1000;
+          const startedAt = Date.now();
+          spotifyClock.current = { position, wall: startedAt, duration, trackId: expectedTrackId, playing: true, lastUiUpdate: startedAt, lastStateProbeAt: startedAt };
+          useLecteurStore.setState({ currentTime: position, duration: duration || useLecteurStore.getState().duration, isPlaying: true });
+        }
         if (active) setQueueNotice("");
       } catch (error) {
         if (!active) return;
+        playCommand.pending = false;
         pause();
         setQueueNotice(error?.message || "Impossible de lire ce titre pour le moment.");
       }
     };
     launch();
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); if (playCommand && spotifyPlayCommandRef.current === playCommand) playCommand.pending = false; };
   }, [isPlaying, currentTrack, pause, spotifySdkEnabled, spotifyReady, spotifyDeviceId]);
 
   useEffect(() => useLecteurStore.subscribe((state, previous) => {
@@ -391,6 +893,7 @@ export function LecteurPersistant() {
   const isLecteurPage = pathname === "/lecteur";
   const track = currentTrack || { title: "Aucun titre", artist: "Choisissez votre musique" };
   const cover = track.cover || track.image || "/placeholders/audio-cover.svg";
+  const isLocalVideoTrack = isLocalTrack(track) && (track.mediaType === "video" || track.fileInfo?.type?.startsWith("video/") || /\.mp4$/i.test(track.fileInfo?.name || ""));
 
   const controlClass = "flex h-9 w-9 items-center justify-center rounded-full text-[#c9d3e8] transition duration-150 hover:scale-110 hover:bg-white/10 hover:text-white active:scale-90 disabled:cursor-not-allowed disabled:opacity-35";
   const notifyQueue = (message) => { setQueueNotice(message); window.setTimeout(() => setQueueNotice(""), 2200); };
@@ -465,10 +968,12 @@ export function LecteurPersistant() {
   }, []);
   useEffect(() => {
     const previousCallback = window.__onGCastApiAvailable;
+    let active = true;
     const onCastApiAvailable = available => { if (available) initializeCastSdk(); };
     window.__onGCastApiAvailable = onCastApiAvailable;
-    if (window.cast?.framework) initializeCastSdk();
+    if (window.cast?.framework) queueMicrotask(() => { if (active) initializeCastSdk(); });
     return () => {
+      active = false;
       if (window.__onGCastApiAvailable === onCastApiAvailable) window.__onGCastApiAvailable = previousCallback;
       const listeners = castListenersRef.current;
       if (listeners) {
@@ -485,11 +990,11 @@ export function LecteurPersistant() {
     return () => window.removeEventListener("audiva-cast-request", requestCast);
   }, [chooseCastDevice]);
 
-  return <>{!publicRoute && <Script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" strategy="afterInteractive" onReady={initializeCastSdk} onError={() => setCastSdkReady(false)} />}{spotifySdkEnabled && <Script src="https://sdk.scdn.co/spotify-player.js" strategy="afterInteractive" onReady={initializeSpotifySdk} onError={() => setQueueNotice("Le lecteur intégré n’a pas pu être chargé.")} />}<video data-audiva-media playsInline x-webkit-airplay="allow" ref={audioRef} className="audiva-persistent-media" style={videoRect && isLocalTrack(track) && (track.mediaType === "video" || track.fileInfo?.type === "video/mp4" || /\.mp4$/i.test(track.fileInfo?.name || "")) ? {position:"fixed",...videoRect,zIndex:20,objectFit:"contain",background:"#040609",borderRadius:videoRect.borderRadius} : {position:"fixed",width:1,height:1,opacity:0,pointerEvents:"none"}} src={isLocalTrack(track) ? track.streamUrl : undefined} preload={isLocalTrack(track) ? "metadata" : "none"} onPlaying={() => useIntelligenceStore.getState().start(track,audioRef.current?.currentTime || 0)} onTimeUpdate={handleAudioTimeUpdate} onSeeking={() => { listened.current.wall = 0; }} onPause={() => { listened.current.wall = 0; }} onWaiting={() => { listened.current.wall = 0; }} onLoadedMetadata={(event) => { const audio = event.currentTarget; setQueueNotice(""); setDuration(audio.duration); const savedTime = useLecteurStore.getState().currentTime; if (savedTime > 0) audio.currentTime = Math.min(savedTime, Number.isFinite(audio.duration) ? audio.duration : savedTime); }} onError={() => { if (isLocalTrack(track) && track.streamUrl) { pause(); } }} onEnded={handleLocalMediaEnded} />
-    {!publicRoute && !playerVisible && <button className="audiva-player-restore" onClick={() => setPlayerVisible(true)} aria-label="Afficher le lecteur">♫ <span>{track.title}</span> ↑</button>}
+  return <>{!publicRoute && <Script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" strategy="afterInteractive" onReady={initializeCastSdk} onError={() => setCastSdkReady(false)} />}{spotifySdkEnabled && <Script src="https://sdk.scdn.co/spotify-player.js" strategy="afterInteractive" onReady={initializeSpotifySdk} onError={() => setQueueNotice("Le lecteur intégré n’a pas pu être chargé.")} />}<video data-audiva-media playsInline x-webkit-airplay="allow" ref={audioRef} className="audiva-persistent-media" style={videoRect && isLocalVideoTrack ? {position:"fixed",...videoRect,zIndex:20,objectFit:"contain",background:"#040609",borderRadius:videoRect.borderRadius} : {position:"fixed",width:1,height:1,opacity:0,pointerEvents:"none"}} src={isLocalTrack(track) ? track.streamUrl : undefined} preload={isLocalTrack(track) ? (isLocalVideoTrack ? "metadata" : "auto") : "none"} onPlaying={() => { const handoff = transitionHandoffRef.current; if (handoff?.id === track?.id) { handoff.element?.pause(); handoff.element?.removeAttribute("src"); handoff.element?.load(); transitionHandoffRef.current = null; } useIntelligenceStore.getState().start(track,audioRef.current?.currentTime || 0); }} onTimeUpdate={handleAudioTimeUpdate} onSeeking={() => { listened.current.wall = 0; if (transitionStartedRef.current) cancelAutoMix(); }} onPause={() => { listened.current.wall = 0; }} onWaiting={() => { listened.current.wall = 0; }} onLoadedMetadata={(event) => { const audio = event.currentTarget; setQueueNotice(""); setDuration(audio.duration); const handoff = transitionHandoffRef.current; if (handoff?.id === track?.id) { audio.currentTime = Math.min(handoff.time, Number.isFinite(audio.duration) ? audio.duration : handoff.time); return; } const savedTime = useLecteurStore.getState().currentTime; if (savedTime > 0) audio.currentTime = Math.min(savedTime, Number.isFinite(audio.duration) ? audio.duration : savedTime); }} onError={() => { if (isLocalTrack(track) && track.streamUrl) { transitionHandoffRef.current?.element?.pause(); transitionHandoffRef.current = null; pause(); } }} onEnded={handleLocalMediaEnded} />
+    {!publicRoute && !playerVisible && <button className="audiva-player-restore" style={restorePosition ? { left: restorePosition.left, top: restorePosition.top, right: "auto", bottom: "auto" } : undefined} onPointerDown={beginRestoreDrag} onPointerMove={moveRestoreDrag} onPointerUp={endRestoreDrag} onPointerCancel={endRestoreDrag} onClick={() => { if (restoreSuppressClickRef.current) { restoreSuppressClickRef.current = false; return; } setPlayerVisible(true); }} aria-label="Afficher le lecteur · faire glisser pour déplacer">♫ <span>{track.title}</span> ↑</button>}
     {!publicRoute && playerVisible && <>
     {queueNotice && !queueOpen && <div role="status" className="audiva-player-notice fixed bottom-24 right-3 z-[80] flex max-w-[min(480px,calc(100vw-24px))] items-center justify-between gap-3 rounded-2xl border border-[#76eee9]/30 bg-[#112139] px-4 py-3 text-sm font-semibold text-[#c8fffb] shadow-xl sm:right-5"><span>{queueNotice}{spotifyNeedsConnection && <button type="button" className="ml-3 font-bold text-[#a6f6ef] underline underline-offset-2" onClick={() => connectSpotify({ returnTo: `${pathname}${window.location.search}`, resumePlayback: true }).catch((error) => setQueueNotice(error.message))}>Réassocier mon compte</button>}</span><button type="button" onClick={() => setQueueNotice("")} aria-label="Fermer le message du lecteur" className="grid h-7 w-7 shrink-0 place-items-center rounded-full hover:bg-white/10"><HugeiconsIcon icon={Cancel01Icon} size={16}/></button></div>}
-    {lyricsOpen && <aside className="fixed bottom-[88px] sm:bottom-[96px] left-0 right-0 top-[72px] z-40 overflow-hidden bg-[#07132b] text-[#eff4ff] lg:left-64"><div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_10%,rgba(80,128,255,.28),transparent_32%),linear-gradient(135deg,#071120,#0b1730_58%,#060b18)]" /><div className="relative grid h-full grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]"><section className="min-w-0 overflow-y-auto px-5 py-8 sm:px-10 lg:px-14"><div className="mx-auto max-w-4xl"><div className="flex items-start justify-between gap-5"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#a6f6ef]">Paroles synchronisées</p><p className="mt-2 text-sm font-semibold text-[#c3d0e8]">{track.title} · {track.artist}</p></div><button onClick={toggleLyrics} className={`${controlClass} border border-white/10 bg-[#07101e]`} aria-label="Fermer les paroles"><HugeiconsIcon icon={Cancel01Icon} size={20} /></button></div><LyricsPanel track={track}/></div></section><aside className="hidden h-full overflow-y-auto border-l border-white/[.08] bg-[#08101d] p-4 lg:block"><p className="text-xs font-bold uppercase tracking-[.14em] text-[#a6f6ef]">Lecture en cours</p><PochetteImage unoptimized src={cover} alt="" width={480} height={480} className="mt-4 aspect-square w-full object-cover rounded-2xl" /><p className="mt-4 text-lg font-black">{track.title}</p><p className="mt-1 text-sm text-[#aebbd7]">{track.artist}</p></aside></div></aside>}
+    {lyricsOpen && <aside className="audiva-lyrics-overlay fixed bottom-[88px] sm:bottom-[96px] left-0 right-0 top-[72px] z-40 overflow-hidden bg-[#07132b] text-[#eff4ff] lg:left-64"><div className="audiva-lyrics-overlay-backdrop absolute inset-0 bg-[radial-gradient(circle_at_72%_10%,rgba(80,128,255,.28),transparent_32%),linear-gradient(135deg,#071120,#0b1730_58%,#060b18)]" /><div className="relative grid h-full grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]"><section className="audiva-lyrics-overlay-main min-w-0 overflow-y-auto px-5 py-8 sm:px-10 lg:px-14"><div className="mx-auto max-w-4xl"><div className="flex items-start justify-between gap-5"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#a6f6ef]">Paroles synchronisées</p><p className="mt-2 text-sm font-semibold text-[#c3d0e8]">{track.title} · {track.artist}</p></div><button onClick={toggleLyrics} className={`${controlClass} border border-white/10 bg-[#07101e]`} aria-label="Fermer les paroles"><HugeiconsIcon icon={Cancel01Icon} size={20} /></button></div><LyricsPanel track={track}/></div></section><aside className="audiva-lyrics-overlay-side hidden h-full overflow-y-auto border-l border-white/[.08] bg-[#08101d] p-4 lg:block"><p className="text-xs font-bold uppercase tracking-[.14em] text-[#a6f6ef]">Lecture en cours</p><PochetteImage unoptimized src={cover} alt="" width={480} height={480} className="mt-4 aspect-square w-full object-cover rounded-2xl" /><p className="mt-4 text-lg font-black">{track.title}</p><p className="mt-1 text-sm text-[#aebbd7]">{track.artist}</p></aside></div></aside>}
     {queueOpen && <aside onDragOver={acceptTrackDrag} onDrop={dropTrack} role="dialog" aria-label="File d&apos;attente" className="audiva-queue fixed bottom-[160px] sm:bottom-[120px] right-3 top-[84px] z-50 flex w-[min(420px,calc(100vw-24px))] flex-col border border-white/10 bg-[#101626]/90 backdrop-blur-2xl rounded-3xl shadow-[-16px_0_45px_rgba(0,0,0,.38)] animate-in slide-in-from-right-5 duration-200">
       <header className="flex shrink-0 items-center justify-between border-b border-white/8 px-5 pt-5">
         <div className="flex h-10 items-start gap-6">
@@ -603,11 +1108,6 @@ export function LecteurPersistant() {
 
         {/* Right: Volume & Utilities */}
         <div className="flex items-center justify-end gap-3 sm:w-[260px] lg:w-[280px] shrink-0 text-[#8c8d99]">
-          <button type="button" onClick={chooseCastDevice} className={`audiva-cast-button ${castState === "connected" ? "audiva-cast-button--connected" : ""}`} aria-label={castTitle} aria-pressed={castState === "connected"} title={castTitle}><HugeiconsIcon icon={CastIcon} size={18}/></button>
-          <button type="button" onClick={chooseAudioOutput} className={`audiva-output-button ${outputName && bluetoothOutputPattern.test(outputName) ? "audiva-output-button--connected" : ""}`} aria-label={outputError || (outputName ? `Sortie audio : ${outputName}. Cliquer pour changer` : "Choisir une sortie audio ou Bluetooth")} title={outputError || outputName || "Choisir une sortie audio / Bluetooth"}>
-            <HugeiconsIcon icon={outputName && bluetoothOutputPattern.test(outputName) ? BluetoothIcon : BluetoothNotConnectedIcon} size={18} />
-            {outputName && <span>{outputName}</span>}
-          </button>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -656,7 +1156,7 @@ export function LecteurPersistant() {
             type="button"
             onClick={toggleLyrics}
             aria-pressed={lyricsOpen}
-            className={`flex h-8 w-8 items-center justify-center rounded-full transition hover:text-white active:scale-90 ${
+            className={`audiva-player-inline-tool flex h-8 w-8 items-center justify-center rounded-full transition hover:text-white active:scale-90 ${
               lyricsOpen ? "bg-white/10 text-[#a6f6ef]" : "hover:bg-white/5"
             }`}
             aria-label="Afficher les paroles"
@@ -664,6 +1164,8 @@ export function LecteurPersistant() {
           >
             <HugeiconsIcon icon={Mic01Icon} size={18} strokeWidth={2} />
           </button>
+
+          <button type="button" onClick={openSpotifyDevices} aria-expanded={spotifyDevicesOpen} className={`audiva-player-inline-tool flex h-8 w-8 items-center justify-center rounded-full transition hover:text-white active:scale-90 ${spotifyDevicesOpen ? "bg-white/10 text-[#a6f6ef]" : "hover:bg-white/5"}`} aria-label="Afficher les appareils Spotify Connect" title="Appareils Spotify Connect"><HugeiconsIcon icon={DeviceAccessIcon} size={18} strokeWidth={2} /></button>
 
           <button
             type="button"
@@ -676,10 +1178,6 @@ export function LecteurPersistant() {
             title="File d'attente"
           >
             <HugeiconsIcon icon={Queue01Icon} size={18} strokeWidth={2} />
-          </button>
-
-          <button type="button" onClick={togglePlayerStyle} aria-pressed={playerStyle === "apple"} title={`Style ${playerStyle === "apple" ? "Apple" : "Audiva"} — cliquer pour changer`} className="audiva-player-style-button">
-            {playerStyle === "apple" ? "Apple" : "Audiva"}
           </button>
 
           <button
@@ -702,6 +1200,7 @@ export function LecteurPersistant() {
           <button type="button" onClick={toggleMute} className="grid h-8 w-8 shrink-0 place-items-center rounded-full hover:bg-white/10" aria-label={isMuted ? "Réactiver le son" : "Couper le son"}><HugeiconsIcon icon={isMuted ? VolumeMute01Icon : VolumeLowIcon} size={17} /></button>
           <ElasticSlider ariaLabel="Volume" value={isMuted ? 0 : volume} startingValue={0} maxValue={1} stepSize={0.01} leftIcon={null} rightIcon={null} valuePosition="bubble" formatValue={(value) => `${Math.round(value * 100)}%`} jumpToClick thumb thickness={4} activeThickness={7} rangeColor="#76eee9" trackColor="rgba(255,255,255,.14)" className="w-full" style={{ width: "100%" }} onChange={setVolume} />
           <span className="w-9 shrink-0 text-right text-[10px] font-semibold tabular-nums">{Math.round((isMuted ? 0 : volume) * 100)}%</span>
+          <button type="button" onClick={openSpotifyDevices} aria-expanded={spotifyDevicesOpen} className="audiva-spotify-devices-button audiva-spotify-devices-button--mobile" aria-label="Afficher les appareils Spotify Connect" title="Appareils Spotify Connect"><HugeiconsIcon icon={DeviceAccessIcon} size={18}/></button>
           <button type="button" onClick={chooseCastDevice} className={`audiva-cast-button audiva-cast-button--mobile ${castState === "connected" ? "audiva-cast-button--connected" : ""}`} aria-label={castTitle} aria-pressed={castState === "connected"} title={castTitle}><HugeiconsIcon icon={CastIcon} size={18}/></button>
           <button type="button" onClick={chooseAudioOutput} className={`audiva-output-button audiva-output-button--mobile ${outputName && bluetoothOutputPattern.test(outputName) ? "audiva-output-button--connected" : ""}`} aria-label={outputError || (outputName ? `Sortie audio : ${outputName}. Cliquer pour changer` : "Choisir une sortie audio ou Bluetooth")} title={outputError || outputName || "Choisir une sortie audio / Bluetooth"}><HugeiconsIcon icon={outputName && bluetoothOutputPattern.test(outputName) ? BluetoothIcon : BluetoothNotConnectedIcon} size={18} />{outputName && <span>{outputName}</span>}</button>
         </div>
@@ -769,7 +1268,9 @@ export function LecteurPersistant() {
         </div>
       </div>
     </footer>
-    )}</>}</>;
+    )}</>}
+    <SpotifyDevicePicker open={spotifyDevicesOpen} anchor={spotifyDevicesAnchor} onClose={closeSpotifyDevices} onNotice={notifyQueue} onSelectDevice={selectSpotifyRemoteDevice} />
+    </>;
 }
 
 function PlayerProgress({ audioRef, mobile = false }) {

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { requestPasswordReset } from "@/domaines/authentification/services/authService";
 import AuthAmbient from "@/domaines/authentification/composants/AuthAmbient";
+import { AuthBrand } from "@/domaines/authentification/composants/AuthBrand";
 
 export default function MotDePasseOubliePage() {
   const [message, setMessage] = useState("");
@@ -20,7 +21,7 @@ export default function MotDePasseOubliePage() {
       <section className="relative flex h-dvh items-center justify-center overflow-hidden bg-[#060b18] px-5 py-5 sm:px-10 lg:px-14 xl:px-20">
         <AuthAmbient />
         <div className="relative z-10 w-full max-w-[420px]">
-          <Image src="/logoAudiva4png" alt="Audiva" width={1254} height={1254} priority className="auth-brand-mark mx-auto mb-3 h-auto w-36 sm:mb-4 sm:w-40" />
+          <AuthBrand className="mx-auto mb-3 h-auto w-36 sm:mb-4 sm:w-40" />
           <p className="mb-5 text-center text-[10px] font-semibold uppercase tracking-[.28em] text-[#8ba2bb] sm:text-left">AUDIVA · VOTRE MUSIQUE VOUS ATTEND</p>
           <h1 className="text-center text-3xl font-bold tracking-tight sm:text-left sm:text-4xl">On vous aide à revenir.</h1>
           <p className="mt-3 text-center text-sm leading-6 text-[#aebbd0] sm:text-left">Indiquez l’adresse e-mail de votre compte. Nous vous enverrons un lien sécurisé pour choisir un nouveau mot de passe.</p>

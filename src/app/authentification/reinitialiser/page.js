@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useState } from "react";
 import { updatePassword } from "@/domaines/authentification/services/authService";
 import AuthAmbient from "@/domaines/authentification/composants/AuthAmbient";
+import { AuthBrand } from "@/domaines/authentification/composants/AuthBrand";
+import AuthPasswordField from "@/domaines/authentification/composants/AuthPasswordField";
 
 export default function ReinitialiserPage() {
   const [message, setMessage] = useState("");
@@ -21,17 +23,13 @@ export default function ReinitialiserPage() {
       <section className="relative flex h-dvh items-center justify-center overflow-hidden bg-[#060b18] px-5 py-5 sm:px-10 lg:px-14 xl:px-20">
         <AuthAmbient />
         <div className="relative z-10 w-full max-w-[420px]">
-          <Image src="/logoAudiva4png" alt="Audiva" width={1254} height={1254} priority className="auth-brand-mark mx-auto mb-3 h-auto w-36 sm:mb-4 sm:w-40" />
+          <AuthBrand className="mx-auto mb-3 h-auto w-36 sm:mb-4 sm:w-40" />
           <p className="mb-5 text-center text-[10px] font-semibold uppercase tracking-[.28em] text-[#8ba2bb] sm:text-left">AUDIVA · VOTRE MUSIQUE VOUS ATTEND</p>
           <h1 className="text-center text-3xl font-bold tracking-tight sm:text-left sm:text-4xl">Retrouvez votre accès.</h1>
           <p className="mt-3 text-center text-sm leading-6 text-[#aebbd0] sm:text-left">Choisissez un nouveau mot de passe pour retrouver votre bibliothèque et poursuivre vos écoutes.</p>
           <form onSubmit={submit} className="mt-7 space-y-5">
-            <label className="block text-sm font-semibold">Nouveau mot de passe
-              <input name="password" type="password" required minLength={8} autoComplete="new-password" placeholder="8 caractères minimum" className="mt-2 w-full border-0 border-b border-white/25 bg-transparent px-0 py-3 text-sm text-white outline-none placeholder:text-[#8291a8] focus:border-[#72eee7]" />
-            </label>
-            <label className="block text-sm font-semibold">Confirmer le mot de passe
-              <input name="confirmation" type="password" required minLength={8} autoComplete="new-password" placeholder="Répétez votre mot de passe" className="mt-2 w-full border-0 border-b border-white/25 bg-transparent px-0 py-3 text-sm text-white outline-none placeholder:text-[#8291a8] focus:border-[#72eee7]" />
-            </label>
+            <AuthPasswordField label="Nouveau mot de passe" name="password" autoComplete="new-password" placeholder="8 caractères minimum" minLength={8} lineClassName="py-3" />
+            <AuthPasswordField label="Confirmer le mot de passe" name="confirmation" autoComplete="new-password" placeholder="Répétez votre mot de passe" minLength={8} lineClassName="py-3" />
             <button className="w-full bg-[#72eee7] px-4 py-3.5 font-bold text-[#061426] transition hover:bg-[#a6f6ef]">Enregistrer mon nouveau mot de passe</button>
           </form>
           {message && <p role="status" className="mt-4 text-sm leading-5 text-[#c8fffb]">{message}</p>}
