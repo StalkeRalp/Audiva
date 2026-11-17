@@ -592,7 +592,7 @@ html[data-theme="apple"] .audiva-import-panel :is(button[class*="bg-[#76eee9]"])
 /* Keep every lyrics state (synced, plain, translated and controls) on one typeface. */
 .audiva-lyrics-panel,
 .audiva-lyrics-panel * { font-family: var(--font-geologica), sans-serif !important; }
-.audiva-lyrics-scroll>button.is-current { color: #c3cad5 !important; text-shadow: 0 0 18px rgb(195 202 213 / .16); }
+.audiva-lyrics-scroll>button.is-current { color: #fff !important; text-shadow: 0 0 22px rgb(255 255 255 / .24); }
 
 html[data-theme="apple"] .library-clear-dialog{background:#f8fafc!important;border-color:#d6e0eb!important;color:#142033!important;box-shadow:0 28px 90px #0b172a40!important}
 html[data-theme="apple"] .library-clear-dialog h2{color:#142033!important}
