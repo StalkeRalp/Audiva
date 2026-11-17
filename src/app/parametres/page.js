@@ -9,6 +9,7 @@ import {
   Cancel01Icon,
   CheckmarkCircle02Icon,
   ImageUpload01Icon,
+  KeyboardIcon,
   MusicNote01Icon,
   Notification03Icon,
   Settings01Icon,
@@ -217,6 +218,25 @@ export default function ParametresPage() {
               </div>
             </Panel>
 
+            <Panel icon={KeyboardIcon} title="Raccourcis clavier">
+              <p className="py-3 text-xs leading-5 text-[#91a0bd]">Utilisables dans toute l’application. Ils sont désactivés pendant la saisie dans un champ de texte.</p>
+              <div id="raccourcis-clavier" className="grid gap-1 scroll-mt-24 sm:grid-cols-2">
+                <Shortcut keys="Espace" action="Lecture / pause" />
+                <Shortcut keys="← / →" action="Reculer / avancer de 5 secondes" />
+                <Shortcut keys="↑ / ↓" action="Augmenter / diminuer le volume" />
+                <Shortcut keys="M" action="Muet / réactiver le son" />
+                <Shortcut keys="N / P" action="Morceau suivant / précédent" />
+                <Shortcut keys="F" action="Ajouter / retirer des favoris" />
+                <Shortcut keys="Y" action="Afficher / fermer les paroles" />
+                <Shortcut keys="Q" action="Afficher / fermer la file d’attente" />
+                <Shortcut keys="L" action="Ouvrir le lecteur" />
+                <Shortcut keys="I" action="Ouvrir l’importation de musique" />
+                <Shortcut keys="Ctrl / ⌘ + K" action="Ouvrir la recherche" />
+                <Shortcut keys="Ctrl+Alt / ⌘+⌥ + 1…0" action="Aller à Accueil, Recherche, Découverte, Bibliothèque, Favoris, Amis, Chat, Notifications, Statistiques ou Paramètres" />
+                <Shortcut keys="?" action="Afficher cette liste" />
+              </div>
+            </Panel>
+
             <Panel icon={Settings01Icon} title="Contenu">
               <Toggle label="Afficher le contenu explicite" description="Autorise les morceaux signalés comme explicites dans la recherche et les recommandations." value={preferences.explicitContent} onChange={() => togglePreference("explicitContent")} />
             </Panel>
@@ -257,6 +277,13 @@ function Panel({ icon, title, children }) {
 
 function Field({ label, value, onChange, type = "text", placeholder }) {
   return <label className="text-xs font-bold text-[#91a0bd]">{label}<input type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} className="mt-2 w-full border border-white/12 bg-[#07101e] p-3 text-sm font-medium text-white outline-none focus:border-[#72eee7]" /></label>;
+}
+
+function Shortcut({ keys, action }) {
+  return <div className="flex min-w-0 items-center justify-between gap-3 border-b border-white/8 py-3">
+    <kbd className="shrink-0 border border-white/12 bg-[#07101e] px-2 py-1 font-mono text-[11px] font-bold text-[#bffffa]">{keys}</kbd>
+    <span className="text-right text-xs leading-5 text-[#aebbd7]">{action}</span>
+  </div>;
 }
 
 function Toggle({ label, description, value, onChange }) {

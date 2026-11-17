@@ -32,6 +32,14 @@ function createBoundedTransitionPlan(currentFacts, nextFacts, settings, mediaDur
   return { ...plan, duration: safeDuration, startAt: fixedTailSeconds ? latestStart : Math.min(plan.startAt, latestStart) };
 }
 
+function spotifyTrackReachedEnd(clock, store, margin = 2) {
+  const trackId = store.currentTrack?.providerId;
+  if (!trackId || clock?.trackId !== trackId) return false;
+  const duration = Number(clock.duration) || Number(store.duration) || Number(store.currentTrack.duration) || 0;
+  const position = Math.max(Number(clock.position) || 0, Number(store.currentTime) || 0);
+  return duration > 0 && position >= duration - margin;
+}
+
 export function LecteurPersistant() {
   const pathname = usePathname();
   const router = useRouter();
@@ -168,7 +176,8 @@ export function LecteurPersistant() {
     spotifyEndedTrackRef.current = trackId;
     useIntelligenceStore.getState().finish(true);
     if (store.repeatMode === "track") {
-      const deviceId = getSpotifyPlayback().deviceId;
+      const playback = getSpotifyPlayback();
+      const deviceId = playback.remoteDeviceId || playback.deviceId;
       if (deviceId && uri) spotifyRequest(`me/player/play?device_id=${encodeURIComponent(deviceId)}`, { method: "PUT", body: { uris: [uri] } }).catch(error => setQueueNotice(error.message));
     } else {
       store.handleTrackEnd();
@@ -304,6 +313,10 @@ export function LecteurPersistant() {
           const actualTrack = actualState?.track_window?.current_track;
           if (!actualState || latest.currentTrack?.provider !== "spotify" || latest.currentTrack.providerId !== clock.trackId) return;
           if (actualTrack?.id !== clock.trackId) {
+            if (spotifyTrackReachedEnd({ ...clock, position }, latest, 1.5)) {
+              finishSpotifyTrack(clock.trackId, latest.currentTrack.uri || `spotify:track:${clock.trackId}`);
+              return;
+            }
             spotifyClock.current = { ...clock, playing: false, wall: Date.now() };
             useLecteurStore.getState().pause();
             setQueueNotice("Spotify a interrompu ou changé le titre en cours. Appuyez sur Lecture pour relancer le morceau sélectionné.");
@@ -371,7 +384,13 @@ export function LecteurPersistant() {
       noteSpotifyPlaybackState(state);
       const spotifyTrack = state.track_window?.current_track;
       const store = useLecteurStore.getState();
-      if (!spotifyTrack || store.currentTrack?.provider !== "spotify" || store.currentTrack.providerId !== spotifyTrack.id) return;
+      if (!spotifyTrack || store.currentTrack?.provider !== "spotify" || store.currentTrack.providerId !== spotifyTrack.id) {
+        const endedClock = spotifyClock.current;
+        if (state.paused && spotifyTrackReachedEnd(endedClock, store, 1.5)) {
+          finishSpotifyTrack(endedClock.trackId, store.currentTrack.uri || `spotify:track:${endedClock.trackId}`);
+        }
+        return;
+      }
       flushQueuedSpotifySeek(spotifyTrack.id);
       const previousClock = spotifyClock.current;
       const sameClockTrack = previousClock.trackId === spotifyTrack.id;
@@ -488,6 +507,12 @@ export function LecteurPersistant() {
         }
         const item = playback.item;
         if (!item || item.type !== "track" || !item.id) {
+          const endedClock = spotifyClock.current;
+          const current = useLecteurStore.getState();
+          if (spotifyTrackReachedEnd(endedClock, current, 2.5)) {
+            finishSpotifyTrack(endedClock.trackId, current.currentTrack.uri || `spotify:track:${endedClock.trackId}`);
+            return;
+          }
           if (playback.device?.id === remoteSpotifyDeviceId) {
             useLecteurStore.setState({ isPlaying: Boolean(playback.is_playing), resumePlayback: false });
             if (!playback.is_playing) setQueueNotice(`Connecté à ${playback.device.name || "l’appareil Spotify"}. Lancez un titre sur cet appareil pour l’afficher dans Audiva.`);
@@ -497,7 +522,13 @@ export function LecteurPersistant() {
         const remoteTrack = spotifyItem(item, "tracks");
         const position = Math.max(0, Number(playback.progress_ms) || 0) / 1000;
         const duration = Math.max(0, Number(item.duration_ms) || 0) / 1000;
+        if (duration > 0 && position < duration - 1.5 && spotifyEndedTrackRef.current === remoteTrack.providerId) spotifyEndedTrackRef.current = null;
         const store = useLecteurStore.getState();
+        const previousClock = spotifyClock.current;
+        if (previousClock.trackId && remoteTrack.providerId !== previousClock.trackId && spotifyTrackReachedEnd(previousClock, store, 2.5)) {
+          finishSpotifyTrack(previousClock.trackId, store.currentTrack.uri || `spotify:track:${previousClock.trackId}`);
+          return;
+        }
         const matchesCurrent = store.currentTrack?.provider === "spotify" && store.currentTrack.providerId === remoteTrack.providerId;
         const queueIndex = store.queue.findIndex(track => track.provider === "spotify" && track.providerId === remoteTrack.providerId);
         const queue = queueIndex >= 0
@@ -527,7 +558,7 @@ export function LecteurPersistant() {
     const initial = window.setTimeout(syncRemotePlayback, 250);
     const interval = window.setInterval(syncRemotePlayback, 1800);
     return () => { active = false; window.clearTimeout(initial); window.clearInterval(interval); };
-  }, [remoteSpotifyDeviceId]);
+  }, [remoteSpotifyDeviceId, finishSpotifyTrack]);
   useEffect(() => {
     const onRemoteError = event => setQueueNotice(event.detail || "La commande Spotify a échoué.");
     const onRemoteDisconnect = () => { setRemoteSpotifyDeviceId(null); setQueueNotice("Lecture locale activée ; la session Spotify distante est mise en pause."); };

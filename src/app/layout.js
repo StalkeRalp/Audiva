@@ -8,6 +8,7 @@ import { NavigationProgress } from "@/composants/layout/NavigationProgress";
 import AuthProvider from "@/domaines/authentification/composants/AuthProvider";
 import AuthInteractionGate from "@/domaines/authentification/composants/AuthInteractionGate";
 import OfflineSupport from "@/composants/layout/OfflineSupport";
+import KeyboardShortcuts from "@/composants/layout/KeyboardShortcuts";
 import ThemeProvider from "@/composants/layout/ThemeProvider";
 import "./globals.css";
 
@@ -49,7 +50,7 @@ export default async function RootLayout({ children }) {
         <script dangerouslySetInnerHTML={{ __html: `try { var savedTheme = localStorage.getItem("audiva-color-theme"); if (savedTheme === "apple" || (!savedTheme && document.cookie.split("; ").includes("audiva-color-theme=apple"))) document.documentElement.dataset.theme = "apple"; else document.documentElement.dataset.theme = "audiva"; } catch {}` }} />
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
       </head>
-      <body className="min-h-full bg-black text-slate-100"><ThemeProvider /><AuthProvider><OfflineSupport /><NavigationProgress /><AuthInteractionGate /><BarreSuperieure /><ApplicationShell>{children}</ApplicationShell><LecteurPersistant /></AuthProvider></body>
+      <body className="min-h-full bg-black text-slate-100"><ThemeProvider /><AuthProvider><OfflineSupport /><NavigationProgress /><AuthInteractionGate /><BarreSuperieure /><ApplicationShell>{children}</ApplicationShell><LecteurPersistant /><KeyboardShortcuts /></AuthProvider></body>
     </html>
   );
 }
